@@ -35,8 +35,8 @@ function getOrCreateSheet() {
   let sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
-    sheet.appendRow(["ID", "Day", "Name", "Description", "Category", "Amount", "Paid By", "Timestamp", "Edited", "Archived"]);
-    sheet.getRange(1, 1, 1, 10).setFontWeight("bold");
+    sheet.appendRow(["ID", "Day", "Name", "Description", "Category", "Amount", "Paid By", "Timestamp", "Edited", "Archived", "Deleted"]);
+    sheet.getRange(1, 1, 1, 11).setFontWeight("bold");
     sheet.setFrozenRows(1);
     sheet.setColumnWidth(1, 120);
     sheet.setColumnWidth(2, 55);
@@ -48,6 +48,7 @@ function getOrCreateSheet() {
     sheet.setColumnWidth(8, 160);
     sheet.setColumnWidth(9, 80);
     sheet.setColumnWidth(10, 80);
+    sheet.setColumnWidth(11, 80);
   } else {
     // Migration: Add Archived column if it doesn't exist
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -55,6 +56,12 @@ function getOrCreateSheet() {
       sheet.getRange(1, 10).setValue("Archived");
       sheet.getRange(1, 10).setFontWeight("bold");
       sheet.setColumnWidth(10, 80);
+    }
+    // Migration: Add Deleted column if it doesn't exist
+    if (headers.length < 11 || headers[10] !== "Deleted") {
+      sheet.getRange(1, 11).setValue("Deleted");
+      sheet.getRange(1, 11).setFontWeight("bold");
+      sheet.setColumnWidth(11, 80);
     }
   }
   return sheet;
@@ -68,7 +75,8 @@ function getAllExpenses() {
   const expenses = [];
   for (let i = 1; i < data.length; i++) {
     const r = data[i];
-    if (r[0]) {
+    // Skip deleted expenses
+    if (r[0] && (!r[10] || r[10] !== "Yes")) {
       expenses.push({
         id:       String(r[0]),
         day:      Number(r[1]),
@@ -91,7 +99,7 @@ function addExpense(p) {
   const id = "exp_" + new Date().getTime();
   const ts = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
-  sheet.appendRow([id, Number(p.day), p.name || "—", p.desc, p.cat, Number(p.amount), p.paidBy || "—", ts, "", ""]);
+  sheet.appendRow([id, Number(p.day), p.name || "—", p.desc, p.cat, Number(p.amount), p.paidBy || "—", ts, "", "", ""]);
 
   // Color-code category cell
   const catColors = {
@@ -112,7 +120,8 @@ function deleteExpense(id) {
   const data  = sheet.getDataRange().getValues();
   for (let i = 1; i < data.length; i++) {
     if (String(data[i][0]) === String(id)) {
-      sheet.deleteRow(i + 1);
+      // Instead of deleting the row, mark it as deleted
+      sheet.getRange(i + 1, 11).setValue("Yes"); // Column K (Deleted)
       return;
     }
   }

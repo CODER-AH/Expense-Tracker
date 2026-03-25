@@ -24,13 +24,14 @@
     color: var(--text);
     min-height: 100vh;
     padding: 24px 16px 60px;
+    font-size: 15px;
   }
 
   /* HEADER */
   .header { text-align: center; padding: 32px 0 20px; }
   .header .route {
     font-family: 'DM Mono', monospace;
-    font-size: 11px;
+    font-size: 12px;
     letter-spacing: 0.18em;
     color: var(--muted);
     text-transform: uppercase;
@@ -45,7 +46,7 @@
   }
   .header h1 span { color: var(--accent); }
   .header .dates {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--muted);
     margin-top: 6px;
     font-family: 'DM Mono', monospace;
@@ -80,7 +81,7 @@
     margin-bottom: 6px;
   }
   .name-box p {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--muted);
     margin-bottom: 20px;
     line-height: 1.5;
@@ -1045,16 +1046,16 @@
 
 <!-- SUMMARY CARDS -->
 <div class="summary-grid" id="insights-section">
-  <div class="sum-card total-card big-card" id="totalCard">
-    <div class="label">Total Spent</div>
-    <div class="amount"><span class="currency">₹</span><span id="totalAll">0</span></div>
-  </div>
   <div class="sum-card big-card" id="budgetCard" style="cursor:pointer" onclick="editBudget()">
     <div class="label">💰 Budget</div>
     <div class="amount" style="display:flex;flex-direction:column;gap:4px">
       <div><span class="currency">₹</span><span id="budgetAmount">0</span></div>
       <div id="budgetRemaining" style="font-size:12px;font-family:'DM Mono',monospace;color:var(--muted)">Set budget</div>
     </div>
+  </div>
+  <div class="sum-card total-card big-card" id="totalCard">
+    <div class="label">Total Spent</div>
+    <div class="amount"><span class="currency">₹</span><span id="totalAll">0</span></div>
   </div>
   <div class="sum-card">
     <div class="label">🍽️ Food</div>
