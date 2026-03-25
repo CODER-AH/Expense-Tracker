@@ -81,9 +81,12 @@ function addExpense(p) {
 
   // Color-code category cell
   const catColors = {
-    fuel:  "#f5d5c0", food:  "#fef9c3",
-    stay:  "#cce8f4", entry: "#e8d5f8",
-    jeep:  "#fcd5de", misc:  "#c8f0dc"
+    food:      "#fef9c3",
+    fuel:      "#f5d5c0",
+    stay:      "#cce8f4",
+    transport: "#fcd5de",
+    entry:     "#e8d5f8",
+    misc:      "#c8f0dc"
   };
   sheet.getRange(sheet.getLastRow(), 5).setBackground(catColors[p.cat] || "#ffffff");
 
@@ -116,9 +119,12 @@ function updateExpense(p) {
 
       // Update category color
       const catColors = {
-        fuel:  "#f5d5c0", food:  "#fef9c3",
-        stay:  "#cce8f4", entry: "#e8d5f8",
-        jeep:  "#fcd5de", misc:  "#c8f0dc"
+        food:      "#fef9c3",
+        fuel:      "#f5d5c0",
+        stay:      "#cce8f4",
+        transport: "#fcd5de",
+        entry:     "#e8d5f8",
+        misc:      "#c8f0dc"
       };
       sheet.getRange(row, 5).setBackground(catColors[p.cat] || "#ffffff");
 

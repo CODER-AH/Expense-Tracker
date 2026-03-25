@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bangalore → Coorg Trip Tracker</title>
+<title>Squad Expense Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -492,8 +492,13 @@
   <div class="name-box">
     <div class="emoji">👋</div>
     <h2>Who are you?</h2>
-    <p>Enter your name so everyone knows who added each expense. This is saved on your device — you'll only need to do this once.</p>
-    <input type="text" id="nameInput" placeholder="e.g. Ravi" maxlength="20" />
+    <p>Select your name so everyone knows who added each expense. This is saved on your device — you'll only need to do this once.</p>
+    <select id="nameInput" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;text-align:center;margin-bottom:14px;transition:border-color 0.15s;">
+      <option value="">Select your name...</option>
+      <option value="Afsar">Afsar</option>
+      <option value="Adham">Adham</option>
+      <option value="Aakif">Aakif</option>
+    </select>
     <button onclick="saveName()">Let's Go →</button>
   </div>
 </div>
@@ -501,7 +506,7 @@
 <!-- HEADER -->
 <div class="header">
   <div class="route">📍 Bangalore → Mysore → Madikeri → Coorg</div>
-  <h1>Trip <span>Expense</span> Tracker</h1>
+  <h1>The <span>Squad</span> Trip</h1>
   <div class="dates">2D / 1N &nbsp;·&nbsp; Saturday – Sunday</div>
 </div>
 
@@ -521,31 +526,52 @@
   <div class="sum-card total-card">
     <div class="label">Total Spent</div>
     <div class="amount"><span class="currency">₹</span><span id="totalAll">0</span></div>
-    <div class="sub" id="perPersonSub">— per person</div>
-  </div>
-  <div class="sum-card">
-    <div class="label">⛽ Fuel</div>
-    <div class="amount"><span class="currency">₹</span><span id="totalFuel">0</span></div>
   </div>
   <div class="sum-card">
     <div class="label">🍽️ Food</div>
     <div class="amount"><span class="currency">₹</span><span id="totalFood">0</span></div>
   </div>
   <div class="sum-card">
+    <div class="label">⛽ Fuel</div>
+    <div class="amount"><span class="currency">₹</span><span id="totalFuel">0</span></div>
+  </div>
+  <div class="sum-card">
     <div class="label">🏨 Stay</div>
     <div class="amount"><span class="currency">₹</span><span id="totalStay">0</span></div>
   </div>
   <div class="sum-card">
-    <div class="label">🎟️ Entry</div>
+    <div class="label">🚙 Transport</div>
+    <div class="amount"><span class="currency">₹</span><span id="totalTransport">0</span></div>
+  </div>
+  <div class="sum-card">
+    <div class="label">🎟️ Entry Fees</div>
     <div class="amount"><span class="currency">₹</span><span id="totalEntry">0</span></div>
   </div>
   <div class="sum-card">
-    <div class="label">🚙 Jeep/Transport</div>
-    <div class="amount"><span class="currency">₹</span><span id="totalJeep">0</span></div>
+    <div class="label">🛍️ Miscellaneous</div>
+    <div class="amount"><span class="currency">₹</span><span id="totalMisc">0</span></div>
+  </div>
+</div>
+
+<div class="section-title" style="margin-top: 32px;">Paid By</div>
+
+<!-- PAID BY TOTALS -->
+<div class="summary-grid">
+  <div class="sum-card">
+    <div class="label">💰 Afsar</div>
+    <div class="amount"><span class="currency">₹</span><span id="paidAfsar">0</span></div>
   </div>
   <div class="sum-card">
-    <div class="label">🛍️ Misc</div>
-    <div class="amount"><span class="currency">₹</span><span id="totalMisc">0</span></div>
+    <div class="label">💰 Adham</div>
+    <div class="amount"><span class="currency">₹</span><span id="paidAdham">0</span></div>
+  </div>
+  <div class="sum-card">
+    <div class="label">💰 Aakif</div>
+    <div class="amount"><span class="currency">₹</span><span id="paidAakif">0</span></div>
+  </div>
+  <div class="sum-card">
+    <div class="label">💰 Sehlaan</div>
+    <div class="amount"><span class="currency">₹</span><span id="paidSehlaan">0</span></div>
   </div>
 </div>
 
@@ -572,12 +598,12 @@
     <div>
       <label>Category</label>
       <select id="inp-cat">
-        <option value="fuel">⛽ Fuel</option>
         <option value="food">🍽️ Food</option>
+        <option value="fuel">⛽ Fuel</option>
         <option value="stay">🏨 Stay</option>
-        <option value="entry">🎟️ Entry</option>
-        <option value="jeep">🚙 Jeep</option>
-        <option value="misc">🛍️ Misc</option>
+        <option value="transport">🚙 Transport</option>
+        <option value="entry">🎟️ Entry Fees</option>
+        <option value="misc">🛍️ Miscellaneous</option>
       </select>
     </div>
     <div>
@@ -588,9 +614,10 @@
       <label>Paid by *</label>
       <select id="inp-paidby" required>
         <option value="">Select...</option>
+        <option value="Afsar">Afsar</option>
         <option value="Adham">Adham</option>
         <option value="Aakif">Aakif</option>
-        <option value="Afsar">Afsar</option>
+        <option value="Sehlaan">Sehlaan</option>
       </select>
     </div>
     <div>
@@ -609,7 +636,7 @@
     <table>
       <thead><tr>
         <th>#</th><th>Description</th><th>Category</th>
-        <th>By</th><th>Paid By</th><th>Time</th><th style="text-align:right">Amount</th><th></th><th></th>
+        <th>Added By</th><th>Paid By</th><th>Time</th><th style="text-align:right">Amount</th><th></th><th></th>
       </tr></thead>
       <tbody id="day1-body"></tbody>
     </table>
@@ -620,7 +647,7 @@
     <table>
       <thead><tr>
         <th>#</th><th>Description</th><th>Category</th>
-        <th>By</th><th>Paid By</th><th>Time</th><th style="text-align:right">Amount</th><th></th><th></th>
+        <th>Added By</th><th>Paid By</th><th>Time</th><th style="text-align:right">Amount</th><th></th><th></th>
       </tr></thead>
       <tbody id="day2-body"></tbody>
     </table>
@@ -650,12 +677,12 @@
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxscbDaRJezz07nggUqUvzxk4UGtYoIIvYqnEfhTRNzB8YscjXgsnU008YsN3jcvE8ZQA/exec';
 
 const CAT_CONFIG = {
-  fuel:  { label: '⛽ Fuel',   color: '#e87c4e', bg: '#2a1a10' },
-  food:  { label: '🍽️ Food',  color: '#f5c842', bg: '#2a2410' },
-  stay:  { label: '🏨 Stay',   color: '#7ec8e3', bg: '#0f2228' },
-  entry: { label: '🎟️ Entry', color: '#b07fe8', bg: '#1e1430' },
-  jeep:  { label: '🚙 Jeep',  color: '#e86e8a', bg: '#2a1018' },
-  misc:  { label: '🛍️ Misc',  color: '#5dba8a', bg: '#0e2418' },
+  food:      { label: '🍽️ Food',   color: '#f5c842', bg: '#2a2410' },
+  fuel:      { label: '⛽ Fuel',   color: '#e87c4e', bg: '#2a1a10' },
+  stay:      { label: '🏨 Stay',   color: '#7ec8e3', bg: '#0f2228' },
+  transport: { label: '🚙 Transport',  color: '#e86e8a', bg: '#2a1018' },
+  entry:     { label: '🎟️ Entry Fees', color: '#b07fe8', bg: '#1e1430' },
+  misc:      { label: '🛍️ Miscellaneous',  color: '#5dba8a', bg: '#0e2418' },
 };
 
 // ─── STATE ────────────────────────────────────────────────
@@ -705,6 +732,9 @@ function changeName() {
 
 document.getElementById('nameInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') saveName();
+});
+document.getElementById('nameInput').addEventListener('change', e => {
+  if (e.target.value) saveName();
 });
 
 // ─── LOCAL STORAGE FALLBACK ───────────────────────────────
@@ -961,19 +991,29 @@ function render() {
 function updateSummary() {
   const all = [...expenses[1], ...expenses[2]];
   const total = all.reduce((s, e) => s + (e.amount || 0), 0);
-  const cats = { fuel: 0, food: 0, stay: 0, entry: 0, jeep: 0, misc: 0 };
+  const cats = { food: 0, fuel: 0, stay: 0, transport: 0, entry: 0, misc: 0 };
   all.forEach(e => { if (cats[e.cat] !== undefined) cats[e.cat] += (e.amount || 0); });
 
-  document.getElementById('totalAll').textContent   = total.toLocaleString('en-IN');
-  document.getElementById('totalFuel').textContent  = cats.fuel.toLocaleString('en-IN');
-  document.getElementById('totalFood').textContent  = cats.food.toLocaleString('en-IN');
-  document.getElementById('totalStay').textContent  = cats.stay.toLocaleString('en-IN');
-  document.getElementById('totalEntry').textContent = cats.entry.toLocaleString('en-IN');
-  document.getElementById('totalJeep').textContent  = cats.jeep.toLocaleString('en-IN');
-  document.getElementById('totalMisc').textContent  = cats.misc.toLocaleString('en-IN');
+  // Calculate paid-by totals
+  const paidBy = { Afsar: 0, Adham: 0, Aakif: 0, Sehlaan: 0 };
+  all.forEach(e => {
+    if (paidBy[e.paidBy] !== undefined) {
+      paidBy[e.paidBy] += (e.amount || 0);
+    }
+  });
 
-  const pp = total > 0 ? Math.ceil(total / 2).toLocaleString('en-IN') : '—';
-  document.getElementById('perPersonSub').textContent = `₹${pp} per person (2 pax)`;
+  document.getElementById('totalAll').textContent = total.toLocaleString('en-IN');
+  document.getElementById('totalFood').textContent = cats.food.toLocaleString('en-IN');
+  document.getElementById('totalFuel').textContent = cats.fuel.toLocaleString('en-IN');
+  document.getElementById('totalStay').textContent = cats.stay.toLocaleString('en-IN');
+  document.getElementById('totalTransport').textContent = cats.transport.toLocaleString('en-IN');
+  document.getElementById('totalEntry').textContent = cats.entry.toLocaleString('en-IN');
+  document.getElementById('totalMisc').textContent = cats.misc.toLocaleString('en-IN');
+
+  document.getElementById('paidAfsar').textContent = paidBy.Afsar.toLocaleString('en-IN');
+  document.getElementById('paidAdham').textContent = paidBy.Adham.toLocaleString('en-IN');
+  document.getElementById('paidAakif').textContent = paidBy.Aakif.toLocaleString('en-IN');
+  document.getElementById('paidSehlaan').textContent = paidBy.Sehlaan.toLocaleString('en-IN');
 }
 
 // ─── UI HELPERS ───────────────────────────────────────────
