@@ -240,6 +240,72 @@
     gap: 10px;
     align-items: end;
   }
+  .multi-row-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 12px;
+    display: none;
+  }
+  .multi-row-container.active {
+    display: block;
+  }
+  .multi-row-entry {
+    display: grid;
+    grid-template-columns: 80px 100px 1fr 110px 120px 110px 60px;
+    gap: 10px;
+    align-items: end;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .multi-row-entry:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+  .multi-row-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .multi-row-entry input,
+  .multi-row-entry select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .multi-row-entry select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg fill='%236b8a78' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 32px;
+  }
+  .multi-row-entry input:focus,
+  .multi-row-entry select:focus {
+    border-color: var(--accent);
+  }
+  .multi-row-entry select option {
+    background: var(--surface);
+    color: var(--text);
+  }
+  .multi-row-entry label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 5px;
+    font-family: 'DM Mono', monospace;
+  }
   .add-form label {
     font-size: 10px;
     letter-spacing: 0.1em;
@@ -260,6 +326,13 @@
     font-size: 13px;
     outline: none;
     transition: border-color 0.15s;
+  }
+  .add-form select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg fill='%236b8a78' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 32px;
   }
   .add-form input:focus, .add-form select:focus { border-color: var(--accent); }
   .add-form select option { background: var(--surface); }
@@ -352,17 +425,19 @@
   thead th.sortable::after {
     content: ' ↕';
     opacity: 0.3;
-    font-size: 9px;
+    font-size: 12px;
   }
   thead th.sorted-asc::after {
     content: ' ↑';
     opacity: 1;
     color: var(--accent);
+    font-size: 12px;
   }
   thead th.sorted-desc::after {
     content: ' ↓';
     opacity: 1;
     color: var(--accent);
+    font-size: 12px;
   }
   tbody tr { border-bottom: 1px solid #1e2e27; transition: background 0.1s; }
   tbody tr:last-child { border-bottom: none; }
@@ -588,6 +663,11 @@
     font-size: 13px;
     outline: none;
     width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg fill='%236b8a78' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    padding-right: 28px;
   }
   .edit-actions {
     display: flex;
@@ -637,6 +717,48 @@
   }
   .show-more-btn:hover {
     text-decoration: underline;
+  }
+
+  /* PAGINATION */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+  .page-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-width: 36px;
+    text-align: center;
+  }
+  .page-btn:hover {
+    background: var(--card);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .page-btn.active {
+    background: var(--accent);
+    color: #0e1412;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .page-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .page-btn:disabled:hover {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
   }
 
   /* SETTLEMENT */
@@ -882,16 +1004,29 @@
       </select>
     </div>
     <div>
-      <button class="add-btn" id="addBtn" onclick="saveExpense()">
-        <div class="spinner" id="addSpinner"></div>
-        <span id="addBtnText">+ Add</span>
+      <button class="add-btn" id="addBtn" onclick="addExpenseRow()">
+        <span id="addBtnText">+ Add Row</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MULTI-ROW ADD SECTION -->
+  <div class="multi-row-container" id="multiRowContainer">
+    <div id="multiRowEntries"></div>
+    <div class="multi-row-actions">
+      <button class="add-btn" onclick="saveMultipleExpenses()">
+        <div class="spinner" id="multiSpinner" style="display:none"></div>
+        💾 Save All
+      </button>
+      <button class="add-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="clearAllRows()">
+        Clear All
       </button>
     </div>
   </div>
 </div>
 
 <div class="section-title">📝 Expense History
-  <select id="filterSelect" onchange="filterExpenses()" style="margin-left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;">
+  <select id="filterSelect" onchange="filterExpenses()" style="margin-left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center;padding-right:26px;">
     <option value="all">All People</option>
     <option value="Afsar">Afsar</option>
     <option value="Adham">Adham</option>
@@ -918,6 +1053,7 @@
       <tbody id="day1-body"></tbody>
     </table>
   </div>
+  <div class="pagination" id="day1-pagination"></div>
 
   <div class="day-label" style="margin-top:18px">🗓 Day 2 — Sunday <span class="day-total" id="day2-total">₹0</span></div>
   <div class="table-wrap">
@@ -935,6 +1071,7 @@
       <tbody id="day2-body"></tbody>
     </table>
   </div>
+  <div class="pagination" id="day2-pagination"></div>
 </div>
 
 <!-- NOTES -->
@@ -988,12 +1125,13 @@ const CAT_CONFIG = {
 // ─── STATE ────────────────────────────────────────────────
 let expenses = { 1: [], 2: [] };
 let currentUser = '';
-let isBusy = false;
 let editingId = null;
 let deleteTarget = null;
 let sortBy = 'time';
 let sortOrder = 'desc'; // 'asc' or 'desc'
 let filterBy = 'all';
+let currentPage = { 1: 1, 2: 1 };
+const ITEMS_PER_PAGE = 10;
 
 // ─── INIT ─────────────────────────────────────────────────
 window.onload = () => {
@@ -1260,6 +1398,155 @@ function cancelInlineEdit(day, id) {
   render();
 }
 
+// ─── MULTI-ROW ADD ────────────────────────────────────────
+let multiRowCount = 0;
+
+function addExpenseRow() {
+  // Show the multi-row container if hidden
+  const container = document.getElementById('multiRowContainer');
+  container.classList.add('active');
+
+  // Add new row
+  multiRowCount++;
+  const entriesDiv = document.getElementById('multiRowEntries');
+  const rowDiv = document.createElement('div');
+  rowDiv.className = 'multi-row-entry';
+  rowDiv.id = `multi-row-${multiRowCount}`;
+
+  // Get current form values
+  const day = document.getElementById('inp-day').value;
+  const cat = document.getElementById('inp-cat').value;
+  const desc = document.getElementById('inp-desc').value.trim();
+  const amount = document.getElementById('inp-amount').value;
+  const paidBy = document.getElementById('inp-paidby').value;
+
+  rowDiv.innerHTML = `
+    <div>
+      <label>Day</label>
+      <select id="multi-day-${multiRowCount}">
+        <option value="1" ${day === '1' ? 'selected' : ''}>Day 1</option>
+        <option value="2" ${day === '2' ? 'selected' : ''}>Day 2</option>
+      </select>
+    </div>
+    <div>
+      <label>Category</label>
+      <select id="multi-cat-${multiRowCount}">
+        <option value="food" ${cat === 'food' ? 'selected' : ''}>🍽️ Food</option>
+        <option value="fuel" ${cat === 'fuel' ? 'selected' : ''}>⛽ Fuel</option>
+        <option value="stay" ${cat === 'stay' ? 'selected' : ''}>🏨 Stay</option>
+        <option value="transport" ${cat === 'transport' ? 'selected' : ''}>🚙 Transport</option>
+        <option value="entry" ${cat === 'entry' ? 'selected' : ''}>🎟️ Entry</option>
+        <option value="misc" ${cat === 'misc' ? 'selected' : ''}>🛍️ Misc</option>
+      </select>
+    </div>
+    <div>
+      <label>Description</label>
+      <input type="text" id="multi-desc-${multiRowCount}" value="${desc}" placeholder="Description" />
+    </div>
+    <div>
+      <label>Amount (₹)</label>
+      <input type="number" id="multi-amount-${multiRowCount}" value="${amount}" placeholder="0" min="0" />
+    </div>
+    <div>
+      <label>Paid by</label>
+      <select id="multi-paidby-${multiRowCount}">
+        <option value="">Select...</option>
+        <option value="Afsar" ${paidBy === 'Afsar' ? 'selected' : ''}>Afsar</option>
+        <option value="Adham" ${paidBy === 'Adham' ? 'selected' : ''}>Adham</option>
+        <option value="Aakif" ${paidBy === 'Aakif' ? 'selected' : ''}>Aakif</option>
+        <option value="Sahlaan" ${paidBy === 'Sahlaan' ? 'selected' : ''}>Sahlaan</option>
+      </select>
+    </div>
+    <div style="visibility:hidden">
+      <label>Added</label>
+      <input type="text" readonly value="${currentUser}" />
+    </div>
+    <div style="display:flex;align-items:end">
+      <button class="del-btn" onclick="removeMultiRow(${multiRowCount})" title="Remove">🗑️</button>
+    </div>
+  `;
+
+  entriesDiv.appendChild(rowDiv);
+
+  // Clear the main form
+  document.getElementById('inp-desc').value = '';
+  document.getElementById('inp-amount').value = '';
+  document.getElementById('inp-paidby').value = '';
+}
+
+function removeMultiRow(id) {
+  const row = document.getElementById(`multi-row-${id}`);
+  if (row) row.remove();
+
+  // Hide container if no rows left
+  const entriesDiv = document.getElementById('multiRowEntries');
+  if (entriesDiv.querySelectorAll('.multi-row-entry').length === 0) {
+    clearAllRows();
+  }
+}
+
+function clearAllRows() {
+  document.getElementById('multiRowContainer').classList.remove('active');
+  document.getElementById('multiRowEntries').innerHTML = '';
+  multiRowCount = 0;
+}
+
+async function saveMultipleExpenses() {
+  const entries = [];
+  const entriesDiv = document.getElementById('multiRowEntries');
+  const rows = entriesDiv.querySelectorAll('.multi-row-entry');
+
+  // Collect and validate all entries
+  for (let row of rows) {
+    const id = row.id.split('-')[2];
+    const day = parseInt(document.getElementById(`multi-day-${id}`)?.value);
+    const cat = document.getElementById(`multi-cat-${id}`)?.value;
+    const desc = document.getElementById(`multi-desc-${id}`)?.value.trim();
+    const amount = parseFloat(document.getElementById(`multi-amount-${id}`)?.value) || 0;
+    const paidBy = document.getElementById(`multi-paidby-${id}`)?.value;
+
+    if (!desc || amount <= 0 || !paidBy) {
+      showToast('Please fill all fields in each row', 'err');
+      return;
+    }
+
+    entries.push({ day, cat, desc, amount, paidBy, name: currentUser });
+  }
+
+  if (entries.length === 0) {
+    showToast('No entries to save', 'err');
+    return;
+  }
+
+  // Save all entries
+  showLoading(true);
+  document.getElementById('multiSpinner').style.display = 'block';
+
+  let savedCount = 0;
+  for (let entry of entries) {
+    try {
+      const exp = { id: 'local_' + Date.now() + '_' + savedCount, ...entry };
+      const newId = await sheetAdd(exp);
+      if (newId) exp.id = newId;
+      exp.ts = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+      exp.edited = "";
+      expenses[entry.day].push(exp);
+      savedCount++;
+      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between requests
+    } catch(e) {
+      console.error('Failed to save entry:', e);
+    }
+  }
+
+  saveLocal();
+  showLoading(false);
+  document.getElementById('multiSpinner').style.display = 'none';
+
+  showToast(`${savedCount} expense${savedCount > 1 ? 's' : ''} added!`, 'ok');
+  clearAllRows();
+  render();
+}
+
 // ─── DELETE EXPENSE ───────────────────────────────────────
 function showDeleteConfirm(day, id) {
   const exp = expenses[day].find(e => String(e.id) === String(id));
@@ -1346,12 +1633,13 @@ function render() {
           break;
         case 'time':
         default:
-          valA = a.id || '';
-          valB = b.id || '';
+          // Extract timestamp from ID or use timestamp field
+          valA = a.ts ? new Date(a.ts).getTime() : parseInt((a.id || '').split('_')[1]) || 0;
+          valB = b.ts ? new Date(b.ts).getTime() : parseInt((b.id || '').split('_')[1]) || 0;
           break;
       }
 
-      if (sortBy === 'amount') {
+      if (sortBy === 'amount' || sortBy === 'time') {
         return sortOrder === 'asc' ? valA - valB : valB - valA;
       } else {
         const comparison = valA < valB ? -1 : valA > valB ? 1 : 0;
@@ -1367,8 +1655,16 @@ function render() {
         : `No expenses yet for Day ${day} — add one above!`;
       tr.innerHTML = `<td colspan="9">${msg}</td>`;
       tbody.appendChild(tr);
+      renderPagination(day, 0);
     } else {
-      dayExpenses.forEach((exp, idx) => {
+      // Pagination
+      const totalPages = Math.ceil(dayExpenses.length / ITEMS_PER_PAGE);
+      const page = currentPage[day] || 1;
+      const startIdx = (page - 1) * ITEMS_PER_PAGE;
+      const endIdx = startIdx + ITEMS_PER_PAGE;
+      const paginatedExpenses = dayExpenses.slice(startIdx, endIdx);
+
+      paginatedExpenses.forEach((exp, idx) => {
         dayTotal += exp.amount || 0;
         const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
 
@@ -1406,10 +1702,10 @@ function render() {
         const showTruncated = exp.desc.length > 100;
 
         tr.innerHTML = `
-          <td class="num-col">${idx + 1}</td>
+          <td class="num-col">${startIdx + idx + 1}</td>
           <td>
             <div id="${descId}" class="${showTruncated ? 'desc-truncated' : 'desc-full'}">
-              ${exp.desc}${editedBadge}
+              ${editedBadge}${exp.desc}
             </div>
             ${showTruncated ? `<span class="show-more-btn" onclick="toggleDesc('${descId}')">Show more...</span>` : ''}
           </td>
@@ -1423,6 +1719,11 @@ function render() {
         `;
         tbody.appendChild(tr);
       });
+
+      // Calculate total for all filtered items (not just current page)
+      dayTotal = dayExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+
+      renderPagination(day, totalPages);
     }
     document.getElementById(`day${day}-total`).textContent =
       dayTotal > 0 ? '₹' + dayTotal.toLocaleString('en-IN') : '₹0';
@@ -1622,12 +1923,61 @@ function toggleDesc(descId) {
   }
 }
 
-// ─── UI HELPERS ───────────────────────────────────────────
-function setBusy(busy) {
-  isBusy = busy;
-  document.getElementById('addBtn').disabled = busy;
-  document.getElementById('addSpinner').style.display = busy ? 'block' : 'none';
+// ─── PAGINATION ───────────────────────────────────────────
+function renderPagination(day, totalPages) {
+  const container = document.getElementById(`day${day}-pagination`);
+  if (totalPages <= 1) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const page = currentPage[day] || 1;
+  let html = '';
+
+  // Previous button
+  html += `<button class="page-btn" onclick="goToPage(${day}, ${page - 1})" ${page === 1 ? 'disabled' : ''}>‹ Prev</button>`;
+
+  // Page numbers
+  const maxVisible = 7;
+  let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+  if (endPage - startPage < maxVisible - 1) {
+    startPage = Math.max(1, endPage - maxVisible + 1);
+  }
+
+  if (startPage > 1) {
+    html += `<button class="page-btn" onclick="goToPage(${day}, 1)">1</button>`;
+    if (startPage > 2) {
+      html += `<span style="color:var(--muted);padding:0 4px">...</span>`;
+    }
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="goToPage(${day}, ${i})">${i}</button>`;
+  }
+
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      html += `<span style="color:var(--muted);padding:0 4px">...</span>`;
+    }
+    html += `<button class="page-btn" onclick="goToPage(${day}, ${totalPages})">${totalPages}</button>`;
+  }
+
+  // Next button
+  html += `<button class="page-btn" onclick="goToPage(${day}, ${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next ›</button>`;
+
+  container.innerHTML = html;
 }
+
+function goToPage(day, page) {
+  currentPage[day] = page;
+  render();
+  // Scroll to top of table
+  document.getElementById(`day${day}-body`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ─── UI HELPERS ───────────────────────────────────────────
 function setStatus(state, text) {
   const dot = document.getElementById('statusDot');
   dot.className = 'status-dot' + (state ? ' ' + state : '');
@@ -1651,10 +2001,10 @@ function showToast(msg, type) {
 }
 
 document.getElementById('inp-amount').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveExpense();
+  if (e.key === 'Enter') addExpenseRow();
 });
 document.getElementById('inp-paidby').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveExpense();
+  if (e.key === 'Enter') addExpenseRow();
 });
 </script>
 </body>
