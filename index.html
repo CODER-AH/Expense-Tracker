@@ -1355,9 +1355,10 @@
     <div class="icon">💰</div>
     <h3>Set Trip Budget</h3>
     <p>Enter your total budget for this trip</p>
-    <div style="margin: 16px 0">
+    <div style="margin: 16px 0;position:relative">
+      <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-family:'DM Mono',monospace;font-size:16px;pointer-events:none">₹</span>
       <input type="number" id="budgetInput" placeholder="Enter amount" min="0"
-        style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:16px;outline:none;transition:border-color 0.15s">
+        style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px 10px 28px;font-family:'DM Mono',monospace;font-size:16px;outline:none;transition:border-color 0.15s">
     </div>
     <div class="confirm-buttons">
       <button class="btn-cancel" onclick="cancelBudgetEdit()">Cancel</button>
@@ -2872,14 +2873,24 @@ async function confirmBudgetEdit() {
     return;
   }
 
+  // Close dialog immediately
+  document.getElementById('budgetOverlay').classList.add('hidden');
+  document.getElementById('budgetInput').value = '';
+
+  // Show loading
+  showLoading(true);
+  setStatus('syncing', 'Saving budget…');
+
   tripBudget = budgetAmount;
   localStorage.setItem('coorg_budget', tripBudget);
 
   // Save budget to Google Sheets
   try {
     await fetch(`${SCRIPT_URL}?action=setBudget&budget=${budgetAmount}`);
+    setStatus('ok', 'Synced ✓');
   } catch(e) {
     console.error('Failed to save budget to Google Sheets:', e);
+    setStatus('err', 'Saved locally only');
     // Continue anyway - saved locally
   }
 
@@ -2893,9 +2904,7 @@ async function confirmBudgetEdit() {
   const total = all.reduce((s, e) => s + (e.amount || 0), 0);
   updateBudgetDisplay(total);
 
-  document.getElementById('budgetOverlay').classList.add('hidden');
-  document.getElementById('budgetInput').value = '';
-
+  showLoading(false);
   showToast('Budget updated!', 'ok');
 }
 
