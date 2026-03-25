@@ -1234,8 +1234,17 @@ function saveName() {
 function hideNameOverlay() {
   document.getElementById('nameOverlay').classList.add('hidden');
   document.getElementById('inp-name').value = currentUser;
-  const initial = currentUser.charAt(0).toUpperCase();
-  document.getElementById('userAvatar').textContent = initial;
+
+  // Map names to emojis
+  const emojiMap = {
+    'Afsar': '👨‍💻',
+    'Adham': '👨‍💻',
+    'Aakif': '👨‍💻',
+    'Sahlaan': '👨‍⚕️'
+  };
+
+  const emoji = emojiMap[currentUser] || currentUser.charAt(0).toUpperCase();
+  document.getElementById('userAvatar').textContent = emoji;
   document.getElementById('userChipName').textContent = currentUser;
 }
 
