@@ -33,8 +33,8 @@ function getOrCreateSheet() {
   let sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
-    sheet.appendRow(["ID", "Day", "Name", "Description", "Category", "Amount", "Paid By", "Timestamp"]);
-    sheet.getRange(1, 1, 1, 8).setFontWeight("bold");
+    sheet.appendRow(["ID", "Day", "Name", "Description", "Category", "Amount", "Paid By", "Timestamp", "Edited"]);
+    sheet.getRange(1, 1, 1, 9).setFontWeight("bold");
     sheet.setFrozenRows(1);
     sheet.setColumnWidth(1, 120);
     sheet.setColumnWidth(2, 55);
@@ -44,6 +44,7 @@ function getOrCreateSheet() {
     sheet.setColumnWidth(6, 90);
     sheet.setColumnWidth(7, 100);
     sheet.setColumnWidth(8, 160);
+    sheet.setColumnWidth(9, 80);
   }
   return sheet;
 }
@@ -65,7 +66,8 @@ function getAllExpenses() {
         cat:     String(r[4]),
         amount:  Number(r[5]),
         paidBy:  String(r[6]),
-        ts:      String(r[7])
+        ts:      String(r[7]),
+        edited:  r[8] ? String(r[8]) : ""
       });
     }
   }
@@ -77,7 +79,7 @@ function addExpense(p) {
   const id = "exp_" + new Date().getTime();
   const ts = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
-  sheet.appendRow([id, Number(p.day), p.name || "—", p.desc, p.cat, Number(p.amount), p.paidBy || "—", ts]);
+  sheet.appendRow([id, Number(p.day), p.name || "—", p.desc, p.cat, Number(p.amount), p.paidBy || "—", ts, ""]);
 
   // Color-code category cell
   const catColors = {
@@ -107,6 +109,8 @@ function deleteExpense(id) {
 function updateExpense(p) {
   const sheet = getOrCreateSheet();
   const data  = sheet.getDataRange().getValues();
+  const now = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
   for (let i = 1; i < data.length; i++) {
     if (String(data[i][0]) === String(p.id)) {
       const row = i + 1;
@@ -116,6 +120,8 @@ function updateExpense(p) {
       sheet.getRange(row, 5).setValue(p.cat);
       sheet.getRange(row, 6).setValue(Number(p.amount));
       sheet.getRange(row, 7).setValue(p.paidBy || "—");
+      sheet.getRange(row, 8).setValue(now); // Update timestamp
+      sheet.getRange(row, 9).setValue("Yes"); // Mark as edited
 
       // Update category color
       const catColors = {
