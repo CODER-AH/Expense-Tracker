@@ -1922,7 +1922,7 @@ function render() {
           <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
           <td class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
           <td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>
-          <td><button class="del-btn" onclick="showDeleteConfirm(${day}, '${exp.id}')" title="Remove">🗑️</button></td>
+          <td><button class="del-btn" onclick="showDeleteConfirm(${day}, '${exp.id}')" title="Archive">🗃️</button></td>
         `;
         tbody.appendChild(tr);
       });
