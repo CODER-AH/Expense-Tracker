@@ -48,6 +48,14 @@ function getOrCreateSheet() {
     sheet.setColumnWidth(8, 160);
     sheet.setColumnWidth(9, 80);
     sheet.setColumnWidth(10, 80);
+  } else {
+    // Migration: Add Archived column if it doesn't exist
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    if (headers.length < 10 || headers[9] !== "Archived") {
+      sheet.getRange(1, 10).setValue("Archived");
+      sheet.getRange(1, 10).setFontWeight("bold");
+      sheet.setColumnWidth(10, 80);
+    }
   }
   return sheet;
 }

@@ -1069,6 +1069,9 @@
   <button class="add-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="toggleArchived()">
     <span id="archivedToggleBtn">🗃️ Show Archived (<span id="archivedCount">0</span>)</span>
   </button>
+  <button class="add-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="toggleAllSections()">
+    <span id="expandCollapseBtn">📂 Expand All</span>
+  </button>
 </div>
 
 <!-- NOTES SECTION -->
@@ -1116,6 +1119,7 @@
       <div class="desc"></div>
       <div class="amount"></div>
       <div class="added-by" style="margin-top:6px;font-size:11px;color:var(--muted)"></div>
+      <div class="paid-by" style="margin-top:4px;font-size:11px;color:var(--muted)"></div>
     </div>
     <div class="confirm-buttons">
       <button class="btn-cancel" onclick="cancelDelete()">Cancel</button>
@@ -1486,6 +1490,12 @@ function cancelInlineEdit(day, id) {
 let multiRowCount = 0;
 
 function addExpenseRow() {
+  // Limit to 3 rows max
+  if (multiRowCount >= 3) {
+    showToast('Maximum 3 rows allowed', 'err');
+    return;
+  }
+
   // Show the multi-row container if hidden
   const container = document.getElementById('multiRowContainer');
   container.classList.add('active');
@@ -1642,6 +1652,7 @@ function showDeleteConfirm(day, id) {
   detailsEl.querySelector('.desc').textContent = exp.desc;
   detailsEl.querySelector('.amount').textContent = `₹${exp.amount.toLocaleString('en-IN')}`;
   detailsEl.querySelector('.added-by').textContent = `Added by: ${exp.name || '—'}`;
+  detailsEl.querySelector('.paid-by').textContent = `Paid by: ${exp.paidBy || '—'}`;
 
   document.getElementById('confirmOverlay').classList.remove('hidden');
 }
@@ -1732,6 +1743,39 @@ function toggleNotes() {
     btn.textContent = '📝 Show Notes';
   }
 }
+
+function toggleAllSections() {
+  const notesContainer = document.getElementById('notesContainer');
+  const archivedContainer = document.getElementById('archivedContainer');
+  const notesBtn = document.getElementById('notesToggleBtn');
+  const archivedBtn = document.getElementById('archivedToggleBtn');
+  const expandBtn = document.getElementById('expandCollapseBtn');
+  const count = archivedExpenses.length;
+
+  // Check if either section is shown
+  const anySectionShown = showNotesSection || showArchivedSection;
+
+  if (anySectionShown) {
+    // Collapse all
+    showNotesSection = false;
+    showArchivedSection = false;
+    notesContainer.style.display = 'none';
+    archivedContainer.style.display = 'none';
+    notesBtn.textContent = '📝 Show Notes';
+    archivedBtn.innerHTML = `🗃️ Show Archived (<span id="archivedCount">${count}</span>)`;
+    expandBtn.textContent = '📂 Expand All';
+  } else {
+    // Expand all
+    showNotesSection = true;
+    showArchivedSection = true;
+    notesContainer.style.display = 'block';
+    archivedContainer.style.display = 'block';
+    notesBtn.textContent = '📝 Hide Notes';
+    archivedBtn.innerHTML = `🗃️ Hide Archived (<span id="archivedCount">${count}</span>)`;
+    expandBtn.textContent = '📁 Collapse All';
+  }
+}
+
 
 function renderArchived() {
   const tbody = document.getElementById('archived-body');
@@ -2103,7 +2147,7 @@ function updateSettlement() {
       });
     }
 
-    const emojiMap = { 'Afsar': '👨‍💻', 'Adham': '🧑‍💻', 'Aakif': '👨‍💼', 'Sahlaan': '🧑‍🔧' };
+    const emojiMap = { 'Afsar': '👨‍💻', 'Adham': '👨‍💻', 'Aakif': '👨‍💻', 'Sahlaan': '👨‍⚕️' };
 
     card.innerHTML = `
       <div class="person-name">
