@@ -5,6 +5,8 @@
 //  - Inserts "Edited" column between Timestamp and Archived
 //  - Adds "Deleted" column after Archived
 //  - Preserves all existing Archived data in correct position
+//  - Added Settings sheet for budget storage
+//  - Budget syncs across all devices/users via Google Sheets
 //
 //  To update your existing deployment:
 //  1. Paste this into Apps Script (replacing old code)
@@ -14,6 +16,7 @@
 // ============================================================
 
 const SHEET_NAME = "Expenses";
+const SETTINGS_SHEET_NAME = "Settings";
 
 function doGet(e)  { return handleRequest(e); }
 function doPost(e) { return handleRequest(e); }
@@ -27,6 +30,8 @@ function handleRequest(e) {
     if (action === "archive") return respond(archiveExpense(e.parameter));
     if (action === "unarchive") return respond(unarchiveExpense(e.parameter));
     if (action === "delete") { deleteExpense(e.parameter.id); return respond({ success: true }); }
+    if (action === "getBudget") return respond(getBudget());
+    if (action === "setBudget") return respond(setBudget(e.parameter.budget));
     if (action === "ping")   return respond({ success: true, message: "Connected!" });
     return respond({ error: "Unknown action" });
   } catch (err) {
@@ -236,4 +241,50 @@ function respond(data) {
   return ContentService
     .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ─── SETTINGS SHEET FOR BUDGET ────────────────────────────
+function getOrCreateSettingsSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SETTINGS_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SETTINGS_SHEET_NAME);
+    sheet.appendRow(["Setting", "Value"]);
+    sheet.getRange(1, 1, 1, 2).setFontWeight("bold");
+    sheet.setColumnWidth(1, 150);
+    sheet.setColumnWidth(2, 150);
+    sheet.appendRow(["Budget", "0"]);
+  }
+  return sheet;
+}
+
+function getBudget() {
+  const sheet = getOrCreateSettingsSheet();
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === "Budget") {
+      return { budget: Number(data[i][1]) || 0 };
+    }
+  }
+
+  // If Budget row doesn't exist, create it
+  sheet.appendRow(["Budget", "0"]);
+  return { budget: 0 };
+}
+
+function setBudget(budgetValue) {
+  const sheet = getOrCreateSettingsSheet();
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === "Budget") {
+      sheet.getRange(i + 1, 2).setValue(Number(budgetValue) || 0);
+      return { success: true, budget: Number(budgetValue) || 0 };
+    }
+  }
+
+  // If Budget row doesn't exist, create it
+  sheet.appendRow(["Budget", Number(budgetValue) || 0]);
+  return { success: true, budget: Number(budgetValue) || 0 };
 }

@@ -1631,6 +1631,7 @@ async function loadFromSheet() {
   showLoading(true);
   setStatus('syncing', 'Loading…');
   try {
+    // Load expenses
     const res = await fetch(`${SCRIPT_URL}?action=getAll`);
     const data = await res.json();
 
@@ -1653,6 +1654,15 @@ async function loadFromSheet() {
         expenses[e.day].push(e);
       }
     });
+
+    // Load budget from Google Sheets
+    const budgetRes = await fetch(`${SCRIPT_URL}?action=getBudget`);
+    const budgetData = await budgetRes.json();
+    if (budgetData.budget !== undefined) {
+      tripBudget = budgetData.budget;
+      localStorage.setItem('coorg_budget', tripBudget);
+    }
+
     saveLocal();
     render();
     setStatus('ok', 'Synced ✓');
@@ -2794,7 +2804,7 @@ function cancelBudgetEdit() {
   document.getElementById('budgetInput').value = '';
 }
 
-function confirmBudgetEdit() {
+async function confirmBudgetEdit() {
   const budgetInput = document.getElementById('budgetInput');
   const newBudget = budgetInput.value.trim();
 
@@ -2811,6 +2821,14 @@ function confirmBudgetEdit() {
 
   tripBudget = budgetAmount;
   localStorage.setItem('coorg_budget', tripBudget);
+
+  // Save budget to Google Sheets
+  try {
+    await fetch(`${SCRIPT_URL}?action=setBudget&budget=${budgetAmount}`);
+  } catch(e) {
+    console.error('Failed to save budget to Google Sheets:', e);
+    // Continue anyway - saved locally
+  }
 
   // Collect all expenses from all days
   let all = [];
