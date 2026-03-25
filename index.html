@@ -882,6 +882,7 @@
   <div class="route">📍 Bangalore → Mysore → Madikeri → Coorg</div>
   <h1>The <span>Coders</span> Trip</h1>
   <div class="dates">2D / 1N &nbsp;·&nbsp; Saturday – Sunday</div>
+  <div class="dates" style="margin-top:4px;font-size:13px;opacity:0.8">28 Mar – 29 Mar 2026</div>
 </div>
 
 <!-- STATUS BAR -->
@@ -1503,9 +1504,10 @@ function cancelInlineEdit(day, id) {
 let multiRowCount = 0;
 
 function addExpenseRow() {
-  // Get current row count
+  // Get current row count from DOM
   const entriesDiv = document.getElementById('multiRowEntries');
-  const currentRowCount = entriesDiv.querySelectorAll('.multi-row-entry').length;
+  const currentRows = entriesDiv.querySelectorAll('.multi-row-entry');
+  const currentRowCount = currentRows.length;
 
   // Limit to 3 rows max
   if (currentRowCount >= 3) {
@@ -1517,7 +1519,7 @@ function addExpenseRow() {
   const container = document.getElementById('multiRowContainer');
   container.classList.add('active');
 
-  // Add new row
+  // Generate unique ID for this row
   multiRowCount++;
   const rowDiv = document.createElement('div');
   rowDiv.className = 'multi-row-entry';
