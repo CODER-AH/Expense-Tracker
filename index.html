@@ -241,6 +241,26 @@
   .sum-card.total-card .amount { color: var(--accent); font-size: 28px; }
   .sum-card .sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
 
+  /* BUDGET CARD */
+  #budgetCard {
+    transition: all 0.3s;
+  }
+  #budgetCard.over-budget {
+    border-color: var(--accent3);
+    background: linear-gradient(135deg, rgba(232,124,78,0.08), rgba(232,124,78,0.05));
+  }
+  #budgetCard.over-budget #budgetRemaining {
+    color: var(--accent3) !important;
+    font-weight: 600;
+  }
+  #budgetCard.within-budget {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(93,186,138,0.08), rgba(93,186,138,0.05));
+  }
+  #budgetCard.within-budget #budgetRemaining {
+    color: var(--accent) !important;
+  }
+
   /* SECTION TITLE */
   .section-title {
     font-family: 'DM Mono', monospace;
@@ -999,6 +1019,13 @@
     <div class="label">Total Spent</div>
     <div class="amount"><span class="currency">₹</span><span id="totalAll">0</span></div>
   </div>
+  <div class="sum-card" id="budgetCard" style="cursor:pointer" onclick="editBudget()">
+    <div class="label">💰 Budget</div>
+    <div class="amount" style="font-size:16px;display:flex;flex-direction:column;gap:4px">
+      <div><span class="currency">₹</span><span id="budgetAmount">0</span></div>
+      <div id="budgetRemaining" style="font-size:12px;font-family:'DM Mono',monospace;color:var(--muted)">Set budget</div>
+    </div>
+  </div>
   <div class="sum-card">
     <div class="label">🍽️ Food</div>
     <div class="amount"><span class="currency">₹</span><span id="totalFood">0</span></div>
@@ -1307,6 +1334,7 @@ let sortOrder = 'desc'; // 'asc' or 'desc'
 let filterBy = 'all';
 let dayFilterBy = 'all'; // New day filter
 let currentPage = 1; // Single page state
+let tripBudget = 0; // Trip budget
 const ITEMS_PER_PAGE = 10;
 
 // ─── INIT ─────────────────────────────────────────────────
@@ -2182,6 +2210,9 @@ function updateSummary() {
   document.getElementById('paidAdham').textContent = paidBy.Adham.toLocaleString('en-IN');
   document.getElementById('paidAakif').textContent = paidBy.Aakif.toLocaleString('en-IN');
   document.getElementById('paidSahlaan').textContent = paidBy.Sahlaan.toLocaleString('en-IN');
+
+  // Update budget card
+  updateBudgetDisplay(total);
 }
 
 // ─── SETTLEMENT ───────────────────────────────────────────
@@ -2485,6 +2516,65 @@ function showToast(msg, type) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.className = 'toast', 2800);
 }
+
+// ─── BUDGET MANAGEMENT ────────────────────────────────────
+function editBudget() {
+  const currentBudget = tripBudget || 0;
+  const newBudget = prompt(`Set trip budget (₹):`, currentBudget);
+
+  if (newBudget === null) return; // Cancelled
+
+  const budgetAmount = parseFloat(newBudget);
+  if (isNaN(budgetAmount) || budgetAmount < 0) {
+    showToast('Invalid budget amount', 'err');
+    return;
+  }
+
+  tripBudget = budgetAmount;
+  localStorage.setItem('coorg_budget', tripBudget);
+
+  const all = [...expenses[1], ...expenses[2]];
+  const total = all.reduce((s, e) => s + (e.amount || 0), 0);
+  updateBudgetDisplay(total);
+
+  showToast('Budget updated!', 'ok');
+}
+
+function updateBudgetDisplay(totalSpent) {
+  const budgetCard = document.getElementById('budgetCard');
+  const budgetAmountEl = document.getElementById('budgetAmount');
+  const budgetRemainingEl = document.getElementById('budgetRemaining');
+
+  if (tripBudget === 0) {
+    budgetAmountEl.textContent = '0';
+    budgetRemainingEl.textContent = 'Set budget';
+    budgetRemainingEl.style.color = 'var(--muted)';
+    budgetCard.classList.remove('over-budget', 'within-budget');
+    return;
+  }
+
+  budgetAmountEl.textContent = tripBudget.toLocaleString('en-IN');
+
+  const remaining = tripBudget - totalSpent;
+
+  if (remaining < 0) {
+    budgetCard.classList.add('over-budget');
+    budgetCard.classList.remove('within-budget');
+    budgetRemainingEl.textContent = `Over by ₹${Math.abs(remaining).toLocaleString('en-IN')}`;
+  } else {
+    budgetCard.classList.add('within-budget');
+    budgetCard.classList.remove('over-budget');
+    budgetRemainingEl.textContent = `₹${remaining.toLocaleString('en-IN')} left`;
+  }
+}
+
+// Load budget from localStorage on init
+window.addEventListener('load', function() {
+  const savedBudget = localStorage.getItem('coorg_budget');
+  if (savedBudget) {
+    tripBudget = parseFloat(savedBudget);
+  }
+});
 
 document.getElementById('inp-amount').addEventListener('keydown', e => {
   if (e.key === 'Enter') addExpenseRow();
