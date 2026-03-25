@@ -1633,9 +1633,10 @@ function render() {
           break;
         case 'time':
         default:
-          // Extract timestamp from ID or use timestamp field
-          valA = a.ts ? new Date(a.ts).getTime() : parseInt((a.id || '').split('_')[1]) || 0;
-          valB = b.ts ? new Date(b.ts).getTime() : parseInt((b.id || '').split('_')[1]) || 0;
+          // Always use ID timestamp (format: exp_1234567890123)
+          // More reliable than parsing locale-formatted timestamp strings
+          valA = parseInt((a.id || 'exp_0').split('_')[1]) || 0;
+          valB = parseInt((b.id || 'exp_0').split('_')[1]) || 0;
           break;
       }
 
