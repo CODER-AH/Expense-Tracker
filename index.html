@@ -1127,10 +1127,31 @@
     <div class="expense-details" id="permanentDeleteDetails">
       <div class="desc"></div>
       <div class="amount"></div>
+      <div class="added-by" style="margin-top:6px;font-size:11px;color:var(--muted)"></div>
+      <div class="paid-by" style="margin-top:4px;font-size:11px;color:var(--muted)"></div>
     </div>
     <div class="confirm-buttons">
       <button class="btn-cancel" onclick="cancelPermanentDelete()">Cancel</button>
       <button class="btn-delete" onclick="confirmPermanentDelete()">Delete Forever</button>
+    </div>
+  </div>
+</div>
+
+<!-- UNARCHIVE CONFIRMATION MODAL -->
+<div class="confirm-overlay hidden" id="unarchiveOverlay">
+  <div class="confirm-box">
+    <div class="icon">↩️</div>
+    <h3>Unarchive Expense?</h3>
+    <p>This will restore the expense to the active list.</p>
+    <div class="expense-details" id="unarchiveDetails">
+      <div class="desc"></div>
+      <div class="amount"></div>
+      <div class="added-by" style="margin-top:6px;font-size:11px;color:var(--muted)"></div>
+      <div class="paid-by" style="margin-top:4px;font-size:11px;color:var(--muted)"></div>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelUnarchive()">Cancel</button>
+      <button class="btn-delete" style="background:var(--accent)" onclick="confirmUnarchive()">Unarchive</button>
     </div>
   </div>
 </div>
@@ -1161,6 +1182,7 @@ let currentUser = '';
 let editingId = null;
 let deleteTarget = null;
 let permanentDeleteTarget = null;
+let unarchiveTarget = null;
 let sortBy = 'time';
 let sortOrder = 'desc'; // 'asc' or 'desc'
 let filterBy = 'all';
@@ -1705,7 +1727,7 @@ function renderArchived() {
       <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
       <td class="amount-col" style="white-space:nowrap">₹${Number(exp.amount).toLocaleString('en-IN')}</td>
       <td style="font-size:11px;color:var(--muted)">Day ${exp.archivedDay}</td>
-      <td><button class="del-btn" onclick="unarchiveExpense('${exp.id}')" title="Unarchive" style="background:var(--accent);color:#0e1412">↩️</button></td>
+      <td><button class="del-btn" onclick="showUnarchiveConfirm('${exp.id}')" title="Unarchive" style="background:var(--accent);color:#0e1412">↩️</button></td>
       <td><button class="del-btn" onclick="showPermanentDeleteConfirm('${exp.id}')" title="Delete Permanently">🗑️</button></td>
     `;
     tbody.appendChild(tr);
@@ -1739,6 +1761,7 @@ async function unarchiveExpense(id) {
 
   saveLocal();
   showLoading(false);
+  unarchiveTarget = null;
   render();
   renderArchived();
 }
@@ -1752,6 +1775,8 @@ function showPermanentDeleteConfirm(id) {
   const detailsEl = document.getElementById('permanentDeleteDetails');
   detailsEl.querySelector('.desc').textContent = exp.desc;
   detailsEl.querySelector('.amount').textContent = `₹${exp.amount.toLocaleString('en-IN')}`;
+  detailsEl.querySelector('.added-by').textContent = `Added by: ${exp.name || '—'}`;
+  detailsEl.querySelector('.paid-by').textContent = `Paid by: ${exp.paidBy || '—'}`;
 
   document.getElementById('permanentDeleteOverlay').classList.remove('hidden');
 }
@@ -1759,6 +1784,36 @@ function showPermanentDeleteConfirm(id) {
 function cancelPermanentDelete() {
   permanentDeleteTarget = null;
   document.getElementById('permanentDeleteOverlay').classList.add('hidden');
+}
+
+function showUnarchiveConfirm(id) {
+  const exp = archivedExpenses.find(e => String(e.id) === String(id));
+  if (!exp) return;
+
+  unarchiveTarget = id;
+
+  const detailsEl = document.getElementById('unarchiveDetails');
+  detailsEl.querySelector('.desc').textContent = exp.desc;
+  detailsEl.querySelector('.amount').textContent = `₹${exp.amount.toLocaleString('en-IN')}`;
+  detailsEl.querySelector('.added-by').textContent = `Added by: ${exp.name || '—'}`;
+  detailsEl.querySelector('.paid-by').textContent = `Paid by: ${exp.paidBy || '—'}`;
+
+  document.getElementById('unarchiveOverlay').classList.remove('hidden');
+}
+
+function cancelUnarchive() {
+  unarchiveTarget = null;
+  document.getElementById('unarchiveOverlay').classList.add('hidden');
+}
+
+async function confirmUnarchive() {
+  if (!unarchiveTarget) return;
+
+  const id = unarchiveTarget;
+
+  document.getElementById('unarchiveOverlay').classList.add('hidden');
+
+  await unarchiveExpense(id);
 }
 
 async function confirmPermanentDelete() {
