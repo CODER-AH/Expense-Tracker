@@ -1,6 +1,6 @@
 // ============================================================
-//  COORG TRIP EXPENSE TRACKER — Google Apps Script (v2)
-//  Changes: Added "Name" column to track who added each expense
+//  COORG TRIP EXPENSE TRACKER — Google Apps Script (v3)
+//  Changes: Added migration for Edited, Archived, and Deleted columns
 //
 //  To update your existing deployment:
 //  1. Paste this into Apps Script (replacing old code)
@@ -50,14 +50,24 @@ function getOrCreateSheet() {
     sheet.setColumnWidth(10, 80);
     sheet.setColumnWidth(11, 80);
   } else {
-    // Migration: Add Archived column if it doesn't exist
+    // Migration: Check and add missing columns
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+    // Add Edited column if it doesn't exist (Column I, index 8)
+    if (headers.length < 9 || headers[8] !== "Edited") {
+      sheet.getRange(1, 9).setValue("Edited");
+      sheet.getRange(1, 9).setFontWeight("bold");
+      sheet.setColumnWidth(9, 80);
+    }
+
+    // Add Archived column if it doesn't exist (Column J, index 9)
     if (headers.length < 10 || headers[9] !== "Archived") {
       sheet.getRange(1, 10).setValue("Archived");
       sheet.getRange(1, 10).setFontWeight("bold");
       sheet.setColumnWidth(10, 80);
     }
-    // Migration: Add Deleted column if it doesn't exist
+
+    // Add Deleted column if it doesn't exist (Column K, index 10)
     if (headers.length < 11 || headers[10] !== "Deleted") {
       sheet.getRange(1, 11).setValue("Deleted");
       sheet.getRange(1, 11).setFontWeight("bold");
