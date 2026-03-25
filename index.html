@@ -1138,9 +1138,8 @@
   <div class="add-form">
     <div>
       <label>Day</label>
-      <select id="inp-day">
-        <option value="1">Day 1 — Sat</option>
-        <option value="2">Day 2 — Sun</option>
+      <select id="inp-day" onchange="handleDaySelect(this)">
+        <!-- Days will be populated dynamically -->
       </select>
     </div>
     <div>
@@ -1198,35 +1197,39 @@
   </div>
 </div>
 
-<div class="section-title" style="cursor:pointer;user-select:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px" onclick="toggleSection('expenseHistory')">
-  <span style="display:flex;align-items:center;gap:4px">
-    📝 Expense History <span id="expenseHistory-icon" style="font-size:12px">▼</span>
-  </span>
-  <span onclick="event.stopPropagation()" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;position:relative">
-    <div class="filter-btn" id="dayFilterBtn" onclick="toggleFilterDropdown('day')">
-      <span id="dayFilterLabel">All Days</span>
-    </div>
-    <div class="filter-dropdown" id="dayFilterDropdown">
-      <div class="filter-option selected" onclick="selectDayFilter('all', 'All Days')">All Days</div>
-      <div class="filter-option" onclick="selectDayFilter('1', 'Day 1 — Sat, 28 Mar')">Day 1 — Sat, 28 Mar</div>
-      <div class="filter-option" onclick="selectDayFilter('2', 'Day 2 — Sun, 29 Mar')">Day 2 — Sun, 29 Mar</div>
-    </div>
-
-    <div class="filter-btn" id="personFilterBtn" onclick="toggleFilterDropdown('person')">
-      <span id="personFilterLabel">All People</span>
-    </div>
-    <div class="filter-dropdown" id="personFilterDropdown">
-      <div class="filter-option selected" onclick="selectPersonFilter('all', 'All People')">All People</div>
-      <div class="filter-option" onclick="selectPersonFilter('Afsar', '👨‍💻 Afsar')">👨‍💻 Afsar</div>
-      <div class="filter-option" onclick="selectPersonFilter('Adham', '👨‍💻 Adham')">👨‍💻 Adham</div>
-      <div class="filter-option" onclick="selectPersonFilter('Aakif', '👨‍💻 Aakif')">👨‍💻 Aakif</div>
-      <div class="filter-option" onclick="selectPersonFilter('Sahlaan', '👨‍⚕️ Sahlaan')">👨‍⚕️ Sahlaan</div>
-    </div>
-  </span>
+<div class="section-title" style="cursor:pointer;user-select:none" onclick="toggleSection('expenseHistory')">
+  📝 Expense History <span id="expenseHistory-icon" style="font-size:12px;margin-left:4px">▼</span>
 </div>
 
 <!-- EXPENSE TABLE -->
 <div class="timeline" id="expenseHistory-section">
+  <!-- FILTERS AND SORT ROW -->
+  <div style="display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-bottom:12px" id="expenseHistory-filters">
+    <div style="position:relative">
+      <div class="filter-btn" id="dayFilterBtn" onclick="toggleFilterDropdown('day')">
+        <span id="dayFilterLabel">All Days</span>
+      </div>
+      <div class="filter-dropdown" id="dayFilterDropdown">
+        <div class="filter-option selected" onclick="selectDayFilter('all', 'All Days')">All Days</div>
+        <div class="filter-option" onclick="selectDayFilter('1', 'Day 1 — Sat, 28 Mar')">Day 1 — Sat, 28 Mar</div>
+        <div class="filter-option" onclick="selectDayFilter('2', 'Day 2 — Sun, 29 Mar')">Day 2 — Sun, 29 Mar</div>
+      </div>
+    </div>
+
+    <div style="position:relative">
+      <div class="filter-btn" id="personFilterBtn" onclick="toggleFilterDropdown('person')">
+        <span id="personFilterLabel">All People</span>
+      </div>
+      <div class="filter-dropdown" id="personFilterDropdown">
+        <div class="filter-option selected" onclick="selectPersonFilter('all', 'All People')">All People</div>
+        <div class="filter-option" onclick="selectPersonFilter('Afsar', '👨‍💻 Afsar')">👨‍💻 Afsar</div>
+        <div class="filter-option" onclick="selectPersonFilter('Adham', '👨‍💻 Adham')">👨‍💻 Adham</div>
+        <div class="filter-option" onclick="selectPersonFilter('Aakif', '👨‍💻 Aakif')">👨‍💻 Aakif</div>
+        <div class="filter-option" onclick="selectPersonFilter('Sahlaan', '👨‍⚕️ Sahlaan')">👨‍⚕️ Sahlaan</div>
+      </div>
+    </div>
+  </div>
+
   <div class="table-wrap">
     <table>
       <thead><tr>
@@ -1398,13 +1401,145 @@ let currentPage = 1; // Single page state
 let tripBudget = 0; // Trip budget
 const ITEMS_PER_PAGE = 10;
 
+// Trip days configuration
+let tripDays = [
+  { day: 1, name: 'Sat', date: '28 Mar' },
+  { day: 2, name: 'Sun', date: '29 Mar' }
+];
+let maxDay = 2;
+
+// Load saved trip days from localStorage
+function loadTripDays() {
+  const saved = localStorage.getItem('coorg_tripDays');
+  if (saved) {
+    tripDays = JSON.parse(saved);
+    maxDay = Math.max(...tripDays.map(d => d.day));
+  }
+}
+
+// Save trip days to localStorage
+function saveTripDays() {
+  localStorage.setItem('coorg_tripDays', JSON.stringify(tripDays));
+}
+
+// Populate day dropdown with dynamic days
+function populateDayDropdown(selectElement) {
+  selectElement.innerHTML = '';
+
+  tripDays.forEach(dayObj => {
+    const option = document.createElement('option');
+    option.value = dayObj.day;
+    option.textContent = `Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})`;
+    selectElement.appendChild(option);
+  });
+
+  // Add "Add New Day" option
+  const addOption = document.createElement('option');
+  addOption.value = 'add';
+  addOption.textContent = '➕ Add New Day';
+  selectElement.appendChild(addOption);
+}
+
+// Handle day select change
+function handleDaySelect(select) {
+  if (select.value === 'add') {
+    addNewDay();
+    // Reset to last actual day
+    select.value = maxDay;
+  }
+}
+
+// Add a new day to the trip
+function addNewDay() {
+  const lastDay = tripDays[tripDays.length - 1];
+  const newDayNum = maxDay + 1;
+
+  // Calculate next day name and date
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  // Parse the last date (e.g., "29 Mar")
+  const lastDateParts = lastDay.date.split(' ');
+  const lastDayOfMonth = parseInt(lastDateParts[0]);
+  const lastMonthName = lastDateParts[1];
+  const lastMonthIndex = months.indexOf(lastMonthName);
+
+  // Calculate next date (assuming 2026)
+  const lastDate = new Date(2026, lastMonthIndex, lastDayOfMonth);
+  const nextDate = new Date(lastDate);
+  nextDate.setDate(nextDate.getDate() + 1);
+
+  const nextDayName = dayNames[nextDate.getDay()];
+  const nextDayOfMonth = nextDate.getDate();
+  const nextMonthName = months[nextDate.getMonth()];
+
+  const newDay = {
+    day: newDayNum,
+    name: nextDayName,
+    date: `${nextDayOfMonth} ${nextMonthName}`
+  };
+
+  tripDays.push(newDay);
+  maxDay = newDayNum;
+
+  // Add to expenses object
+  expenses[newDayNum] = [];
+
+  // Save to localStorage
+  saveTripDays();
+  saveLocal();
+
+  // Re-populate all day dropdowns
+  const mainDaySelect = document.getElementById('inp-day');
+  populateDayDropdown(mainDaySelect);
+  mainDaySelect.value = newDayNum;
+
+  // Update multi-row day dropdowns
+  document.querySelectorAll('.multi-row-entry select[id^="mr-day-"]').forEach(select => {
+    const currentValue = select.value;
+    populateDayDropdown(select);
+    select.value = currentValue;
+  });
+
+  // Update filter dropdown
+  updateFilterOptions();
+
+  showToast(`Added Day ${newDayNum} (${nextDayName}, ${nextDayOfMonth} ${nextMonthName})`);
+}
+
+// Update filter dropdown options with current trip days
+function updateFilterOptions() {
+  const dayFilterDropdown = document.getElementById('dayFilterDropdown');
+  if (!dayFilterDropdown) return;
+
+  // Clear existing options except "All Days"
+  dayFilterDropdown.innerHTML = '<div class="filter-option selected" onclick="selectDayFilter(\'all\', \'All Days\')">All Days</div>';
+
+  // Add options for each trip day
+  tripDays.forEach(dayObj => {
+    const option = document.createElement('div');
+    option.className = 'filter-option';
+    option.onclick = () => selectDayFilter(String(dayObj.day), `Day ${dayObj.day} — ${dayObj.name}, ${dayObj.date}`);
+    option.textContent = `Day ${dayObj.day} — ${dayObj.name}, ${dayObj.date}`;
+    dayFilterDropdown.appendChild(option);
+  });
+}
+
 // ─── INIT ─────────────────────────────────────────────────
 window.onload = () => {
   showLoading(true);
+  loadTripDays();
+
   const saved = localStorage.getItem('coorg_username');
   if (saved) {
     currentUser = saved;
     hideNameOverlay();
+
+    // Populate day dropdown and filters before loading data
+    const mainDaySelect = document.getElementById('inp-day');
+    populateDayDropdown(mainDaySelect);
+    updateFilterOptions();
+
     loadFromSheet();
   } else {
     showLoading(false);
@@ -1477,7 +1612,15 @@ function saveLocal() {
 }
 function loadFromLocal() {
   const saved = localStorage.getItem('coorg_expenses');
-  expenses = saved ? JSON.parse(saved) : { 1: [], 2: [] };
+  if (saved) {
+    expenses = JSON.parse(saved);
+  } else {
+    // Initialize expenses object for all trip days
+    expenses = {};
+    tripDays.forEach(dayObj => {
+      expenses[dayObj.day] = [];
+    });
+  }
 
   const savedArchived = localStorage.getItem('coorg_archived');
   archivedExpenses = savedArchived ? JSON.parse(savedArchived) : [];
@@ -1490,14 +1633,24 @@ async function loadFromSheet() {
   try {
     const res = await fetch(`${SCRIPT_URL}?action=getAll`);
     const data = await res.json();
-    expenses = { 1: [], 2: [] };
+
+    // Initialize expenses object for all trip days
+    expenses = {};
+    tripDays.forEach(dayObj => {
+      expenses[dayObj.day] = [];
+    });
+
     archivedExpenses = [];
     (data.expenses || []).forEach(e => {
-      const day = e.day === 1 || e.day === 2 ? e.day : 1;
+      // Ensure the day exists in our expenses object
+      if (!expenses[e.day]) {
+        expenses[e.day] = [];
+      }
+
       if (e.archived === "Yes") {
-        archivedExpenses.push({ ...e, archivedDay: day });
+        archivedExpenses.push({ ...e, archivedDay: e.day });
       } else {
-        expenses[day].push(e);
+        expenses[e.day].push(e);
       }
     });
     saveLocal();
@@ -1740,12 +1893,20 @@ function addExpenseRow() {
   const amount = document.getElementById('inp-amount').value;
   const paidBy = document.getElementById('inp-paidby').value;
 
+  // Build day options dynamically
+  let dayOptionsHTML = '';
+  tripDays.forEach(dayObj => {
+    const selected = String(dayObj.day) === String(day) ? 'selected' : '';
+    dayOptionsHTML += `<option value="${dayObj.day}" ${selected}>Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})</option>`;
+  });
+  // Add "Add New Day" option
+  dayOptionsHTML += '<option value="add">➕ Add New Day</option>';
+
   rowDiv.innerHTML = `
     <div>
       <label>Day</label>
-      <select id="multi-day-${multiRowCount}">
-        <option value="1" ${day === '1' ? 'selected' : ''}>Day 1</option>
-        <option value="2" ${day === '2' ? 'selected' : ''}>Day 2</option>
+      <select id="mr-day-${multiRowCount}" onchange="handleDaySelect(this)">
+        ${dayOptionsHTML}
       </select>
     </div>
     <div>
@@ -1819,7 +1980,7 @@ async function saveMultipleExpenses() {
   // Collect and validate all entries
   for (let row of rows) {
     const id = row.id.split('-')[2];
-    const day = parseInt(document.getElementById(`multi-day-${id}`)?.value);
+    const day = parseInt(document.getElementById(`mr-day-${id}`)?.value);
     const cat = document.getElementById(`multi-cat-${id}`)?.value;
     const desc = document.getElementById(`multi-desc-${id}`)?.value.trim();
     const amount = parseFloat(document.getElementById(`multi-amount-${id}`)?.value) || 0;
@@ -1946,10 +2107,22 @@ function toggleSection(sectionId) {
     }
     icon.textContent = '▼';
     collapsedSections[sectionId] = false;
+
+    // Show filters for expense history
+    if (sectionId === 'expenseHistory') {
+      const filters = document.getElementById('expenseHistory-filters');
+      if (filters) filters.style.display = 'flex';
+    }
   } else {
     section.style.display = 'none';
     icon.textContent = '▶';
     collapsedSections[sectionId] = true;
+
+    // Hide filters for expense history
+    if (sectionId === 'expenseHistory') {
+      const filters = document.getElementById('expenseHistory-filters');
+      if (filters) filters.style.display = 'none';
+    }
   }
 }
 
@@ -2237,6 +2410,20 @@ function render() {
       `;
       tbody.appendChild(tr);
     });
+
+    // Add total row for filtered expenses
+    const filteredTotal = allExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+    const totalRow = document.createElement('tr');
+    totalRow.className = 'total-row';
+    totalRow.style.fontWeight = 'bold';
+    totalRow.style.backgroundColor = 'rgba(72, 126, 98, 0.15)';
+    totalRow.style.borderTop = '2px solid var(--accent)';
+    totalRow.innerHTML = `
+      <td colspan="7" style="text-align:right;padding-right:12px">Total ${dayFilterBy !== 'all' ? `(Day ${dayFilterBy})` : ''}:</td>
+      <td class="amount-col" style="white-space:nowrap;color:var(--accent)">₹${filteredTotal.toLocaleString('en-IN')}</td>
+      <td colspan="2"></td>
+    `;
+    tbody.appendChild(totalRow);
 
     renderPagination(totalPages);
   }
