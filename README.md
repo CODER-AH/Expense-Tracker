@@ -2,6 +2,8 @@
 
 A beautiful expense tracking app for managing trip expenses with real-time Google Sheets sync.
 
+**Live App:** https://coder-ah.github.io/Expense-Tracker/
+
 ## Features
 
 - ✅ Add, edit, and delete expenses
