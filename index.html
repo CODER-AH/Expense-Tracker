@@ -779,6 +779,64 @@
     color: var(--text);
   }
 
+  /* CUSTOM FILTER BUTTONS */
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 4px 10px 4px 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .filter-btn:hover { border-color: var(--accent); background: var(--card); }
+  .filter-btn::after {
+    content: '▼';
+    font-size: 8px;
+    color: var(--accent);
+  }
+
+  /* FILTER DROPDOWN */
+  .filter-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    background: var(--card);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 6px;
+    min-width: 160px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    display: none;
+  }
+  .filter-dropdown.active { display: block; }
+  .filter-option {
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .filter-option:hover { background: var(--surface); color: var(--accent); }
+  .filter-option.selected {
+    background: rgba(93,186,138,0.15);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
   /* SETTLEMENT */
   .settlement-grid {
     display: grid;
@@ -910,8 +968,7 @@
 <div class="header">
   <div class="route">📍 Bangalore → Mysore → Madikeri → Coorg</div>
   <h1>The <span>Coders</span> Trip</h1>
-  <div class="dates">2D / 1N &nbsp;·&nbsp; Saturday – Sunday</div>
-  <div class="dates" style="margin-top:4px;font-size:13px;opacity:0.8">28 Mar – 29 Mar 2026</div>
+  <div class="dates">Saturday, 28 March – Sunday, 29 March 2026</div>
 </div>
 
 <!-- STATUS BAR -->
@@ -1066,19 +1123,26 @@
   <span style="display:flex;align-items:center;gap:4px">
     📝 Expense History <span id="expenseHistory-icon" style="font-size:12px">▼</span>
   </span>
-  <span onclick="event.stopPropagation()" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-    <select id="dayFilter" onchange="filterByDay()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center;padding-right:26px;">
-      <option value="all">All Days</option>
-      <option value="1">Day 1 — Sat, 28 Mar</option>
-      <option value="2">Day 2 — Sun, 29 Mar</option>
-    </select>
-    <select id="filterSelect" onchange="filterExpenses()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center;padding-right:26px;">
-      <option value="all">All People</option>
-      <option value="Afsar">👨‍💻 Afsar</option>
-      <option value="Adham">👨‍💻 Adham</option>
-      <option value="Aakif">👨‍💻 Aakif</option>
-      <option value="Sahlaan">👨‍⚕️ Sahlaan</option>
-    </select>
+  <span onclick="event.stopPropagation()" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;position:relative">
+    <div class="filter-btn" id="dayFilterBtn" onclick="toggleFilterDropdown('day')">
+      <span id="dayFilterLabel">All Days</span>
+    </div>
+    <div class="filter-dropdown" id="dayFilterDropdown">
+      <div class="filter-option selected" onclick="selectDayFilter('all', 'All Days')">All Days</div>
+      <div class="filter-option" onclick="selectDayFilter('1', 'Day 1 — Sat, 28 Mar')">Day 1 — Sat, 28 Mar</div>
+      <div class="filter-option" onclick="selectDayFilter('2', 'Day 2 — Sun, 29 Mar')">Day 2 — Sun, 29 Mar</div>
+    </div>
+
+    <div class="filter-btn" id="personFilterBtn" onclick="toggleFilterDropdown('person')">
+      <span id="personFilterLabel">All People</span>
+    </div>
+    <div class="filter-dropdown" id="personFilterDropdown">
+      <div class="filter-option selected" onclick="selectPersonFilter('all', 'All People')">All People</div>
+      <div class="filter-option" onclick="selectPersonFilter('Afsar', '👨‍💻 Afsar')">👨‍💻 Afsar</div>
+      <div class="filter-option" onclick="selectPersonFilter('Adham', '👨‍💻 Adham')">👨‍💻 Adham</div>
+      <div class="filter-option" onclick="selectPersonFilter('Aakif', '👨‍💻 Aakif')">👨‍💻 Aakif</div>
+      <div class="filter-option" onclick="selectPersonFilter('Sahlaan', '👨‍⚕️ Sahlaan')">👨‍⚕️ Sahlaan</div>
+    </div>
   </span>
 </div>
 
@@ -2238,14 +2302,69 @@ function sortByColumn(column) {
   render();
 }
 
+// ─── CUSTOM FILTER DROPDOWNS ──────────────────────────────
+function toggleFilterDropdown(type) {
+  const dropdown = document.getElementById(`${type}FilterDropdown`);
+  const isActive = dropdown.classList.contains('active');
+
+  // Close all dropdowns first
+  document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('active'));
+
+  // Toggle the clicked dropdown
+  if (!isActive) {
+    dropdown.classList.add('active');
+  }
+}
+
+function selectDayFilter(value, label) {
+  dayFilterBy = value;
+  document.getElementById('dayFilterLabel').textContent = label;
+
+  // Update selected state
+  document.querySelectorAll('#dayFilterDropdown .filter-option').forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+
+  // Close dropdown
+  document.getElementById('dayFilterDropdown').classList.remove('active');
+
+  currentPage = 1;
+  render();
+}
+
+function selectPersonFilter(value, label) {
+  filterBy = value;
+  document.getElementById('personFilterLabel').textContent = label;
+
+  // Update selected state
+  document.querySelectorAll('#personFilterDropdown .filter-option').forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+
+  // Close dropdown
+  document.getElementById('personFilterDropdown').classList.remove('active');
+
+  currentPage = 1;
+  render();
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.filter-btn') && !e.target.closest('.filter-dropdown')) {
+    document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('active'));
+  }
+});
+
 function filterExpenses() {
-  filterBy = document.getElementById('filterSelect').value;
+  filterBy = document.getElementById('filterSelect')?.value || filterBy;
   currentPage = 1; // Reset to first page
   render();
 }
 
 function filterByDay() {
-  dayFilterBy = document.getElementById('dayFilter').value;
+  dayFilterBy = document.getElementById('dayFilter')?.value || dayFilterBy;
   currentPage = 1; // Reset to first page
   render();
 }
