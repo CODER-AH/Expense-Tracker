@@ -1061,22 +1061,28 @@
   <div class="pagination" id="expenses-pagination"></div>
 </div>
 
-<!-- NOTES -->
-<div class="notes-bar">
-  <div class="note-item">✔️ Carry cash for jeep at Mandalpatti (~₹2500 shared)</div>
-  <div class="note-item">✔️ Abbey Falls entry: ₹10/person + ₹50 parking</div>
-  <div class="note-item">✔️ Raja's Seat entry: ₹20/person</div>
-  <div class="note-item">⛽ Fuel up at Mysore & Kushalnagar</div>
-  <div class="note-item">🌄 Ghat roads after Kushalnagar — drive safe!</div>
-</div>
-
-<!-- ARCHIVED SECTION -->
-<div style="max-width:860px;margin:32px auto 0;text-align:center">
+<!-- TOGGLE BUTTONS -->
+<div style="max-width:860px;margin:32px auto 0;text-align:center;display:flex;gap:12px;justify-content:center">
+  <button class="add-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="toggleNotes()">
+    <span id="notesToggleBtn">📝 Show Notes</span>
+  </button>
   <button class="add-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="toggleArchived()">
     <span id="archivedToggleBtn">🗃️ Show Archived (<span id="archivedCount">0</span>)</span>
   </button>
 </div>
 
+<!-- NOTES SECTION -->
+<div class="notes-container" id="notesContainer" style="display:none;max-width:860px;margin:16px auto">
+  <div class="notes-bar">
+    <div class="note-item">✔️ Carry cash for jeep at Mandalpatti (~₹2500 shared)</div>
+    <div class="note-item">✔️ Abbey Falls entry: ₹10/person + ₹50 parking</div>
+    <div class="note-item">✔️ Raja's Seat entry: ₹20/person</div>
+    <div class="note-item">⛽ Fuel up at Mysore & Kushalnagar</div>
+    <div class="note-item">🌄 Ghat roads after Kushalnagar — drive safe!</div>
+  </div>
+</div>
+
+<!-- ARCHIVED SECTION -->
 <div class="archived-container" id="archivedContainer" style="display:none;max-width:860px;margin:16px auto">
   <div class="timeline">
     <div class="table-wrap">
@@ -1189,6 +1195,7 @@ let filterBy = 'all';
 let dayFilterBy = 'all'; // New day filter
 let currentPage = 1; // Single page state
 let showArchivedSection = false;
+let showNotesSection = false;
 const ITEMS_PER_PAGE = 10;
 
 // ─── INIT ─────────────────────────────────────────────────
@@ -1682,17 +1689,47 @@ async function confirmDelete() {
 // ─── ARCHIVED FUNCTIONS ───────────────────────────────────
 function toggleArchived() {
   const container = document.getElementById('archivedContainer');
+  const notesContainer = document.getElementById('notesContainer');
   const btn = document.getElementById('archivedToggleBtn');
   const count = archivedExpenses.length;
 
   showArchivedSection = !showArchivedSection;
 
   if (showArchivedSection) {
+    // Close notes if open
+    if (showNotesSection) {
+      showNotesSection = false;
+      notesContainer.style.display = 'none';
+      document.getElementById('notesToggleBtn').textContent = '📝 Show Notes';
+    }
     container.style.display = 'block';
     btn.innerHTML = `🗃️ Hide Archived (<span id="archivedCount">${count}</span>)`;
   } else {
     container.style.display = 'none';
     btn.innerHTML = `🗃️ Show Archived (<span id="archivedCount">${count}</span>)`;
+  }
+}
+
+function toggleNotes() {
+  const container = document.getElementById('notesContainer');
+  const archivedContainer = document.getElementById('archivedContainer');
+  const btn = document.getElementById('notesToggleBtn');
+
+  showNotesSection = !showNotesSection;
+
+  if (showNotesSection) {
+    // Close archived if open
+    if (showArchivedSection) {
+      showArchivedSection = false;
+      archivedContainer.style.display = 'none';
+      const count = archivedExpenses.length;
+      document.getElementById('archivedToggleBtn').innerHTML = `🗃️ Show Archived (<span id="archivedCount">${count}</span>)`;
+    }
+    container.style.display = 'block';
+    btn.textContent = '📝 Hide Notes';
+  } else {
+    container.style.display = 'none';
+    btn.textContent = '📝 Show Notes';
   }
 }
 
