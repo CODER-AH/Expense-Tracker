@@ -1877,15 +1877,18 @@ async function saveEdit() {
     return;
   }
 
-  showLoading(true);
-  setStatus('syncing', 'Saving…');
-
   const exp = expenses[currentEditDay].find(e => String(e.id) === String(currentEditId));
   if (!exp) {
-    showLoading(false);
     showToast('Expense not found', 'err');
     return;
   }
+
+  // Close dialog immediately
+  document.getElementById('editOverlay').classList.add('hidden');
+
+  // Show loading and start sync
+  showLoading(true);
+  setStatus('syncing', 'Saving…');
 
   // Update local data
   exp.desc = desc;
@@ -1916,7 +1919,6 @@ async function saveEdit() {
     showToast('Failed to update', 'err');
   } finally {
     showLoading(false);
-    document.getElementById('editOverlay').classList.add('hidden');
     currentEditDay = null;
     currentEditId = null;
   }
