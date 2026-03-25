@@ -737,7 +737,7 @@
     </div>
     <div>
       <label>Description</label>
-      <input type="text" id="inp-desc" placeholder="e.g. Masala Dosa at Mylari" />
+      <input type="text" id="inp-desc" placeholder="e.g. Masala Dosa at Mylari" maxlength="300" />
     </div>
     <div>
       <label>Category</label>
@@ -774,7 +774,14 @@
 </div>
 
 <div class="section-title">📝 Expense History
-  <select id="sortSelect" onchange="sortExpenses()" style="margin-left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;">
+  <select id="filterSelect" onchange="filterExpenses()" style="margin-left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;">
+    <option value="all">All People</option>
+    <option value="Afsar">Afsar Only</option>
+    <option value="Adham">Adham Only</option>
+    <option value="Aakif">Aakif Only</option>
+    <option value="Sehlaan">Sehlaan Only</option>
+  </select>
+  <select id="sortSelect" onchange="sortExpenses()" style="margin-left:8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;">
     <option value="time">Sort by Time</option>
     <option value="name">Sort by Name</option>
     <option value="amount">Sort by Amount</option>
@@ -861,6 +868,7 @@ let isBusy = false;
 let editingId = null;
 let deleteTarget = null;
 let sortBy = 'time';
+let filterBy = 'all';
 
 // ─── INIT ─────────────────────────────────────────────────
 window.onload = () => {
@@ -1055,7 +1063,7 @@ function startInlineEdit(day, id) {
 
   row.innerHTML = `
     <td class="num-col"></td>
-    <td><input class="edit-input" id="edit-desc-${id}" value="${exp.desc}" /></td>
+    <td><input class="edit-input" id="edit-desc-${id}" value="${exp.desc}" maxlength="300" /></td>
     <td>
       <select class="edit-select" id="edit-cat-${id}">
         <option value="food" ${exp.cat === 'food' ? 'selected' : ''}>🍽️ Food</option>
@@ -1180,8 +1188,13 @@ function render() {
     tbody.innerHTML = '';
     let dayTotal = 0;
 
-    // Sort expenses
+    // Filter expenses
     let dayExpenses = [...expenses[day]];
+    if (filterBy !== 'all') {
+      dayExpenses = dayExpenses.filter(e => e.name === filterBy);
+    }
+
+    // Sort expenses
     if (sortBy === 'name') {
       dayExpenses.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     } else if (sortBy === 'amount') {
@@ -1191,7 +1204,10 @@ function render() {
     if (dayExpenses.length === 0) {
       const tr = document.createElement('tr');
       tr.className = 'empty-row';
-      tr.innerHTML = `<td colspan="9">No expenses yet for Day ${day} — add one above!</td>`;
+      const msg = filterBy !== 'all'
+        ? `No expenses from ${filterBy} for Day ${day}`
+        : `No expenses yet for Day ${day} — add one above!`;
+      tr.innerHTML = `<td colspan="9">${msg}</td>`;
       tbody.appendChild(tr);
     } else {
       dayExpenses.forEach((exp, idx) => {
@@ -1278,6 +1294,11 @@ function updateSummary() {
 // ─── SORT ─────────────────────────────────────────────────
 function sortExpenses() {
   sortBy = document.getElementById('sortSelect').value;
+  render();
+}
+
+function filterExpenses() {
+  filterBy = document.getElementById('filterSelect').value;
   render();
 }
 
