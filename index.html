@@ -282,6 +282,13 @@
     outline: none;
     transition: border-color 0.15s;
   }
+  .multi-row-entry select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg fill='%236b8a78' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 32px;
+  }
   .multi-row-entry input:focus,
   .multi-row-entry select:focus {
     border-color: var(--accent);
@@ -319,6 +326,13 @@
     font-size: 13px;
     outline: none;
     transition: border-color 0.15s;
+  }
+  .add-form select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg fill='%236b8a78' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 32px;
   }
   .add-form input:focus, .add-form select:focus { border-color: var(--accent); }
   .add-form select option { background: var(--surface); }
@@ -649,6 +663,11 @@
     font-size: 13px;
     outline: none;
     width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg fill='%236b8a78' height='18' viewBox='0 0 24 24' width='18' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    padding-right: 28px;
   }
   .edit-actions {
     display: flex;
@@ -1007,7 +1026,7 @@
 </div>
 
 <div class="section-title">📝 Expense History
-  <select id="filterSelect" onchange="filterExpenses()" style="margin-left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;">
+  <select id="filterSelect" onchange="filterExpenses()" style="margin-left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center;padding-right:26px;">
     <option value="all">All People</option>
     <option value="Afsar">Afsar</option>
     <option value="Adham">Adham</option>
