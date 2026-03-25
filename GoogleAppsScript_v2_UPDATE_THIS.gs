@@ -1,6 +1,10 @@
 // ============================================================
 //  COORG TRIP EXPENSE TRACKER — Google Apps Script (v3)
-//  Changes: Added migration for Edited, Archived, and Deleted columns
+//  Changes:
+//  - Proper migration from 9-column to 11-column schema
+//  - Inserts "Edited" column between Timestamp and Archived
+//  - Adds "Deleted" column after Archived
+//  - Preserves all existing Archived data in correct position
 //
 //  To update your existing deployment:
 //  1. Paste this into Apps Script (replacing old code)
@@ -52,26 +56,55 @@ function getOrCreateSheet() {
   } else {
     // Migration: Check and add missing columns
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const lastRow = sheet.getLastRow();
+    let needsMigration = false;
 
-    // Add Edited column if it doesn't exist (Column I, index 8)
-    if (headers.length < 9 || headers[8] !== "Edited") {
+    // Check if we need to migrate from old schema
+    // Old schema: ID, Day, Name, Description, Category, Amount, Paid By, Timestamp, Archived
+    // New schema: ID, Day, Name, Description, Category, Amount, Paid By, Timestamp, Edited, Archived, Deleted
+
+    if (headers.length === 9 && headers[8] === "Archived") {
+      // Old schema detected - need to insert Edited column and add Deleted column
+      needsMigration = true;
+
+      // Insert "Edited" column at position 9 (before Archived)
+      sheet.insertColumnAfter(8);
       sheet.getRange(1, 9).setValue("Edited");
       sheet.getRange(1, 9).setFontWeight("bold");
       sheet.setColumnWidth(9, 80);
-    }
 
-    // Add Archived column if it doesn't exist (Column J, index 9)
-    if (headers.length < 10 || headers[9] !== "Archived") {
-      sheet.getRange(1, 10).setValue("Archived");
-      sheet.getRange(1, 10).setFontWeight("bold");
-      sheet.setColumnWidth(10, 80);
-    }
-
-    // Add Deleted column if it doesn't exist (Column K, index 10)
-    if (headers.length < 11 || headers[10] !== "Deleted") {
+      // Now Archived is at column 10, add Deleted at column 11
       sheet.getRange(1, 11).setValue("Deleted");
       sheet.getRange(1, 11).setFontWeight("bold");
       sheet.setColumnWidth(11, 80);
+
+      // Clear the inserted Edited column cells (will be empty for existing rows)
+      if (lastRow > 1) {
+        sheet.getRange(2, 9, lastRow - 1, 1).setValue("");
+      }
+    } else {
+      // Add individual missing columns if needed
+
+      // Add Edited column if it doesn't exist (Column I, index 8)
+      if (headers.length < 9 || headers[8] !== "Edited") {
+        sheet.getRange(1, 9).setValue("Edited");
+        sheet.getRange(1, 9).setFontWeight("bold");
+        sheet.setColumnWidth(9, 80);
+      }
+
+      // Add Archived column if it doesn't exist (Column J, index 9)
+      if (headers.length < 10 || headers[9] !== "Archived") {
+        sheet.getRange(1, 10).setValue("Archived");
+        sheet.getRange(1, 10).setFontWeight("bold");
+        sheet.setColumnWidth(10, 80);
+      }
+
+      // Add Deleted column if it doesn't exist (Column K, index 10)
+      if (headers.length < 11 || headers[10] !== "Deleted") {
+        sheet.getRange(1, 11).setValue("Deleted");
+        sheet.getRange(1, 11).setFontWeight("bold");
+        sheet.setColumnWidth(11, 80);
+      }
     }
   }
   return sheet;
