@@ -1026,7 +1026,12 @@
 </div>
 
 <div class="section-title">📝 Expense History
-  <select id="filterSelect" onchange="filterExpenses()" style="margin-left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center;padding-right:26px;">
+  <select id="dayFilter" onchange="filterByDay()" style="margin-left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center;padding-right:26px;">
+    <option value="all">All Days</option>
+    <option value="1">Day 1 — Sat, 28 Mar</option>
+    <option value="2">Day 2 — Sun, 29 Mar</option>
+  </select>
+  <select id="filterSelect" onchange="filterExpenses()" style="margin-left:8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center;padding-right:26px;">
     <option value="all">All People</option>
     <option value="Afsar">👨‍💻 Afsar</option>
     <option value="Adham">👨‍💻 Adham</option>
@@ -1035,13 +1040,13 @@
   </select>
 </div>
 
-<!-- EXPENSE TABLES -->
+<!-- EXPENSE TABLE -->
 <div class="timeline">
-  <div class="day-label">🗓 Day 1 — Saturday, 28 Mar 2026 <span class="day-total" id="day1-total">₹0</span></div>
   <div class="table-wrap">
     <table>
       <thead><tr>
         <th style="white-space:nowrap">#</th>
+        <th style="white-space:nowrap">Day</th>
         <th class="sortable" onclick="sortByColumn('desc')" style="white-space:nowrap">Description</th>
         <th class="sortable" onclick="sortByColumn('cat')" style="white-space:nowrap">Category</th>
         <th class="sortable" onclick="sortByColumn('name')" style="white-space:nowrap">Added By</th>
@@ -1050,28 +1055,10 @@
         <th class="sortable" onclick="sortByColumn('amount')" style="text-align:right;white-space:nowrap">Amount</th>
         <th style="white-space:nowrap"></th><th style="white-space:nowrap"></th>
       </tr></thead>
-      <tbody id="day1-body"></tbody>
+      <tbody id="expenses-body"></tbody>
     </table>
   </div>
-  <div class="pagination" id="day1-pagination"></div>
-
-  <div class="day-label" style="margin-top:18px">🗓 Day 2 — Sunday, 29 Mar 2026 <span class="day-total" id="day2-total">₹0</span></div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th style="white-space:nowrap">#</th>
-        <th class="sortable" onclick="sortByColumn('desc')" style="white-space:nowrap">Description</th>
-        <th class="sortable" onclick="sortByColumn('cat')" style="white-space:nowrap">Category</th>
-        <th class="sortable" onclick="sortByColumn('name')" style="white-space:nowrap">Added By</th>
-        <th class="sortable" onclick="sortByColumn('paidBy')" style="white-space:nowrap">Paid By</th>
-        <th class="sortable" onclick="sortByColumn('time')" style="white-space:nowrap">Time</th>
-        <th class="sortable" onclick="sortByColumn('amount')" style="text-align:right;white-space:nowrap">Amount</th>
-        <th style="white-space:nowrap"></th><th style="white-space:nowrap"></th>
-      </tr></thead>
-      <tbody id="day2-body"></tbody>
-    </table>
-  </div>
-  <div class="pagination" id="day2-pagination"></div>
+  <div class="pagination" id="expenses-pagination"></div>
 </div>
 
 <!-- NOTES -->
@@ -1177,7 +1164,8 @@ let permanentDeleteTarget = null;
 let sortBy = 'time';
 let sortOrder = 'desc'; // 'asc' or 'desc'
 let filterBy = 'all';
-let currentPage = { 1: 1, 2: 1 };
+let dayFilterBy = 'all'; // New day filter
+let currentPage = 1; // Single page state
 let showArchivedSection = false;
 const ITEMS_PER_PAGE = 10;
 
@@ -1800,141 +1788,145 @@ async function confirmPermanentDelete() {
 
 // ─── RENDER ───────────────────────────────────────────────
 function render() {
-  [1, 2].forEach(day => {
-    const tbody = document.getElementById(`day${day}-body`);
-    tbody.innerHTML = '';
-    let dayTotal = 0;
+  const tbody = document.getElementById('expenses-body');
+  tbody.innerHTML = '';
 
-    // Filter expenses
-    let dayExpenses = [...expenses[day]];
-    if (filterBy !== 'all') {
-      dayExpenses = dayExpenses.filter(e => e.name === filterBy);
+  // Combine all expenses with day property
+  let allExpenses = [];
+  [1, 2].forEach(day => {
+    expenses[day].forEach(exp => {
+      allExpenses.push({ ...exp, day });
+    });
+  });
+
+  // Filter by day
+  if (dayFilterBy !== 'all') {
+    allExpenses = allExpenses.filter(e => e.day === parseInt(dayFilterBy));
+  }
+
+  // Filter by person
+  if (filterBy !== 'all') {
+    allExpenses = allExpenses.filter(e => e.name === filterBy);
+  }
+
+  // Sort expenses
+  allExpenses.sort((a, b) => {
+    let valA, valB;
+
+    switch(sortBy) {
+      case 'desc':
+        valA = (a.desc || '').toLowerCase();
+        valB = (b.desc || '').toLowerCase();
+        break;
+      case 'cat':
+        valA = (a.cat || '').toLowerCase();
+        valB = (b.cat || '').toLowerCase();
+        break;
+      case 'name':
+        valA = (a.name || '').toLowerCase();
+        valB = (b.name || '').toLowerCase();
+        break;
+      case 'paidBy':
+        valA = (a.paidBy || '').toLowerCase();
+        valB = (b.paidBy || '').toLowerCase();
+        break;
+      case 'amount':
+        valA = a.amount || 0;
+        valB = b.amount || 0;
+        break;
+      case 'time':
+      default:
+        valA = parseInt((a.id || 'exp_0').split('_')[1]) || 0;
+        valB = parseInt((b.id || 'exp_0').split('_')[1]) || 0;
+        break;
     }
 
-    // Sort expenses
-    dayExpenses.sort((a, b) => {
-      let valA, valB;
+    if (sortBy === 'amount' || sortBy === 'time') {
+      return sortOrder === 'asc' ? valA - valB : valB - valA;
+    } else {
+      const comparison = valA < valB ? -1 : valA > valB ? 1 : 0;
+      return sortOrder === 'asc' ? comparison : -comparison;
+    }
+  });
 
-      switch(sortBy) {
-        case 'desc':
-          valA = (a.desc || '').toLowerCase();
-          valB = (b.desc || '').toLowerCase();
-          break;
-        case 'cat':
-          valA = (a.cat || '').toLowerCase();
-          valB = (b.cat || '').toLowerCase();
-          break;
-        case 'name':
-          valA = (a.name || '').toLowerCase();
-          valB = (b.name || '').toLowerCase();
-          break;
-        case 'paidBy':
-          valA = (a.paidBy || '').toLowerCase();
-          valB = (b.paidBy || '').toLowerCase();
-          break;
-        case 'amount':
-          valA = a.amount || 0;
-          valB = b.amount || 0;
-          break;
-        case 'time':
-        default:
-          // Always use ID timestamp (format: exp_1234567890123)
-          // More reliable than parsing locale-formatted timestamp strings
-          valA = parseInt((a.id || 'exp_0').split('_')[1]) || 0;
-          valB = parseInt((b.id || 'exp_0').split('_')[1]) || 0;
-          break;
+  if (allExpenses.length === 0) {
+    const tr = document.createElement('tr');
+    tr.className = 'empty-row';
+    const msg = filterBy !== 'all'
+      ? `No expenses from ${filterBy}`
+      : dayFilterBy !== 'all'
+      ? `No expenses for Day ${dayFilterBy}`
+      : `No expenses yet — add one above!`;
+    tr.innerHTML = `<td colspan="10">${msg}</td>`;
+    tbody.appendChild(tr);
+    renderPagination(0);
+  } else {
+    // Pagination
+    const totalPages = Math.ceil(allExpenses.length / ITEMS_PER_PAGE);
+    const page = currentPage || 1;
+    const startIdx = (page - 1) * ITEMS_PER_PAGE;
+    const endIdx = startIdx + ITEMS_PER_PAGE;
+    const paginatedExpenses = allExpenses.slice(startIdx, endIdx);
+
+    paginatedExpenses.forEach((exp, idx) => {
+      const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
+
+      // Format time without seconds
+      let timeStr = '—';
+      if (exp.ts) {
+        try {
+          const parts = exp.ts.split(',');
+          if (parts.length >= 2) {
+            const timePart = parts[1].trim();
+            const timeMatch = timePart.match(/(\d{1,2}:\d{2})/);
+            if (timeMatch) {
+              timeStr = timeMatch[1];
+              if (timePart.toLowerCase().includes('am')) timeStr += ' AM';
+              else if (timePart.toLowerCase().includes('pm')) timeStr += ' PM';
+            }
+          }
+        } catch(e) {
+          timeStr = '—';
+        }
       }
 
-      if (sortBy === 'amount' || sortBy === 'time') {
-        return sortOrder === 'asc' ? valA - valB : valB - valA;
-      } else {
-        const comparison = valA < valB ? -1 : valA > valB ? 1 : 0;
-        return sortOrder === 'asc' ? comparison : -comparison;
-      }
+      const tr = document.createElement('tr');
+      tr.id = `row-${exp.id}`;
+
+      // Check if user can edit
+      const canEdit = currentUser === exp.name;
+      const editIcon = canEdit ? '✏️' : '';
+
+      // Edited badge
+      const editedBadge = exp.edited === 'Yes' ? '<span class="edited-badge">EDITED</span>' : '';
+
+      // Description with truncation
+      const descId = `desc-${exp.id}`;
+      const showTruncated = exp.desc.length > 100;
+
+      tr.innerHTML = `
+        <td class="num-col">${startIdx + idx + 1}</td>
+        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">Day ${exp.day}</td>
+        <td>
+          ${editedBadge ? `<div style="margin-bottom:4px">${editedBadge}</div>` : ''}
+          <div id="${descId}" class="${showTruncated ? 'desc-truncated' : 'desc-full'}">
+            ${exp.desc}
+          </div>
+          ${showTruncated ? `<span class="show-more-btn" onclick="toggleDesc('${descId}')">Show more...</span>` : ''}
+        </td>
+        <td style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
+        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
+        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
+        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
+        <td class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
+        <td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${exp.day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>
+        <td><button class="del-btn" onclick="showDeleteConfirm(${exp.day}, '${exp.id}')" title="Archive">🗃️</button></td>
+      `;
+      tbody.appendChild(tr);
     });
 
-    if (dayExpenses.length === 0) {
-      const tr = document.createElement('tr');
-      tr.className = 'empty-row';
-      const msg = filterBy !== 'all'
-        ? `No expenses from ${filterBy} for Day ${day}`
-        : `No expenses yet for Day ${day} — add one above!`;
-      tr.innerHTML = `<td colspan="9">${msg}</td>`;
-      tbody.appendChild(tr);
-      renderPagination(day, 0);
-    } else {
-      // Pagination
-      const totalPages = Math.ceil(dayExpenses.length / ITEMS_PER_PAGE);
-      const page = currentPage[day] || 1;
-      const startIdx = (page - 1) * ITEMS_PER_PAGE;
-      const endIdx = startIdx + ITEMS_PER_PAGE;
-      const paginatedExpenses = dayExpenses.slice(startIdx, endIdx);
-
-      paginatedExpenses.forEach((exp, idx) => {
-        dayTotal += exp.amount || 0;
-        const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
-
-        // Format time without seconds
-        let timeStr = '—';
-        if (exp.ts) {
-          try {
-            const parts = exp.ts.split(',');
-            if (parts.length >= 2) {
-              const timePart = parts[1].trim();
-              const timeMatch = timePart.match(/(\d{1,2}:\d{2})/);
-              if (timeMatch) {
-                timeStr = timeMatch[1];
-                if (timePart.toLowerCase().includes('am')) timeStr += ' AM';
-                else if (timePart.toLowerCase().includes('pm')) timeStr += ' PM';
-              }
-            }
-          } catch(e) {
-            timeStr = '—';
-          }
-        }
-
-        const tr = document.createElement('tr');
-        tr.id = `row-${exp.id}`;
-
-        // Check if user can edit
-        const canEdit = currentUser === exp.name;
-        const editIcon = canEdit ? '✏️' : '';
-
-        // Edited badge
-        const editedBadge = exp.edited === 'Yes' ? '<span class="edited-badge">EDITED</span>' : '';
-
-        // Description with truncation
-        const descId = `desc-${exp.id}`;
-        const showTruncated = exp.desc.length > 100;
-
-        tr.innerHTML = `
-          <td class="num-col">${startIdx + idx + 1}</td>
-          <td>
-            ${editedBadge ? `<div style="margin-bottom:4px">${editedBadge}</div>` : ''}
-            <div id="${descId}" class="${showTruncated ? 'desc-truncated' : 'desc-full'}">
-              ${exp.desc}
-            </div>
-            ${showTruncated ? `<span class="show-more-btn" onclick="toggleDesc('${descId}')">Show more...</span>` : ''}
-          </td>
-          <td style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
-          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
-          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
-          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
-          <td class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
-          <td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>
-          <td><button class="del-btn" onclick="showDeleteConfirm(${day}, '${exp.id}')" title="Archive">🗃️</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      // Calculate total for all filtered items (not just current page)
-      dayTotal = dayExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-
-      renderPagination(day, totalPages);
-    }
-    document.getElementById(`day${day}-total`).textContent =
-      dayTotal > 0 ? '₹' + dayTotal.toLocaleString('en-IN') : '₹0';
-  });
+    renderPagination(totalPages);
+  }
   updateSummary();
   updateSettlement();
   renderArchived();
@@ -2113,6 +2105,13 @@ function sortByColumn(column) {
 
 function filterExpenses() {
   filterBy = document.getElementById('filterSelect').value;
+  currentPage = 1; // Reset to first page
+  render();
+}
+
+function filterByDay() {
+  dayFilterBy = document.getElementById('dayFilter').value;
+  currentPage = 1; // Reset to first page
   render();
 }
 
@@ -2132,18 +2131,18 @@ function toggleDesc(descId) {
 }
 
 // ─── PAGINATION ───────────────────────────────────────────
-function renderPagination(day, totalPages) {
-  const container = document.getElementById(`day${day}-pagination`);
+function renderPagination(totalPages) {
+  const container = document.getElementById('expenses-pagination');
   if (totalPages <= 1) {
     container.innerHTML = '';
     return;
   }
 
-  const page = currentPage[day] || 1;
+  const page = currentPage || 1;
   let html = '';
 
   // Previous button
-  html += `<button class="page-btn" onclick="goToPage(${day}, ${page - 1})" ${page === 1 ? 'disabled' : ''}>‹ Prev</button>`;
+  html += `<button class="page-btn" onclick="goToPage(${page - 1})" ${page === 1 ? 'disabled' : ''}>‹ Prev</button>`;
 
   // Page numbers
   const maxVisible = 7;
@@ -2155,34 +2154,34 @@ function renderPagination(day, totalPages) {
   }
 
   if (startPage > 1) {
-    html += `<button class="page-btn" onclick="goToPage(${day}, 1)">1</button>`;
+    html += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
     if (startPage > 2) {
       html += `<span style="color:var(--muted);padding:0 4px">...</span>`;
     }
   }
 
   for (let i = startPage; i <= endPage; i++) {
-    html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="goToPage(${day}, ${i})">${i}</button>`;
+    html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
   }
 
   if (endPage < totalPages) {
     if (endPage < totalPages - 1) {
       html += `<span style="color:var(--muted);padding:0 4px">...</span>`;
     }
-    html += `<button class="page-btn" onclick="goToPage(${day}, ${totalPages})">${totalPages}</button>`;
+    html += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
   }
 
   // Next button
-  html += `<button class="page-btn" onclick="goToPage(${day}, ${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next ›</button>`;
+  html += `<button class="page-btn" onclick="goToPage(${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next ›</button>`;
 
   container.innerHTML = html;
 }
 
-function goToPage(day, page) {
-  currentPage[day] = page;
+function goToPage(page) {
+  currentPage = page;
   render();
   // Scroll to top of table
-  document.getElementById(`day${day}-body`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('expenses-body').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ─── UI HELPERS ───────────────────────────────────────────
