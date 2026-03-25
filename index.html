@@ -234,11 +234,31 @@
     color: #fff;
   }
   .sum-card .amount .currency { font-size: 14px; color: var(--muted); }
+  .sum-card.big-card {
+    grid-column: span 2;
+  }
+  .sum-card.big-card .amount {
+    font-size: 32px;
+  }
+  .sum-card.big-card .amount .currency {
+    font-size: 18px;
+  }
   .sum-card.total-card {
     background: linear-gradient(135deg, #1c3028, #243d30);
     border-color: var(--accent);
+    transition: all 0.3s;
   }
-  .sum-card.total-card .amount { color: var(--accent); font-size: 28px; }
+  .sum-card.total-card .amount { color: var(--accent); }
+  .sum-card.total-card.near-budget {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.05));
+  }
+  .sum-card.total-card.near-budget .amount { color: #f59e0b; }
+  .sum-card.total-card.over-budget {
+    border-color: var(--accent3);
+    background: linear-gradient(135deg, rgba(232,124,78,0.08), rgba(232,124,78,0.05));
+  }
+  .sum-card.total-card.over-budget .amount { color: var(--accent3); }
   .sum-card .sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
 
   /* BUDGET CARD */
@@ -338,6 +358,16 @@
   .multi-row-entry input:focus,
   .multi-row-entry select:focus {
     border-color: var(--accent);
+  }
+
+  /* REMOVE NUMBER INPUT SPINNERS */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type=number] {
+    -moz-appearance: textfield;
   }
   .multi-row-entry select option {
     background: var(--surface);
@@ -1015,13 +1045,13 @@
 
 <!-- SUMMARY CARDS -->
 <div class="summary-grid" id="insights-section">
-  <div class="sum-card total-card">
+  <div class="sum-card total-card big-card" id="totalCard">
     <div class="label">Total Spent</div>
     <div class="amount"><span class="currency">₹</span><span id="totalAll">0</span></div>
   </div>
-  <div class="sum-card" id="budgetCard" style="cursor:pointer" onclick="editBudget()">
+  <div class="sum-card big-card" id="budgetCard" style="cursor:pointer" onclick="editBudget()">
     <div class="label">💰 Budget</div>
-    <div class="amount" style="font-size:16px;display:flex;flex-direction:column;gap:4px">
+    <div class="amount" style="display:flex;flex-direction:column;gap:4px">
       <div><span class="currency">₹</span><span id="budgetAmount">0</span></div>
       <div id="budgetRemaining" style="font-size:12px;font-family:'DM Mono',monospace;color:var(--muted)">Set budget</div>
     </div>
@@ -2577,6 +2607,7 @@ function confirmBudgetEdit() {
 
 function updateBudgetDisplay(totalSpent) {
   const budgetCard = document.getElementById('budgetCard');
+  const totalCard = document.getElementById('totalCard');
   const budgetAmountEl = document.getElementById('budgetAmount');
   const budgetRemainingEl = document.getElementById('budgetRemaining');
 
@@ -2585,13 +2616,16 @@ function updateBudgetDisplay(totalSpent) {
     budgetRemainingEl.textContent = 'Set budget';
     budgetRemainingEl.style.color = 'var(--muted)';
     budgetCard.classList.remove('over-budget', 'within-budget');
+    totalCard.classList.remove('near-budget', 'over-budget');
     return;
   }
 
   budgetAmountEl.textContent = tripBudget.toLocaleString('en-IN');
 
   const remaining = tripBudget - totalSpent;
+  const percentageUsed = (totalSpent / tripBudget) * 100;
 
+  // Update budget card
   if (remaining < 0) {
     budgetCard.classList.add('over-budget');
     budgetCard.classList.remove('within-budget');
@@ -2601,6 +2635,15 @@ function updateBudgetDisplay(totalSpent) {
     budgetCard.classList.remove('over-budget');
     budgetRemainingEl.textContent = `₹${remaining.toLocaleString('en-IN')} left`;
   }
+
+  // Update total card color based on budget
+  totalCard.classList.remove('near-budget', 'over-budget');
+  if (percentageUsed > 100) {
+    totalCard.classList.add('over-budget'); // Red - over budget
+  } else if (percentageUsed >= 85) {
+    totalCard.classList.add('near-budget'); // Orange - near budget (85%+)
+  }
+  // else: stays green (default)
 }
 
 // Handle Enter key in budget input
