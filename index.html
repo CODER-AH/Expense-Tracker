@@ -217,7 +217,7 @@
       grid-template-columns: repeat(4, 1fr);
     }
     .sum-card.big-card {
-      grid-column: span 4;
+      grid-column: span 2;
     }
   }
   .sum-card {
@@ -1355,13 +1355,62 @@
     <div class="icon">💰</div>
     <h3>Set Trip Budget</h3>
     <p>Enter your total budget for this trip</p>
-    <div style="margin: 16px 0">
+    <div style="margin: 16px 0;position:relative">
+      <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-family:'DM Mono',monospace;font-size:16px;pointer-events:none">₹</span>
       <input type="number" id="budgetInput" placeholder="Enter amount" min="0"
-        style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:16px;outline:none;transition:border-color 0.15s">
+        style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px 10px 28px;font-family:'DM Mono',monospace;font-size:16px;outline:none;transition:border-color 0.15s">
     </div>
     <div class="confirm-buttons">
       <button class="btn-cancel" onclick="cancelBudgetEdit()">Cancel</button>
       <button class="btn-delete" style="background:var(--accent)" onclick="confirmBudgetEdit()">Save Budget</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT EXPENSE OVERLAY -->
+<div class="confirm-overlay hidden" id="editOverlay">
+  <div class="confirm-box" style="max-width:500px">
+    <div class="icon">✏️</div>
+    <h3>Edit Expense</h3>
+    <div style="margin: 20px 0;display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Description</label>
+        <textarea id="editDesc" placeholder="Enter description" rows="3"
+          style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.15s;resize:vertical"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Category</label>
+          <select id="editCat"
+            style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+            <option value="food">🍽️ Food</option>
+            <option value="fuel">⛽ Fuel</option>
+            <option value="stay">🏨 Stay</option>
+            <option value="transport">🚙 Transport</option>
+            <option value="entry">🎟️ Entry Fees</option>
+            <option value="misc">🛍️ Miscellaneous</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Amount (₹)</label>
+          <input type="number" id="editAmount" placeholder="0" min="0"
+            style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:14px;outline:none;transition:border-color 0.15s">
+        </div>
+      </div>
+      <div>
+        <label style="display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Paid By</label>
+        <select id="editPaidBy"
+          style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+          <option value="Afsar">👨‍💻 Afsar</option>
+          <option value="Adham">👨‍💻 Adham</option>
+          <option value="Aakif">👨‍💻 Aakif</option>
+          <option value="Sahlaan">👨‍⚕️ Sahlaan</option>
+        </select>
+      </div>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+      <button class="btn-delete" style="background:var(--accent)" onclick="saveEdit()">Save Changes</button>
     </div>
   </div>
 </div>
@@ -1784,6 +1833,10 @@ function clearForm() {
 }
 
 // ─── INLINE EDIT ──────────────────────────────────────────
+// Store current edit context
+let currentEditDay = null;
+let currentEditId = null;
+
 function startInlineEdit(day, id) {
   const exp = expenses[day].find(e => String(e.id) === String(id));
   if (!exp || exp.name !== currentUser) {
@@ -1791,84 +1844,85 @@ function startInlineEdit(day, id) {
     return;
   }
 
-  const row = document.getElementById(`row-${id}`);
-  if (!row) return;
+  // Store context
+  currentEditDay = day;
+  currentEditId = id;
 
-  row.classList.add('edit-mode');
-  const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
+  // Populate edit dialog
+  document.getElementById('editDesc').value = exp.desc;
+  document.getElementById('editCat').value = exp.cat;
+  document.getElementById('editAmount').value = exp.amount;
+  document.getElementById('editPaidBy').value = exp.paidBy;
 
-  row.innerHTML = `
-    <td class="num-col"></td>
-    <td><input class="edit-input" id="edit-desc-${id}" value="${exp.desc}" /></td>
-    <td>
-      <select class="edit-select" id="edit-cat-${id}">
-        <option value="food" ${exp.cat === 'food' ? 'selected' : ''}>🍽️ Food</option>
-        <option value="fuel" ${exp.cat === 'fuel' ? 'selected' : ''}>⛽ Fuel</option>
-        <option value="stay" ${exp.cat === 'stay' ? 'selected' : ''}>🏨 Stay</option>
-        <option value="transport" ${exp.cat === 'transport' ? 'selected' : ''}>🚙 Transport</option>
-        <option value="entry" ${exp.cat === 'entry' ? 'selected' : ''}>🎟️ Entry Fees</option>
-        <option value="misc" ${exp.cat === 'misc' ? 'selected' : ''}>🛍️ Miscellaneous</option>
-      </select>
-    </td>
-    <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)">${exp.name}</td>
-    <td>
-      <select class="edit-select" id="edit-paidby-${id}">
-        <option value="Afsar" ${exp.paidBy === 'Afsar' ? 'selected' : ''}>Afsar</option>
-        <option value="Adham" ${exp.paidBy === 'Adham' ? 'selected' : ''}>Adham</option>
-        <option value="Aakif" ${exp.paidBy === 'Aakif' ? 'selected' : ''}>Aakif</option>
-        <option value="Sahlaan" ${exp.paidBy === 'Sahlaan' ? 'selected' : ''}>Sahlaan</option>
-      </select>
-    </td>
-    <td></td>
-    <td><input class="edit-input" type="number" id="edit-amount-${id}" value="${exp.amount}" style="width:80px;" /></td>
-    <td colspan="2">
-      <div class="edit-actions">
-        <button onclick="saveInlineEdit(${day}, '${id}')" title="Save">✅</button>
-        <button onclick="cancelInlineEdit(${day}, '${id}')" title="Cancel">❌</button>
-      </div>
-    </td>
-  `;
+  // Show dialog
+  document.getElementById('editOverlay').classList.remove('hidden');
+  setTimeout(() => document.getElementById('editDesc').focus(), 100);
 }
 
-async function saveInlineEdit(day, id) {
-  const desc = document.getElementById(`edit-desc-${id}`)?.value.trim();
-  const cat = document.getElementById(`edit-cat-${id}`)?.value;
-  const amount = parseFloat(document.getElementById(`edit-amount-${id}`)?.value) || 0;
-  const paidBy = document.getElementById(`edit-paidby-${id}`)?.value;
+function cancelEdit() {
+  document.getElementById('editOverlay').classList.add('hidden');
+  currentEditDay = null;
+  currentEditId = null;
+}
+
+async function saveEdit() {
+  if (!currentEditDay || !currentEditId) return;
+
+  const desc = document.getElementById('editDesc').value.trim();
+  const cat = document.getElementById('editCat').value;
+  const amount = parseFloat(document.getElementById('editAmount').value) || 0;
+  const paidBy = document.getElementById('editPaidBy').value;
 
   if (!desc || amount <= 0 || !paidBy) {
-    showToast('Please fill all fields correctly', 'err');
+    showToast('Please fill all fields', 'err');
     return;
   }
 
-  showLoading(true);
-  setBusy(true);
-
-  const exp = expenses[day].find(e => String(e.id) === String(id));
-  const updated = { id, day, name: exp.name, desc, cat, amount, paidBy };
-
-  try {
-    await sheetUpdate(updated);
-
-    // Update local
-    const idx = expenses[day].findIndex(e => String(e.id) === String(id));
-    if (idx !== -1) {
-      expenses[day][idx] = { ...expenses[day][idx], desc, cat, amount, paidBy, edited: 'Yes', ts: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) };
-    }
-
-    saveLocal();
-    showToast('Expense updated!', 'ok');
-  } catch(e) {
-    showToast('Update failed', 'err');
+  const exp = expenses[currentEditDay].find(e => String(e.id) === String(currentEditId));
+  if (!exp) {
+    showToast('Expense not found', 'err');
+    return;
   }
 
-  showLoading(false);
-  setBusy(false);
-  render();
-}
+  // Close dialog immediately
+  document.getElementById('editOverlay').classList.add('hidden');
 
-function cancelInlineEdit(day, id) {
-  render();
+  // Show loading and start sync
+  showLoading(true);
+  setStatus('syncing', 'Saving…');
+
+  // Update local data
+  exp.desc = desc;
+  exp.cat = cat;
+  exp.amount = amount;
+  exp.paidBy = paidBy;
+  exp.edited = "Yes";
+
+  // Update on sheet
+  try {
+    const params = new URLSearchParams({
+      action: 'update',
+      id: exp.id,
+      day: currentEditDay,
+      name: exp.name,
+      desc: desc,
+      cat: cat,
+      amount: amount,
+      paidBy: paidBy
+    });
+    await fetch(`${SCRIPT_URL}?${params}`);
+    saveLocal();
+    render();
+    setStatus('ok', 'Synced ✓');
+    showToast('Expense updated!', 'ok');
+  } catch(e) {
+    setStatus('err', 'Update failed');
+    showToast('Failed to update', 'err');
+  } finally {
+    showLoading(false);
+    currentEditDay = null;
+    currentEditId = null;
+  }
 }
 
 // ─── MULTI-ROW ADD ────────────────────────────────────────
@@ -2819,14 +2873,24 @@ async function confirmBudgetEdit() {
     return;
   }
 
+  // Close dialog immediately
+  document.getElementById('budgetOverlay').classList.add('hidden');
+  document.getElementById('budgetInput').value = '';
+
+  // Show loading
+  showLoading(true);
+  setStatus('syncing', 'Saving budget…');
+
   tripBudget = budgetAmount;
   localStorage.setItem('coorg_budget', tripBudget);
 
   // Save budget to Google Sheets
   try {
     await fetch(`${SCRIPT_URL}?action=setBudget&budget=${budgetAmount}`);
+    setStatus('ok', 'Synced ✓');
   } catch(e) {
     console.error('Failed to save budget to Google Sheets:', e);
+    setStatus('err', 'Saved locally only');
     // Continue anyway - saved locally
   }
 
@@ -2840,9 +2904,7 @@ async function confirmBudgetEdit() {
   const total = all.reduce((s, e) => s + (e.amount || 0), 0);
   updateBudgetDisplay(total);
 
-  document.getElementById('budgetOverlay').classList.add('hidden');
-  document.getElementById('budgetInput').value = '';
-
+  showLoading(false);
   showToast('Budget updated!', 'ok');
 }
 
@@ -2892,6 +2954,12 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('budgetInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') confirmBudgetEdit();
     if (e.key === 'Escape') cancelBudgetEdit();
+  });
+
+  // Edit dialog keyboard shortcuts
+  document.getElementById('editAmount').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveEdit();
+    if (e.key === 'Escape') cancelEdit();
   });
 });
 
