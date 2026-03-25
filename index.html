@@ -1302,6 +1302,23 @@
   </div>
 </div>
 
+<!-- BUDGET DIALOG -->
+<div class="confirm-overlay hidden" id="budgetOverlay">
+  <div class="confirm-box">
+    <div class="icon">💰</div>
+    <h3>Set Trip Budget</h3>
+    <p>Enter your total budget for this trip</p>
+    <div style="margin: 16px 0">
+      <input type="number" id="budgetInput" placeholder="Enter amount" min="0"
+        style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:16px;outline:none;transition:border-color 0.15s">
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelBudgetEdit()">Cancel</button>
+      <button class="btn-delete" style="background:var(--accent)" onclick="confirmBudgetEdit()">Save Budget</button>
+    </div>
+  </div>
+</div>
+
 <!-- LOADING OVERLAY -->
 <div class="loading-overlay hidden" id="loadingOverlay">
   <div class="loading-spinner"></div>
@@ -2520,9 +2537,24 @@ function showToast(msg, type) {
 // ─── BUDGET MANAGEMENT ────────────────────────────────────
 function editBudget() {
   const currentBudget = tripBudget || 0;
-  const newBudget = prompt(`Set trip budget (₹):`, currentBudget);
+  document.getElementById('budgetInput').value = currentBudget > 0 ? currentBudget : '';
+  document.getElementById('budgetOverlay').classList.remove('hidden');
+  setTimeout(() => document.getElementById('budgetInput').focus(), 100);
+}
 
-  if (newBudget === null) return; // Cancelled
+function cancelBudgetEdit() {
+  document.getElementById('budgetOverlay').classList.add('hidden');
+  document.getElementById('budgetInput').value = '';
+}
+
+function confirmBudgetEdit() {
+  const budgetInput = document.getElementById('budgetInput');
+  const newBudget = budgetInput.value.trim();
+
+  if (!newBudget) {
+    showToast('Please enter a budget amount', 'err');
+    return;
+  }
 
   const budgetAmount = parseFloat(newBudget);
   if (isNaN(budgetAmount) || budgetAmount < 0) {
@@ -2536,6 +2568,9 @@ function editBudget() {
   const all = [...expenses[1], ...expenses[2]];
   const total = all.reduce((s, e) => s + (e.amount || 0), 0);
   updateBudgetDisplay(total);
+
+  document.getElementById('budgetOverlay').classList.add('hidden');
+  document.getElementById('budgetInput').value = '';
 
   showToast('Budget updated!', 'ok');
 }
@@ -2567,6 +2602,14 @@ function updateBudgetDisplay(totalSpent) {
     budgetRemainingEl.textContent = `₹${remaining.toLocaleString('en-IN')} left`;
   }
 }
+
+// Handle Enter key in budget input
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('budgetInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmBudgetEdit();
+    if (e.key === 'Escape') cancelBudgetEdit();
+  });
+});
 
 // Load budget from localStorage on init
 window.addEventListener('load', function() {
