@@ -692,14 +692,14 @@
     background: rgba(245,200,66,0.1);
     padding: 2px 6px;
     border-radius: 4px;
-    margin-left: 6px;
+    margin-bottom: 4px;
     vertical-align: middle;
   }
 
   /* DESCRIPTION TRUNCATION */
   .desc-truncated {
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 1.4;
@@ -868,10 +868,10 @@
     <p>Select your name so everyone knows who added each expense. This is saved on your device — you'll only need to do this once.</p>
     <select id="nameInput" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:14px;transition:border-color 0.15s;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center;padding-right:35px;">
       <option value="">Select your name...</option>
-      <option value="Afsar">Afsar</option>
-      <option value="Adham">Adham</option>
-      <option value="Aakif">Aakif</option>
-      <option value="Sahlaan">Sahlaan</option>
+      <option value="Afsar">👨‍💻 Afsar</option>
+      <option value="Adham">👨‍💻 Adham</option>
+      <option value="Aakif">👨‍💻 Aakif</option>
+      <option value="Sahlaan">👨‍⚕️ Sahlaan</option>
     </select>
     <button onclick="saveName()">Let's Go →</button>
   </div>
@@ -997,10 +997,10 @@
       <label>Paid by *</label>
       <select id="inp-paidby" required>
         <option value="">Select...</option>
-        <option value="Afsar">Afsar</option>
-        <option value="Adham">Adham</option>
-        <option value="Aakif">Aakif</option>
-        <option value="Sahlaan">Sahlaan</option>
+        <option value="Afsar">👨‍💻 Afsar</option>
+        <option value="Adham">👨‍💻 Adham</option>
+        <option value="Aakif">👨‍💻 Aakif</option>
+        <option value="Sahlaan">👨‍⚕️ Sahlaan</option>
       </select>
     </div>
     <div>
@@ -1026,61 +1026,81 @@
 </div>
 
 <div class="section-title">📝 Expense History
-  <select id="filterSelect" onchange="filterExpenses()" style="margin-left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center;padding-right:26px;">
+  <select id="dayFilter" onchange="filterByDay()" style="margin-left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center;padding-right:26px;">
+    <option value="all">All Days</option>
+    <option value="1">Day 1 — Sat, 28 Mar</option>
+    <option value="2">Day 2 — Sun, 29 Mar</option>
+  </select>
+  <select id="filterSelect" onchange="filterExpenses()" style="margin-left:8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center;padding-right:26px;">
     <option value="all">All People</option>
-    <option value="Afsar">Afsar</option>
-    <option value="Adham">Adham</option>
-    <option value="Aakif">Aakif</option>
-    <option value="Sahlaan">Sahlaan</option>
+    <option value="Afsar">👨‍💻 Afsar</option>
+    <option value="Adham">👨‍💻 Adham</option>
+    <option value="Aakif">👨‍💻 Aakif</option>
+    <option value="Sahlaan">👨‍⚕️ Sahlaan</option>
   </select>
 </div>
 
-<!-- EXPENSE TABLES -->
+<!-- EXPENSE TABLE -->
 <div class="timeline">
-  <div class="day-label">🗓 Day 1 — Saturday <span class="day-total" id="day1-total">₹0</span></div>
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>#</th>
-        <th class="sortable" onclick="sortByColumn('desc')">Description</th>
-        <th class="sortable" onclick="sortByColumn('cat')">Category</th>
-        <th class="sortable" onclick="sortByColumn('name')">Added By</th>
-        <th class="sortable" onclick="sortByColumn('paidBy')">Paid By</th>
-        <th class="sortable" onclick="sortByColumn('time')">Time</th>
-        <th class="sortable" onclick="sortByColumn('amount')" style="text-align:right">Amount</th>
-        <th></th><th></th>
+        <th style="white-space:nowrap">#</th>
+        <th style="white-space:nowrap">Day</th>
+        <th class="sortable" onclick="sortByColumn('desc')" style="white-space:nowrap">Description</th>
+        <th class="sortable" onclick="sortByColumn('cat')" style="white-space:nowrap">Category</th>
+        <th class="sortable" onclick="sortByColumn('name')" style="white-space:nowrap">Added By</th>
+        <th class="sortable" onclick="sortByColumn('paidBy')" style="white-space:nowrap">Paid By</th>
+        <th class="sortable" onclick="sortByColumn('time')" style="white-space:nowrap">Time</th>
+        <th class="sortable" onclick="sortByColumn('amount')" style="text-align:right;white-space:nowrap">Amount</th>
+        <th style="white-space:nowrap"></th><th style="white-space:nowrap"></th>
       </tr></thead>
-      <tbody id="day1-body"></tbody>
+      <tbody id="expenses-body"></tbody>
     </table>
   </div>
-  <div class="pagination" id="day1-pagination"></div>
-
-  <div class="day-label" style="margin-top:18px">🗓 Day 2 — Sunday <span class="day-total" id="day2-total">₹0</span></div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>#</th>
-        <th class="sortable" onclick="sortByColumn('desc')">Description</th>
-        <th class="sortable" onclick="sortByColumn('cat')">Category</th>
-        <th class="sortable" onclick="sortByColumn('name')">Added By</th>
-        <th class="sortable" onclick="sortByColumn('paidBy')">Paid By</th>
-        <th class="sortable" onclick="sortByColumn('time')">Time</th>
-        <th class="sortable" onclick="sortByColumn('amount')" style="text-align:right">Amount</th>
-        <th></th><th></th>
-      </tr></thead>
-      <tbody id="day2-body"></tbody>
-    </table>
-  </div>
-  <div class="pagination" id="day2-pagination"></div>
+  <div class="pagination" id="expenses-pagination"></div>
 </div>
 
-<!-- NOTES -->
-<div class="notes-bar">
-  <div class="note-item">✔️ Carry cash for jeep at Mandalpatti (~₹2500 shared)</div>
-  <div class="note-item">✔️ Abbey Falls entry: ₹10/person + ₹50 parking</div>
-  <div class="note-item">✔️ Raja's Seat entry: ₹20/person</div>
-  <div class="note-item">⛽ Fuel up at Mysore & Kushalnagar</div>
-  <div class="note-item">🌄 Ghat roads after Kushalnagar — drive safe!</div>
+<!-- TOGGLE BUTTONS -->
+<div style="max-width:860px;margin:32px auto 0;text-align:center;display:flex;gap:12px;justify-content:center">
+  <button class="add-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="toggleNotes()">
+    <span id="notesToggleBtn">📝 Show Notes</span>
+  </button>
+  <button class="add-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="toggleArchived()">
+    <span id="archivedToggleBtn">🗃️ Show Archived (<span id="archivedCount">0</span>)</span>
+  </button>
+</div>
+
+<!-- NOTES SECTION -->
+<div class="notes-container" id="notesContainer" style="display:none;max-width:860px;margin:16px auto">
+  <div class="notes-bar">
+    <div class="note-item">✔️ Carry cash for jeep at Mandalpatti (~₹2500 shared)</div>
+    <div class="note-item">✔️ Abbey Falls entry: ₹10/person + ₹50 parking</div>
+    <div class="note-item">✔️ Raja's Seat entry: ₹20/person</div>
+    <div class="note-item">⛽ Fuel up at Mysore & Kushalnagar</div>
+    <div class="note-item">🌄 Ghat roads after Kushalnagar — drive safe!</div>
+  </div>
+</div>
+
+<!-- ARCHIVED SECTION -->
+<div class="archived-container" id="archivedContainer" style="display:none;max-width:860px;margin:16px auto">
+  <div class="timeline">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th style="white-space:nowrap">#</th>
+          <th style="white-space:nowrap">Description</th>
+          <th style="white-space:nowrap">Category</th>
+          <th style="white-space:nowrap">Added By</th>
+          <th style="white-space:nowrap">Paid By</th>
+          <th style="white-space:nowrap">Amount</th>
+          <th style="white-space:nowrap">Day</th>
+          <th style="white-space:nowrap" colspan="2">Actions</th>
+        </tr></thead>
+        <tbody id="archived-body"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <!-- TOAST -->
@@ -1090,15 +1110,54 @@
 <div class="confirm-overlay hidden" id="confirmOverlay">
   <div class="confirm-box">
     <div class="icon">⚠️</div>
-    <h3>Delete Expense?</h3>
-    <p>This action cannot be undone.</p>
+    <h3>Archive Expense?</h3>
+    <p>This will move the expense to archived section.</p>
     <div class="expense-details" id="confirmDetails">
       <div class="desc"></div>
       <div class="amount"></div>
+      <div class="added-by" style="margin-top:6px;font-size:11px;color:var(--muted)"></div>
     </div>
     <div class="confirm-buttons">
       <button class="btn-cancel" onclick="cancelDelete()">Cancel</button>
-      <button class="btn-delete" onclick="confirmDelete()">Delete</button>
+      <button class="btn-delete" onclick="confirmDelete()">Archive</button>
+    </div>
+  </div>
+</div>
+
+<!-- PERMANENT DELETE CONFIRMATION MODAL -->
+<div class="confirm-overlay hidden" id="permanentDeleteOverlay">
+  <div class="confirm-box">
+    <div class="icon">🗑️</div>
+    <h3>Delete Permanently?</h3>
+    <p style="color:var(--accent3)">This action cannot be undone. The expense will be deleted forever.</p>
+    <div class="expense-details" id="permanentDeleteDetails">
+      <div class="desc"></div>
+      <div class="amount"></div>
+      <div class="added-by" style="margin-top:6px;font-size:11px;color:var(--muted)"></div>
+      <div class="paid-by" style="margin-top:4px;font-size:11px;color:var(--muted)"></div>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelPermanentDelete()">Cancel</button>
+      <button class="btn-delete" onclick="confirmPermanentDelete()">Delete Forever</button>
+    </div>
+  </div>
+</div>
+
+<!-- UNARCHIVE CONFIRMATION MODAL -->
+<div class="confirm-overlay hidden" id="unarchiveOverlay">
+  <div class="confirm-box">
+    <div class="icon">↩️</div>
+    <h3>Unarchive Expense?</h3>
+    <p>This will restore the expense to the active list.</p>
+    <div class="expense-details" id="unarchiveDetails">
+      <div class="desc"></div>
+      <div class="amount"></div>
+      <div class="added-by" style="margin-top:6px;font-size:11px;color:var(--muted)"></div>
+      <div class="paid-by" style="margin-top:4px;font-size:11px;color:var(--muted)"></div>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelUnarchive()">Cancel</button>
+      <button class="btn-delete" style="background:var(--accent)" onclick="confirmUnarchive()">Unarchive</button>
     </div>
   </div>
 </div>
@@ -1124,13 +1183,19 @@ const CAT_CONFIG = {
 
 // ─── STATE ────────────────────────────────────────────────
 let expenses = { 1: [], 2: [] };
+let archivedExpenses = [];
 let currentUser = '';
 let editingId = null;
 let deleteTarget = null;
+let permanentDeleteTarget = null;
+let unarchiveTarget = null;
 let sortBy = 'time';
 let sortOrder = 'desc'; // 'asc' or 'desc'
 let filterBy = 'all';
-let currentPage = { 1: 1, 2: 1 };
+let dayFilterBy = 'all'; // New day filter
+let currentPage = 1; // Single page state
+let showArchivedSection = false;
+let showNotesSection = false;
 const ITEMS_PER_PAGE = 10;
 
 // ─── INIT ─────────────────────────────────────────────────
@@ -1182,10 +1247,14 @@ document.getElementById('nameInput').addEventListener('change', e => {
 // ─── LOCAL STORAGE FALLBACK ───────────────────────────────
 function saveLocal() {
   localStorage.setItem('coorg_expenses', JSON.stringify(expenses));
+  localStorage.setItem('coorg_archived', JSON.stringify(archivedExpenses));
 }
 function loadFromLocal() {
   const saved = localStorage.getItem('coorg_expenses');
   expenses = saved ? JSON.parse(saved) : { 1: [], 2: [] };
+
+  const savedArchived = localStorage.getItem('coorg_archived');
+  archivedExpenses = savedArchived ? JSON.parse(savedArchived) : [];
 }
 
 // ─── GOOGLE SHEETS ────────────────────────────────────────
@@ -1196,9 +1265,14 @@ async function loadFromSheet() {
     const res = await fetch(`${SCRIPT_URL}?action=getAll`);
     const data = await res.json();
     expenses = { 1: [], 2: [] };
+    archivedExpenses = [];
     (data.expenses || []).forEach(e => {
       const day = e.day === 1 || e.day === 2 ? e.day : 1;
-      expenses[day].push(e);
+      if (e.archived === "Yes") {
+        archivedExpenses.push({ ...e, archivedDay: day });
+      } else {
+        expenses[day].push(e);
+      }
     });
     saveLocal();
     render();
@@ -1244,6 +1318,16 @@ async function sheetUpdate(exp) {
 
 async function sheetDelete(id) {
   const params = new URLSearchParams({ action: 'delete', id });
+  await fetch(`${SCRIPT_URL}?${params}`);
+}
+
+async function sheetArchive(id) {
+  const params = new URLSearchParams({ action: 'archive', id });
+  await fetch(`${SCRIPT_URL}?${params}`);
+}
+
+async function sheetUnarchive(id) {
+  const params = new URLSearchParams({ action: 'unarchive', id });
   await fetch(`${SCRIPT_URL}?${params}`);
 }
 
@@ -1557,6 +1641,7 @@ function showDeleteConfirm(day, id) {
   const detailsEl = document.getElementById('confirmDetails');
   detailsEl.querySelector('.desc').textContent = exp.desc;
   detailsEl.querySelector('.amount').textContent = `₹${exp.amount.toLocaleString('en-IN')}`;
+  detailsEl.querySelector('.added-by').textContent = `Added by: ${exp.name || '—'}`;
 
   document.getElementById('confirmOverlay').classList.remove('hidden');
 }
@@ -1573,163 +1658,370 @@ async function confirmDelete() {
 
   document.getElementById('confirmOverlay').classList.add('hidden');
   showLoading(true);
-  setBusy(true);
-  setStatus('syncing', 'Deleting…');
+  setStatus('syncing', 'Archiving…');
+
+  try {
+    await sheetArchive(id);
+    setStatus('ok', 'Synced ✓');
+    showToast('Expense archived', 'ok');
+  } catch(e) {
+    setStatus('err', 'Archive failed');
+    showToast('Archive failed — check connection', 'err');
+    showLoading(false);
+    return;
+  }
+
+  // Move to archived
+  const expense = expenses[day].find(e => String(e.id) === String(id));
+  if (expense) {
+    archivedExpenses.push({ ...expense, archivedDay: day, archived: "Yes" });
+  }
+
+  expenses[day] = expenses[day].filter(e => String(e.id) !== String(id));
+
+  saveLocal();
+  showLoading(false);
+  deleteTarget = null;
+  render();
+  renderArchived();
+}
+
+// ─── ARCHIVED FUNCTIONS ───────────────────────────────────
+function toggleArchived() {
+  const container = document.getElementById('archivedContainer');
+  const notesContainer = document.getElementById('notesContainer');
+  const btn = document.getElementById('archivedToggleBtn');
+  const count = archivedExpenses.length;
+
+  showArchivedSection = !showArchivedSection;
+
+  if (showArchivedSection) {
+    // Close notes if open
+    if (showNotesSection) {
+      showNotesSection = false;
+      notesContainer.style.display = 'none';
+      document.getElementById('notesToggleBtn').textContent = '📝 Show Notes';
+    }
+    container.style.display = 'block';
+    btn.innerHTML = `🗃️ Hide Archived (<span id="archivedCount">${count}</span>)`;
+  } else {
+    container.style.display = 'none';
+    btn.innerHTML = `🗃️ Show Archived (<span id="archivedCount">${count}</span>)`;
+  }
+}
+
+function toggleNotes() {
+  const container = document.getElementById('notesContainer');
+  const archivedContainer = document.getElementById('archivedContainer');
+  const btn = document.getElementById('notesToggleBtn');
+
+  showNotesSection = !showNotesSection;
+
+  if (showNotesSection) {
+    // Close archived if open
+    if (showArchivedSection) {
+      showArchivedSection = false;
+      archivedContainer.style.display = 'none';
+      const count = archivedExpenses.length;
+      document.getElementById('archivedToggleBtn').innerHTML = `🗃️ Show Archived (<span id="archivedCount">${count}</span>)`;
+    }
+    container.style.display = 'block';
+    btn.textContent = '📝 Hide Notes';
+  } else {
+    container.style.display = 'none';
+    btn.textContent = '📝 Show Notes';
+  }
+}
+
+function renderArchived() {
+  const tbody = document.getElementById('archived-body');
+  tbody.innerHTML = '';
+
+  const count = archivedExpenses.length;
+
+  // Update count in button
+  const countSpan = document.getElementById('archivedCount');
+  if (countSpan) countSpan.textContent = count;
+
+  if (archivedExpenses.length === 0) {
+    const tr = document.createElement('tr');
+    tr.className = 'empty-row';
+    tr.innerHTML = `<td colspan="9">No archived expenses</td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
+  archivedExpenses.forEach((exp, idx) => {
+    const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
+
+    const tr = document.createElement('tr');
+    tr.style.opacity = '0.7';
+    tr.innerHTML = `
+      <td class="num-col">${idx + 1}</td>
+      <td style="font-size:13px">${exp.desc}</td>
+      <td style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
+      <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
+      <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
+      <td class="amount-col" style="white-space:nowrap">₹${Number(exp.amount).toLocaleString('en-IN')}</td>
+      <td style="font-size:11px;color:var(--muted)">Day ${exp.archivedDay}</td>
+      <td><button class="del-btn" onclick="showUnarchiveConfirm('${exp.id}')" title="Unarchive" style="background:var(--accent);color:#0e1412">↩️</button></td>
+      <td><button class="del-btn" onclick="showPermanentDeleteConfirm('${exp.id}')" title="Delete Permanently">🗑️</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function unarchiveExpense(id) {
+  const expense = archivedExpenses.find(e => String(e.id) === String(id));
+  if (!expense) return;
+
+  showLoading(true);
+  setStatus('syncing', 'Unarchiving…');
+
+  try {
+    await sheetUnarchive(id);
+    setStatus('ok', 'Synced ✓');
+    showToast('Expense unarchived', 'ok');
+  } catch(e) {
+    setStatus('err', 'Unarchive failed');
+    showToast('Unarchive failed — check connection', 'err');
+    showLoading(false);
+    return;
+  }
+
+  const day = expense.archivedDay;
+  delete expense.archivedDay;
+  delete expense.archived;
+
+  expenses[day].push(expense);
+  archivedExpenses = archivedExpenses.filter(e => String(e.id) !== String(id));
+
+  saveLocal();
+  showLoading(false);
+  unarchiveTarget = null;
+  render();
+  renderArchived();
+}
+
+function showPermanentDeleteConfirm(id) {
+  const exp = archivedExpenses.find(e => String(e.id) === String(id));
+  if (!exp) return;
+
+  permanentDeleteTarget = id;
+
+  const detailsEl = document.getElementById('permanentDeleteDetails');
+  detailsEl.querySelector('.desc').textContent = exp.desc;
+  detailsEl.querySelector('.amount').textContent = `₹${exp.amount.toLocaleString('en-IN')}`;
+  detailsEl.querySelector('.added-by').textContent = `Added by: ${exp.name || '—'}`;
+  detailsEl.querySelector('.paid-by').textContent = `Paid by: ${exp.paidBy || '—'}`;
+
+  document.getElementById('permanentDeleteOverlay').classList.remove('hidden');
+}
+
+function cancelPermanentDelete() {
+  permanentDeleteTarget = null;
+  document.getElementById('permanentDeleteOverlay').classList.add('hidden');
+}
+
+function showUnarchiveConfirm(id) {
+  const exp = archivedExpenses.find(e => String(e.id) === String(id));
+  if (!exp) return;
+
+  unarchiveTarget = id;
+
+  const detailsEl = document.getElementById('unarchiveDetails');
+  detailsEl.querySelector('.desc').textContent = exp.desc;
+  detailsEl.querySelector('.amount').textContent = `₹${exp.amount.toLocaleString('en-IN')}`;
+  detailsEl.querySelector('.added-by').textContent = `Added by: ${exp.name || '—'}`;
+  detailsEl.querySelector('.paid-by').textContent = `Paid by: ${exp.paidBy || '—'}`;
+
+  document.getElementById('unarchiveOverlay').classList.remove('hidden');
+}
+
+function cancelUnarchive() {
+  unarchiveTarget = null;
+  document.getElementById('unarchiveOverlay').classList.add('hidden');
+}
+
+async function confirmUnarchive() {
+  if (!unarchiveTarget) return;
+
+  const id = unarchiveTarget;
+
+  document.getElementById('unarchiveOverlay').classList.add('hidden');
+
+  await unarchiveExpense(id);
+}
+
+async function confirmPermanentDelete() {
+  if (!permanentDeleteTarget) return;
+
+  const id = permanentDeleteTarget;
+
+  document.getElementById('permanentDeleteOverlay').classList.add('hidden');
+  showLoading(true);
+  setStatus('syncing', 'Deleting permanently…');
 
   try {
     await sheetDelete(id);
     setStatus('ok', 'Synced ✓');
-    showToast('Expense deleted', 'ok');
+    showToast('Expense deleted permanently', 'ok');
   } catch(e) {
     setStatus('err', 'Delete failed');
     showToast('Delete failed — check connection', 'err');
   }
 
-  expenses[day] = expenses[day].filter(e => String(e.id) !== String(id));
+  archivedExpenses = archivedExpenses.filter(e => String(e.id) !== String(id));
   saveLocal();
-  setBusy(false);
   showLoading(false);
-  deleteTarget = null;
-  render();
+  permanentDeleteTarget = null;
+  renderArchived();
 }
 
 // ─── RENDER ───────────────────────────────────────────────
 function render() {
-  [1, 2].forEach(day => {
-    const tbody = document.getElementById(`day${day}-body`);
-    tbody.innerHTML = '';
-    let dayTotal = 0;
+  const tbody = document.getElementById('expenses-body');
+  tbody.innerHTML = '';
 
-    // Filter expenses
-    let dayExpenses = [...expenses[day]];
-    if (filterBy !== 'all') {
-      dayExpenses = dayExpenses.filter(e => e.name === filterBy);
+  // Combine all expenses with day property
+  let allExpenses = [];
+  [1, 2].forEach(day => {
+    expenses[day].forEach(exp => {
+      allExpenses.push({ ...exp, day });
+    });
+  });
+
+  // Filter by day
+  if (dayFilterBy !== 'all') {
+    allExpenses = allExpenses.filter(e => e.day === parseInt(dayFilterBy));
+  }
+
+  // Filter by person
+  if (filterBy !== 'all') {
+    allExpenses = allExpenses.filter(e => e.name === filterBy);
+  }
+
+  // Sort expenses
+  allExpenses.sort((a, b) => {
+    let valA, valB;
+
+    switch(sortBy) {
+      case 'desc':
+        valA = (a.desc || '').toLowerCase();
+        valB = (b.desc || '').toLowerCase();
+        break;
+      case 'cat':
+        valA = (a.cat || '').toLowerCase();
+        valB = (b.cat || '').toLowerCase();
+        break;
+      case 'name':
+        valA = (a.name || '').toLowerCase();
+        valB = (b.name || '').toLowerCase();
+        break;
+      case 'paidBy':
+        valA = (a.paidBy || '').toLowerCase();
+        valB = (b.paidBy || '').toLowerCase();
+        break;
+      case 'amount':
+        valA = a.amount || 0;
+        valB = b.amount || 0;
+        break;
+      case 'time':
+      default:
+        valA = parseInt((a.id || 'exp_0').split('_')[1]) || 0;
+        valB = parseInt((b.id || 'exp_0').split('_')[1]) || 0;
+        break;
     }
 
-    // Sort expenses
-    dayExpenses.sort((a, b) => {
-      let valA, valB;
+    if (sortBy === 'amount' || sortBy === 'time') {
+      return sortOrder === 'asc' ? valA - valB : valB - valA;
+    } else {
+      const comparison = valA < valB ? -1 : valA > valB ? 1 : 0;
+      return sortOrder === 'asc' ? comparison : -comparison;
+    }
+  });
 
-      switch(sortBy) {
-        case 'desc':
-          valA = (a.desc || '').toLowerCase();
-          valB = (b.desc || '').toLowerCase();
-          break;
-        case 'cat':
-          valA = (a.cat || '').toLowerCase();
-          valB = (b.cat || '').toLowerCase();
-          break;
-        case 'name':
-          valA = (a.name || '').toLowerCase();
-          valB = (b.name || '').toLowerCase();
-          break;
-        case 'paidBy':
-          valA = (a.paidBy || '').toLowerCase();
-          valB = (b.paidBy || '').toLowerCase();
-          break;
-        case 'amount':
-          valA = a.amount || 0;
-          valB = b.amount || 0;
-          break;
-        case 'time':
-        default:
-          // Extract timestamp from ID or use timestamp field
-          valA = a.ts ? new Date(a.ts).getTime() : parseInt((a.id || '').split('_')[1]) || 0;
-          valB = b.ts ? new Date(b.ts).getTime() : parseInt((b.id || '').split('_')[1]) || 0;
-          break;
+  if (allExpenses.length === 0) {
+    const tr = document.createElement('tr');
+    tr.className = 'empty-row';
+    const msg = filterBy !== 'all'
+      ? `No expenses from ${filterBy}`
+      : dayFilterBy !== 'all'
+      ? `No expenses for Day ${dayFilterBy}`
+      : `No expenses yet — add one above!`;
+    tr.innerHTML = `<td colspan="10">${msg}</td>`;
+    tbody.appendChild(tr);
+    renderPagination(0);
+  } else {
+    // Pagination
+    const totalPages = Math.ceil(allExpenses.length / ITEMS_PER_PAGE);
+    const page = currentPage || 1;
+    const startIdx = (page - 1) * ITEMS_PER_PAGE;
+    const endIdx = startIdx + ITEMS_PER_PAGE;
+    const paginatedExpenses = allExpenses.slice(startIdx, endIdx);
+
+    paginatedExpenses.forEach((exp, idx) => {
+      const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
+
+      // Format time without seconds
+      let timeStr = '—';
+      if (exp.ts) {
+        try {
+          const parts = exp.ts.split(',');
+          if (parts.length >= 2) {
+            const timePart = parts[1].trim();
+            const timeMatch = timePart.match(/(\d{1,2}:\d{2})/);
+            if (timeMatch) {
+              timeStr = timeMatch[1];
+              if (timePart.toLowerCase().includes('am')) timeStr += ' AM';
+              else if (timePart.toLowerCase().includes('pm')) timeStr += ' PM';
+            }
+          }
+        } catch(e) {
+          timeStr = '—';
+        }
       }
 
-      if (sortBy === 'amount' || sortBy === 'time') {
-        return sortOrder === 'asc' ? valA - valB : valB - valA;
-      } else {
-        const comparison = valA < valB ? -1 : valA > valB ? 1 : 0;
-        return sortOrder === 'asc' ? comparison : -comparison;
-      }
+      const tr = document.createElement('tr');
+      tr.id = `row-${exp.id}`;
+
+      // Check if user can edit
+      const canEdit = currentUser === exp.name;
+      const editIcon = canEdit ? '✏️' : '';
+
+      // Edited badge
+      const editedBadge = exp.edited === 'Yes' ? '<span class="edited-badge">EDITED</span>' : '';
+
+      // Description with truncation
+      const descId = `desc-${exp.id}`;
+      const showTruncated = exp.desc.length > 100;
+
+      tr.innerHTML = `
+        <td class="num-col">${startIdx + idx + 1}</td>
+        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">Day ${exp.day}</td>
+        <td>
+          ${editedBadge ? `<div style="margin-bottom:4px">${editedBadge}</div>` : ''}
+          <div id="${descId}" class="${showTruncated ? 'desc-truncated' : 'desc-full'}">
+            ${exp.desc}
+          </div>
+          ${showTruncated ? `<span class="show-more-btn" onclick="toggleDesc('${descId}')">Show more...</span>` : ''}
+        </td>
+        <td style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
+        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
+        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
+        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
+        <td class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
+        <td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${exp.day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>
+        <td><button class="del-btn" onclick="showDeleteConfirm(${exp.day}, '${exp.id}')" title="Archive">🗃️</button></td>
+      `;
+      tbody.appendChild(tr);
     });
 
-    if (dayExpenses.length === 0) {
-      const tr = document.createElement('tr');
-      tr.className = 'empty-row';
-      const msg = filterBy !== 'all'
-        ? `No expenses from ${filterBy} for Day ${day}`
-        : `No expenses yet for Day ${day} — add one above!`;
-      tr.innerHTML = `<td colspan="9">${msg}</td>`;
-      tbody.appendChild(tr);
-      renderPagination(day, 0);
-    } else {
-      // Pagination
-      const totalPages = Math.ceil(dayExpenses.length / ITEMS_PER_PAGE);
-      const page = currentPage[day] || 1;
-      const startIdx = (page - 1) * ITEMS_PER_PAGE;
-      const endIdx = startIdx + ITEMS_PER_PAGE;
-      const paginatedExpenses = dayExpenses.slice(startIdx, endIdx);
-
-      paginatedExpenses.forEach((exp, idx) => {
-        dayTotal += exp.amount || 0;
-        const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
-
-        // Format time without seconds
-        let timeStr = '—';
-        if (exp.ts) {
-          try {
-            const parts = exp.ts.split(',');
-            if (parts.length >= 2) {
-              const timePart = parts[1].trim();
-              const timeMatch = timePart.match(/(\d{1,2}:\d{2})/);
-              if (timeMatch) {
-                timeStr = timeMatch[1];
-                if (timePart.toLowerCase().includes('am')) timeStr += ' AM';
-                else if (timePart.toLowerCase().includes('pm')) timeStr += ' PM';
-              }
-            }
-          } catch(e) {
-            timeStr = '—';
-          }
-        }
-
-        const tr = document.createElement('tr');
-        tr.id = `row-${exp.id}`;
-
-        // Check if user can edit
-        const canEdit = currentUser === exp.name;
-        const editIcon = canEdit ? '✏️' : '';
-
-        // Edited badge
-        const editedBadge = exp.edited === 'Yes' ? '<span class="edited-badge">EDITED</span>' : '';
-
-        // Description with truncation
-        const descId = `desc-${exp.id}`;
-        const showTruncated = exp.desc.length > 100;
-
-        tr.innerHTML = `
-          <td class="num-col">${startIdx + idx + 1}</td>
-          <td>
-            <div id="${descId}" class="${showTruncated ? 'desc-truncated' : 'desc-full'}">
-              ${editedBadge}${exp.desc}
-            </div>
-            ${showTruncated ? `<span class="show-more-btn" onclick="toggleDesc('${descId}')">Show more...</span>` : ''}
-          </td>
-          <td style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
-          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
-          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
-          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
-          <td class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
-          <td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>
-          <td><button class="del-btn" onclick="showDeleteConfirm(${day}, '${exp.id}')" title="Remove">🗑️</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      // Calculate total for all filtered items (not just current page)
-      dayTotal = dayExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-
-      renderPagination(day, totalPages);
-    }
-    document.getElementById(`day${day}-total`).textContent =
-      dayTotal > 0 ? '₹' + dayTotal.toLocaleString('en-IN') : '₹0';
-  });
+    renderPagination(totalPages);
+  }
   updateSummary();
   updateSettlement();
+  renderArchived();
 }
 
 function updateSummary() {
@@ -1905,6 +2197,13 @@ function sortByColumn(column) {
 
 function filterExpenses() {
   filterBy = document.getElementById('filterSelect').value;
+  currentPage = 1; // Reset to first page
+  render();
+}
+
+function filterByDay() {
+  dayFilterBy = document.getElementById('dayFilter').value;
+  currentPage = 1; // Reset to first page
   render();
 }
 
@@ -1924,18 +2223,18 @@ function toggleDesc(descId) {
 }
 
 // ─── PAGINATION ───────────────────────────────────────────
-function renderPagination(day, totalPages) {
-  const container = document.getElementById(`day${day}-pagination`);
+function renderPagination(totalPages) {
+  const container = document.getElementById('expenses-pagination');
   if (totalPages <= 1) {
     container.innerHTML = '';
     return;
   }
 
-  const page = currentPage[day] || 1;
+  const page = currentPage || 1;
   let html = '';
 
   // Previous button
-  html += `<button class="page-btn" onclick="goToPage(${day}, ${page - 1})" ${page === 1 ? 'disabled' : ''}>‹ Prev</button>`;
+  html += `<button class="page-btn" onclick="goToPage(${page - 1})" ${page === 1 ? 'disabled' : ''}>‹ Prev</button>`;
 
   // Page numbers
   const maxVisible = 7;
@@ -1947,34 +2246,34 @@ function renderPagination(day, totalPages) {
   }
 
   if (startPage > 1) {
-    html += `<button class="page-btn" onclick="goToPage(${day}, 1)">1</button>`;
+    html += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
     if (startPage > 2) {
       html += `<span style="color:var(--muted);padding:0 4px">...</span>`;
     }
   }
 
   for (let i = startPage; i <= endPage; i++) {
-    html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="goToPage(${day}, ${i})">${i}</button>`;
+    html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
   }
 
   if (endPage < totalPages) {
     if (endPage < totalPages - 1) {
       html += `<span style="color:var(--muted);padding:0 4px">...</span>`;
     }
-    html += `<button class="page-btn" onclick="goToPage(${day}, ${totalPages})">${totalPages}</button>`;
+    html += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
   }
 
   // Next button
-  html += `<button class="page-btn" onclick="goToPage(${day}, ${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next ›</button>`;
+  html += `<button class="page-btn" onclick="goToPage(${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next ›</button>`;
 
   container.innerHTML = html;
 }
 
-function goToPage(day, page) {
-  currentPage[day] = page;
+function goToPage(page) {
+  currentPage = page;
   render();
   // Scroll to top of table
-  document.getElementById(`day${day}-body`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('expenses-body').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ─── UI HELPERS ───────────────────────────────────────────
