@@ -269,6 +269,36 @@
     gap: 8px;
     margin-top: 12px;
   }
+  .multi-row-entry input,
+  .multi-row-entry select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .multi-row-entry input:focus,
+  .multi-row-entry select:focus {
+    border-color: var(--accent);
+  }
+  .multi-row-entry select option {
+    background: var(--surface);
+    color: var(--text);
+  }
+  .multi-row-entry label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 5px;
+    font-family: 'DM Mono', monospace;
+  }
   .add-form label {
     font-size: 10px;
     letter-spacing: 0.1em;
@@ -1392,11 +1422,11 @@ function addExpenseRow() {
     </div>
     <div>
       <label>Description</label>
-      <input type="text" id="multi-desc-${multiRowCount}" value="${desc}" placeholder="Description" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;width:100%;outline:none;" />
+      <input type="text" id="multi-desc-${multiRowCount}" value="${desc}" placeholder="Description" />
     </div>
     <div>
       <label>Amount (₹)</label>
-      <input type="number" id="multi-amount-${multiRowCount}" value="${amount}" placeholder="0" min="0" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;width:100%;outline:none;" />
+      <input type="number" id="multi-amount-${multiRowCount}" value="${amount}" placeholder="0" min="0" />
     </div>
     <div>
       <label>Paid by</label>
@@ -1410,7 +1440,7 @@ function addExpenseRow() {
     </div>
     <div style="visibility:hidden">
       <label>Added</label>
-      <input type="text" readonly value="${currentUser}" style="background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 10px;font-size:11px;width:100%;" />
+      <input type="text" readonly value="${currentUser}" />
     </div>
     <div style="display:flex;align-items:end">
       <button class="del-btn" onclick="removeMultiRow(${multiRowCount})" title="Remove">🗑️</button>
