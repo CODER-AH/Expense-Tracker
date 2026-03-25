@@ -1,22 +1,64 @@
 # Release Notes - Coorg Trip Expense Tracker
 
-## Latest Updates (v2.0) - Current
+## Latest Updates (v3.0) - Current
 
 ### Major Features
 
+#### Budget Tracking
+- **Trip budget management**: Set and track total budget with custom dialog
+- **Budget tile**: Prominent full-width tile showing budget and remaining amount
+- **Dynamic color-coding**: Budget card turns green (within budget) or red (over budget)
+- **Total Spent colors**: Changes based on budget usage
+  - Green: Under 85% of budget
+  - Orange: 85-100% of budget (getting close)
+  - Red: Over budget
+- **Persistent storage**: Budget saved in localStorage across sessions
+
+#### Data Integrity & Soft Delete
+- **Soft delete system**: "Delete Forever" never actually deletes data from Google Sheets
+- **Deleted column**: Added "Deleted" column (Column K) to track deleted expenses
+- **Complete audit trail**: All expenses preserved in Google Sheets, just hidden from UI
+- **No data loss**: Every expense ever added is permanently stored
+
+#### Archive System
+- **Soft deletion**: Archive expenses instead of permanent deletion
+- **Restore capability**: Unarchive expenses to restore them to active list
+- **Archive section**: Dedicated collapsible section showing all archived items
+- **Confirmation dialogs**: Custom dialogs showing full expense details (description, amount, added by, paid by) before archive/unarchive/delete
+- **Flag-based system**: Uses "Archived" column (Column J) for tracking
+
+#### Collapsible Sections
+- **All sections collapsible**: Insights, Who Paid What, Settlement, Add New Expense, Expense History, Notes, and Archived
+- **Click to toggle**: Click section title to expand/collapse
+- **Visual indicators**: ▼ for expanded, ▶ for collapsed
+- **Default states**: Notes and Archived default to collapsed, others expanded
+
+#### Custom Filter Dropdowns
+- **Custom styled filters**: Beautiful custom dropdowns replacing browser defaults
+- **Day filter**: Filter by All Days, Day 1, or Day 2
+- **Person filter**: Filter by person with emoji indicators
+- **Auto-close**: Dropdowns close when clicking outside
+- **Selected highlight**: Active filter option highlighted in dropdown
+
 #### Multi-Row Expense Entry
-- **Add multiple expenses in batch**: Click "Add Row" to stage expenses, then "Save All" at once
+- **Add up to 3 expenses**: Limited to 3 rows maximum for better UX
+- **Smart counter**: Correctly tracks row count even after deletions
 - **Clear All option**: Discard staged rows without saving
 - **Individual row removal**: Remove specific rows before saving
 - **Pre-filled values**: Form values carry over to new rows for faster entry
-- **Visual feedback**: Multi-row section appears/disappears automatically
+
+#### Floating Status Bar
+- **Top-right position**: Compact floating badge at top-right corner
+- **Auto-hide on scroll**: Hides when scrolling down, reappears on scroll up
+- **Color-coded status**: Green (synced ✓), red (error), amber (syncing)
+- **Glass morphism**: Backdrop blur with semi-transparent background
+- **Emoji indicators**: Shows user emoji (👨‍💻 for techies, 👨‍⚕️ for doctor) instead of initials
 
 #### Advanced Table Features
 - **Pagination**: View 10 entries per page with numbered page navigation
 - **Column sorting**: Click any column header to sort ascending/descending
   - Supported columns: Description, Category, Added By, Paid By, Time, Amount
   - Visual indicators (▲/▼) show current sort direction
-- **Person filtering**: Dropdown to view expenses from specific people
 - **Smart time sorting**: Fixed to properly compare timestamps
 
 #### Inline Editing
@@ -30,31 +72,42 @@
 - **Minimum transactions**: Uses greedy algorithm to calculate fewest transfers
 - **Balance display**: Shows how much each person paid vs their share
 - **Action items**: Clear "owes" or "gets" indicators per person
+- **Emoji indicators**: Consistent emoji display in settlement cards
+- **Correct formatting**: Rupee symbol after sign (−₹500, +₹500)
 
 #### UI/UX Improvements
+- **Larger font sizes**: Base font increased to 15px for better readability
+- **Updated date format**: Shows "Saturday, 28 March – Sunday, 29 March 2026" (removed "2D / 1N")
+- **Prominent budget cards**: Budget and Total Spent span full width on desktop
+- **Responsive grid**: Category cards share width (4 per row desktop, 2 per row mobile)
+- **No number spinners**: Removed spinner controls from all number inputs
 - **Description truncation**: Long descriptions show 3 lines with "Show more" button
-- **Consistent dropdown arrows**: Fixed positioning across all select elements
 - **Edit badge placement**: EDITED label now appears before description (visible even when truncated)
 - **Larger sort icons**: Increased size for better visibility
 - **Loading overlay**: Full-screen spinner during initial data fetch
-- **Toast notifications**: User feedback for all actions (add, edit, delete)
+- **Toast notifications**: User feedback for all actions (add, edit, delete, archive)
+- **Filter wrapping**: Filters wrap properly on small screens
+- **Custom dialogs**: All prompts use custom styled dialogs (no browser defaults)
 
-### Backend Updates (Google Apps Script v2)
+### Backend Updates (Google Apps Script v3)
 
-#### New Columns
-- **Name** (Column C): Tracks who added each expense
-- **Edited** (Column I): Flags modified entries
-
-#### Enhanced Functions
+#### New Columns & Functions
+- **Archived** (Column J): Tracks archived status
+- **Deleted** (Column K): Tracks deleted status (soft delete)
+- **Migration logic**: Automatically adds "Archived" and "Deleted" columns to existing sheets
+- `archiveExpense()`: Marks expense as archived
+- `unarchiveExpense()`: Restores archived expense
+- `deleteExpense()`: Now marks as deleted instead of removing row
 - `updateExpense()`: Full edit support with timestamp and edit flag updates
-- `getAllExpenses()`: Returns complete expense data including edit status
-- `addExpense()`: Saves name and paid-by information
+- `getAllExpenses()`: Returns only non-deleted expenses, filters out archived and deleted
 - Color-coded categories in Google Sheets for visual clarity
 
 ### Bug Fixes
+- ✅ Fixed multi-row counter to allow adding rows after deletion
 - ✅ Fixed column mapping between frontend and Google Sheets
 - ✅ Fixed time sorting to properly handle date comparisons
-- ✅ Fixed dropdown styling inconsistencies (white backgrounds, misaligned arrows)
+- ✅ Fixed archive dialog to show "Paid by" information
+- ✅ Fixed rupee symbol position in settlement balance (−₹500 not ₹-500)
 - ✅ Removed duplicate setBusy function and isBusy state variable
 - ✅ Fixed description character limit (now unlimited with truncation)
 
@@ -63,7 +116,18 @@
 - ✅ Main branch protection enabled
 - ✅ Code owners set (@CODER-AH)
 - ✅ GitHub Pages deployment active
-- ✅ Feature branch workflow (feature/pagination-and-fixes)
+- ✅ Feature branch workflow (feature/archive-fixes)
+
+---
+
+## Previous Version (v2.0)
+
+### Major Features
+- Multi-row expense entry
+- Pagination and sorting
+- Inline editing
+- Settlement calculator
+- Basic UI improvements
 
 ---
 

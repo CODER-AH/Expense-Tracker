@@ -5,11 +5,13 @@ A beautiful expense tracking app for managing trip expenses with real-time Googl
 ## Features
 
 ### Core Functionality
-- ✅ **Multi-row expense entry** - Add multiple expenses at once with a single save action
+- ✅ **Multi-row expense entry** - Add up to 3 expenses at once with a single save action
 - ✅ **Inline editing** - Edit expenses directly in the table without opening forms
-- ✅ **Smart deletion** - Custom confirmation dialog before deleting expenses
-- ✅ **User tracking** - Track who added each expense with name saved in browser
-- ✅ **Real-time sync** - All changes sync to Google Sheets instantly
+- ✅ **Archive system** - Archive expenses instead of deletion, with restore option
+- ✅ **Soft delete** - Deleted expenses flagged but never removed from Google Sheets (full audit trail)
+- ✅ **Smart confirmations** - Custom dialogs showing full expense details before archive/delete
+- ✅ **User tracking** - Track who added each expense with emoji indicators (👨‍💻 for techies, 👨‍⚕️ for doctor)
+- ✅ **Real-time sync** - All changes sync to Google Sheets instantly with visual status indicator
 - ✅ **Offline support** - Works offline with localStorage, syncs when back online
 
 ### Organization & Display
@@ -17,22 +19,29 @@ A beautiful expense tracking app for managing trip expenses with real-time Googl
 - ✅ **Category-based** - Food, Fuel, Stay, Transport, Entry Fees, Miscellaneous
 - ✅ **Pagination** - View 10 entries per page with page navigation
 - ✅ **Sorting** - Sort by description, category, name, paid by, time, or amount (ascending/descending)
-- ✅ **Filtering** - Filter expenses by person (Afsar, Adham, Aakif, Sahlaan)
+- ✅ **Custom filters** - Beautiful custom filter dropdowns for day and person filtering
 - ✅ **Description truncation** - Long descriptions auto-truncate with "Show more" option
+- ✅ **Collapsible sections** - All sections (Insights, Settlement, Add Expense, History, Notes, Archived) can be collapsed
 
 ### Settlement & Analytics
+- ✅ **Budget tracking** - Set trip budget with visual indicators (green/orange/red based on usage)
+- ✅ **Dynamic color-coding** - Total spent changes color based on budget (green < 85%, orange 85-100%, red > 100%)
 - ✅ **Automatic settlement calculator** - Splits total equally among 4 people
 - ✅ **Minimum transactions** - Calculates who owes whom with fewest transfers needed
 - ✅ **Category totals** - See spending breakdown by category
-- ✅ **Person totals** - Track how much each person paid
+- ✅ **Person totals** - Track how much each person paid with emoji indicators
 - ✅ **Edit tracking** - Visual badge shows if an expense was edited
 
 ### UI & Design
 - ✅ **Beautiful dark theme** - Elegant dark green design with custom colors
+- ✅ **Floating status bar** - Compact sync indicator at top-right, auto-hides on scroll down
+- ✅ **Glass morphism effects** - Modern backdrop blur and transparency
+- ✅ **Large focal cards** - Budget and Total Spent prominently displayed as 2x size
 - ✅ **Mobile responsive** - Works seamlessly on phones and tablets
 - ✅ **Loading states** - Spinner overlay during data fetch
 - ✅ **Toast notifications** - User feedback for all actions
-- ✅ **Custom dropdowns** - Consistent arrow styling across all select elements
+- ✅ **Custom UI components** - No browser default dialogs, all custom styled
+- ✅ **Improved readability** - Increased font sizes across the app
 
 ## Deployment Instructions
 
