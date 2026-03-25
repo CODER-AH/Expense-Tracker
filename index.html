@@ -463,6 +463,137 @@
     letter-spacing: 0.1em;
   }
 
+  /* DELETE CONFIRMATION MODAL */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(14,20,18,0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 101;
+    padding: 24px;
+  }
+  .confirm-overlay.hidden { display: none; }
+  .confirm-box {
+    background: var(--card);
+    border: 1px solid var(--accent3);
+    border-radius: 16px;
+    padding: 28px 24px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+  .confirm-box .icon { font-size: 32px; margin-bottom: 12px; }
+  .confirm-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 19px;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .confirm-box p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  .confirm-box .expense-details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+  .confirm-box .expense-details .desc {
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .confirm-box .expense-details .amount {
+    color: var(--accent3);
+    font-weight: 600;
+    font-size: 16px;
+  }
+  .confirm-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  .confirm-buttons button {
+    flex: 1;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .confirm-buttons button:hover { opacity: 0.85; }
+  .btn-cancel {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-delete {
+    background: var(--accent3);
+    color: #0e1412;
+  }
+
+  /* INLINE EDIT */
+  .edit-mode {
+    background: #1e2e27 !important;
+  }
+  .edit-input {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+  }
+  .edit-select {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+  }
+  .edit-actions {
+    display: flex;
+    gap: 4px;
+  }
+  .edit-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .edit-actions button:hover { background: var(--border); }
+  .edited-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.05em;
+    color: var(--accent2);
+    background: rgba(245,200,66,0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
   /* NOTES */
   .notes-bar {
     max-width: 860px;
@@ -642,7 +773,13 @@
   </div>
 </div>
 
-<div class="section-title">📝 Expense History</div>
+<div class="section-title">📝 Expense History
+  <select id="sortSelect" onchange="sortExpenses()" style="margin-left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;">
+    <option value="time">Sort by Time</option>
+    <option value="name">Sort by Name</option>
+    <option value="amount">Sort by Amount</option>
+  </select>
+</div>
 
 <!-- EXPENSE TABLES -->
 <div class="timeline">
@@ -681,6 +818,23 @@
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<!-- DELETE CONFIRMATION MODAL -->
+<div class="confirm-overlay hidden" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="icon">⚠️</div>
+    <h3>Delete Expense?</h3>
+    <p>This action cannot be undone.</p>
+    <div class="expense-details" id="confirmDetails">
+      <div class="desc"></div>
+      <div class="amount"></div>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelDelete()">Cancel</button>
+      <button class="btn-delete" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
 <!-- LOADING OVERLAY -->
 <div class="loading-overlay hidden" id="loadingOverlay">
   <div class="loading-spinner"></div>
@@ -705,6 +859,8 @@ let expenses = { 1: [], 2: [] };
 let currentUser = '';
 let isBusy = false;
 let editingId = null;
+let deleteTarget = null;
+let sortBy = 'time';
 
 // ─── INIT ─────────────────────────────────────────────────
 window.onload = () => {
@@ -849,42 +1005,20 @@ async function saveExpense() {
 
   setBusy(true);
   showLoading(true);
-  setStatus('syncing', editingId ? 'Updating…' : 'Saving…');
+  setStatus('syncing', 'Saving…');
 
   try {
-    if (editingId) {
-      // Edit mode
-      const exp = { id: editingId, day, name, desc, cat, amount, paidBy };
-      await sheetUpdate(exp);
+    const exp = { id: 'local_' + Date.now(), day, name, desc, cat, amount, paidBy };
+    const newId = await sheetAdd(exp);
+    if (newId) exp.id = newId;
+    exp.ts = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+    exp.edited = "";
+    expenses[day].push(exp);
 
-      // Update local array
-      for (let d = 1; d <= 2; d++) {
-        const idx = expenses[d].findIndex(e => String(e.id) === String(editingId));
-        if (idx !== -1) {
-          expenses[d].splice(idx, 1);
-          break;
-        }
-      }
-      exp.ts = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-      expenses[day].push(exp);
-
-      setStatus('ok', 'Synced ✓');
-      showToast('Expense updated!', 'ok');
-      editingId = null;
-      document.getElementById('addBtnText').textContent = '+ Add';
-    } else {
-      // Add mode
-      const exp = { id: 'local_' + Date.now(), day, name, desc, cat, amount, paidBy };
-      const newId = await sheetAdd(exp);
-      if (newId) exp.id = newId;
-      exp.ts = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-      expenses[day].push(exp);
-
-      setStatus('ok', 'Synced ✓');
-      showToast('Expense added!', 'ok');
-    }
+    setStatus('ok', 'Synced ✓');
+    showToast('Expense added!', 'ok');
   } catch(e) {
-    setStatus('err', editingId ? 'Update failed' : 'Saved locally only');
+    setStatus('err', 'Saved locally only');
     showToast('No internet — saved locally', 'err');
   }
 
@@ -900,41 +1034,128 @@ function clearForm() {
   document.getElementById('inp-amount').value = '';
   document.getElementById('inp-paidby').value = '';
   document.getElementById('inp-day').value = '1';
-  document.getElementById('inp-cat').value = 'fuel';
+  document.getElementById('inp-cat').value = 'food';
   editingId = null;
   document.getElementById('addBtnText').textContent = '+ Add';
 }
 
-function editExpense(day, id) {
+// ─── INLINE EDIT ──────────────────────────────────────────
+function startInlineEdit(day, id) {
   const exp = expenses[day].find(e => String(e.id) === String(id));
-  if (!exp) return;
+  if (!exp || exp.name !== currentUser) {
+    showToast('You can only edit your own expenses', 'err');
+    return;
+  }
 
-  editingId = id;
-  document.getElementById('inp-day').value = exp.day;
-  document.getElementById('inp-desc').value = exp.desc;
-  document.getElementById('inp-cat').value = exp.cat;
-  document.getElementById('inp-amount').value = exp.amount;
-  document.getElementById('inp-paidby').value = exp.paidBy || '';
-  document.getElementById('addBtnText').textContent = '💾 Update';
+  const row = document.getElementById(`row-${id}`);
+  if (!row) return;
 
-  document.getElementById('inp-desc').focus();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  row.classList.add('edit-mode');
+  const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
+
+  row.innerHTML = `
+    <td class="num-col"></td>
+    <td><input class="edit-input" id="edit-desc-${id}" value="${exp.desc}" /></td>
+    <td>
+      <select class="edit-select" id="edit-cat-${id}">
+        <option value="food" ${exp.cat === 'food' ? 'selected' : ''}>🍽️ Food</option>
+        <option value="fuel" ${exp.cat === 'fuel' ? 'selected' : ''}>⛽ Fuel</option>
+        <option value="stay" ${exp.cat === 'stay' ? 'selected' : ''}>🏨 Stay</option>
+        <option value="transport" ${exp.cat === 'transport' ? 'selected' : ''}>🚙 Transport</option>
+        <option value="entry" ${exp.cat === 'entry' ? 'selected' : ''}>🎟️ Entry Fees</option>
+        <option value="misc" ${exp.cat === 'misc' ? 'selected' : ''}>🛍️ Miscellaneous</option>
+      </select>
+    </td>
+    <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)">${exp.name}</td>
+    <td>
+      <select class="edit-select" id="edit-paidby-${id}">
+        <option value="Afsar" ${exp.paidBy === 'Afsar' ? 'selected' : ''}>Afsar</option>
+        <option value="Adham" ${exp.paidBy === 'Adham' ? 'selected' : ''}>Adham</option>
+        <option value="Aakif" ${exp.paidBy === 'Aakif' ? 'selected' : ''}>Aakif</option>
+        <option value="Sehlaan" ${exp.paidBy === 'Sehlaan' ? 'selected' : ''}>Sehlaan</option>
+      </select>
+    </td>
+    <td></td>
+    <td><input class="edit-input" type="number" id="edit-amount-${id}" value="${exp.amount}" style="width:80px;" /></td>
+    <td colspan="2">
+      <div class="edit-actions">
+        <button onclick="saveInlineEdit(${day}, '${id}')" title="Save">✅</button>
+        <button onclick="cancelInlineEdit(${day}, '${id}')" title="Cancel">❌</button>
+      </div>
+    </td>
+  `;
+}
+
+async function saveInlineEdit(day, id) {
+  const desc = document.getElementById(`edit-desc-${id}`)?.value.trim();
+  const cat = document.getElementById(`edit-cat-${id}`)?.value;
+  const amount = parseFloat(document.getElementById(`edit-amount-${id}`)?.value) || 0;
+  const paidBy = document.getElementById(`edit-paidby-${id}`)?.value;
+
+  if (!desc || amount <= 0 || !paidBy) {
+    showToast('Please fill all fields correctly', 'err');
+    return;
+  }
+
+  showLoading(true);
+  setBusy(true);
+
+  const exp = expenses[day].find(e => String(e.id) === String(id));
+  const updated = { id, day, name: exp.name, desc, cat, amount, paidBy };
+
+  try {
+    await sheetUpdate(updated);
+
+    // Update local
+    const idx = expenses[day].findIndex(e => String(e.id) === String(id));
+    if (idx !== -1) {
+      expenses[day][idx] = { ...expenses[day][idx], desc, cat, amount, paidBy, edited: 'Yes', ts: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) };
+    }
+
+    saveLocal();
+    showToast('Expense updated!', 'ok');
+  } catch(e) {
+    showToast('Update failed', 'err');
+  }
+
+  showLoading(false);
+  setBusy(false);
+  render();
+}
+
+function cancelInlineEdit(day, id) {
+  render();
 }
 
 // ─── DELETE EXPENSE ───────────────────────────────────────
-async function deleteExp(day, id) {
-  if (isBusy) return;
-
+function showDeleteConfirm(day, id) {
   const exp = expenses[day].find(e => String(e.id) === String(id));
-  const confirmMsg = exp
-    ? `Delete "${exp.desc}" (₹${exp.amount})?`
-    : 'Delete this expense?';
+  if (!exp) return;
 
-  if (!confirm(confirmMsg)) return;
+  deleteTarget = { day, id };
 
-  setBusy(true);
+  const detailsEl = document.getElementById('confirmDetails');
+  detailsEl.querySelector('.desc').textContent = exp.desc;
+  detailsEl.querySelector('.amount').textContent = `₹${exp.amount.toLocaleString('en-IN')}`;
+
+  document.getElementById('confirmOverlay').classList.remove('hidden');
+}
+
+function cancelDelete() {
+  deleteTarget = null;
+  document.getElementById('confirmOverlay').classList.add('hidden');
+}
+
+async function confirmDelete() {
+  if (!deleteTarget) return;
+
+  const { day, id } = deleteTarget;
+
+  document.getElementById('confirmOverlay').classList.add('hidden');
   showLoading(true);
+  setBusy(true);
   setStatus('syncing', 'Deleting…');
+
   try {
     await sheetDelete(id);
     setStatus('ok', 'Synced ✓');
@@ -943,10 +1164,12 @@ async function deleteExp(day, id) {
     setStatus('err', 'Delete failed');
     showToast('Delete failed — check connection', 'err');
   }
+
   expenses[day] = expenses[day].filter(e => String(e.id) !== String(id));
   saveLocal();
   setBusy(false);
   showLoading(false);
+  deleteTarget = null;
   render();
 }
 
@@ -957,13 +1180,21 @@ function render() {
     tbody.innerHTML = '';
     let dayTotal = 0;
 
-    if (expenses[day].length === 0) {
+    // Sort expenses
+    let dayExpenses = [...expenses[day]];
+    if (sortBy === 'name') {
+      dayExpenses.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } else if (sortBy === 'amount') {
+      dayExpenses.sort((a, b) => (b.amount || 0) - (a.amount || 0));
+    }
+
+    if (dayExpenses.length === 0) {
       const tr = document.createElement('tr');
       tr.className = 'empty-row';
       tr.innerHTML = `<td colspan="9">No expenses yet for Day ${day} — add one above!</td>`;
       tbody.appendChild(tr);
     } else {
-      expenses[day].forEach((exp, idx) => {
+      dayExpenses.forEach((exp, idx) => {
         dayTotal += exp.amount || 0;
         const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
 
@@ -977,7 +1208,6 @@ function render() {
               const timeMatch = timePart.match(/(\d{1,2}:\d{2})/);
               if (timeMatch) {
                 timeStr = timeMatch[1];
-                // Add AM/PM if present
                 if (timePart.toLowerCase().includes('am')) timeStr += ' AM';
                 else if (timePart.toLowerCase().includes('pm')) timeStr += ' PM';
               }
@@ -988,16 +1218,25 @@ function render() {
         }
 
         const tr = document.createElement('tr');
+        tr.id = `row-${exp.id}`;
+
+        // Check if user can edit
+        const canEdit = currentUser === exp.name;
+        const editIcon = canEdit ? '✏️' : '';
+
+        // Edited badge
+        const editedBadge = exp.edited === 'Yes' ? '<span class="edited-badge">EDITED</span>' : '';
+
         tr.innerHTML = `
           <td class="num-col">${idx + 1}</td>
-          <td><div>${exp.desc}</div></td>
+          <td><div>${exp.desc}${editedBadge}</div></td>
           <td><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
           <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)">${exp.name || '—'}</td>
           <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)">${exp.paidBy || '—'}</td>
           <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)">${timeStr}</td>
           <td class="amount-col">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
-          <td><button class="del-btn edit-btn" onclick="editExpense(${day}, '${exp.id}')" title="Edit">✏️</button></td>
-          <td><button class="del-btn" onclick="deleteExp(${day}, '${exp.id}')" title="Remove">🗑️</button></td>
+          <td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>
+          <td><button class="del-btn" onclick="showDeleteConfirm(${day}, '${exp.id}')" title="Remove">🗑️</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -1034,6 +1273,12 @@ function updateSummary() {
   document.getElementById('paidAdham').textContent = paidBy.Adham.toLocaleString('en-IN');
   document.getElementById('paidAakif').textContent = paidBy.Aakif.toLocaleString('en-IN');
   document.getElementById('paidSehlaan').textContent = paidBy.Sehlaan.toLocaleString('en-IN');
+}
+
+// ─── SORT ─────────────────────────────────────────────────
+function sortExpenses() {
+  sortBy = document.getElementById('sortSelect').value;
+  render();
 }
 
 // ─── UI HELPERS ───────────────────────────────────────────
