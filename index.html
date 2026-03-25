@@ -1494,8 +1494,12 @@ function cancelInlineEdit(day, id) {
 let multiRowCount = 0;
 
 function addExpenseRow() {
+  // Get current row count
+  const entriesDiv = document.getElementById('multiRowEntries');
+  const currentRowCount = entriesDiv.querySelectorAll('.multi-row-entry').length;
+
   // Limit to 3 rows max
-  if (multiRowCount >= 3) {
+  if (currentRowCount >= 3) {
     showToast('Maximum 3 rows allowed', 'err');
     return;
   }
@@ -1506,7 +1510,6 @@ function addExpenseRow() {
 
   // Add new row
   multiRowCount++;
-  const entriesDiv = document.getElementById('multiRowEntries');
   const rowDiv = document.createElement('div');
   rowDiv.className = 'multi-row-entry';
   rowDiv.id = `multi-row-${multiRowCount}`;
