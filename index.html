@@ -236,7 +236,7 @@
     border-radius: 14px;
     padding: 18px;
     display: grid;
-    grid-template-columns: 80px 100px 1fr 110px 120px 110px auto auto;
+    grid-template-columns: 80px 100px 1fr 110px 120px 110px auto;
     gap: 10px;
     align-items: end;
   }
@@ -955,31 +955,22 @@
       </select>
     </div>
     <div>
-      <button class="add-btn" id="addBtn" onclick="saveExpense()">
-        <div class="spinner" id="addSpinner"></div>
+      <button class="add-btn" id="addBtn" onclick="addExpenseRow()">
         <span id="addBtnText">+ Add</span>
-      </button>
-    </div>
-    <div>
-      <button class="add-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="toggleMultiRow()">
-        + Add Multiple
       </button>
     </div>
   </div>
 
-  <!-- MULTI-ROW ADD -->
+  <!-- MULTI-ROW ADD SECTION -->
   <div class="multi-row-container" id="multiRowContainer">
     <div id="multiRowEntries"></div>
     <div class="multi-row-actions">
-      <button class="add-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="addMultiRow()">
-        + Add Row
-      </button>
       <button class="add-btn" onclick="saveMultipleExpenses()">
         <div class="spinner" id="multiSpinner" style="display:none"></div>
         💾 Save All
       </button>
-      <button class="add-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="cancelMultiRow()">
-        Cancel
+      <button class="add-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="clearAllRows()">
+        Clear All
       </button>
     </div>
   </div>
@@ -1085,7 +1076,6 @@ const CAT_CONFIG = {
 // ─── STATE ────────────────────────────────────────────────
 let expenses = { 1: [], 2: [] };
 let currentUser = '';
-let isBusy = false;
 let editingId = null;
 let deleteTarget = null;
 let sortBy = 'time';
@@ -1362,63 +1352,60 @@ function cancelInlineEdit(day, id) {
 // ─── MULTI-ROW ADD ────────────────────────────────────────
 let multiRowCount = 0;
 
-function toggleMultiRow() {
+function addExpenseRow() {
+  // Show the multi-row container if hidden
   const container = document.getElementById('multiRowContainer');
-  if (container.classList.contains('active')) {
-    cancelMultiRow();
-  } else {
-    container.classList.add('active');
-    multiRowCount = 0;
-    document.getElementById('multiRowEntries').innerHTML = '';
-    // Add first row automatically
-    addMultiRow();
-    addMultiRow();
-    addMultiRow();
-  }
-}
+  container.classList.add('active');
 
-function addMultiRow() {
+  // Add new row
   multiRowCount++;
   const entriesDiv = document.getElementById('multiRowEntries');
   const rowDiv = document.createElement('div');
   rowDiv.className = 'multi-row-entry';
   rowDiv.id = `multi-row-${multiRowCount}`;
 
+  // Get current form values
+  const day = document.getElementById('inp-day').value;
+  const cat = document.getElementById('inp-cat').value;
+  const desc = document.getElementById('inp-desc').value.trim();
+  const amount = document.getElementById('inp-amount').value;
+  const paidBy = document.getElementById('inp-paidby').value;
+
   rowDiv.innerHTML = `
     <div>
       <label>Day</label>
       <select id="multi-day-${multiRowCount}">
-        <option value="1">Day 1</option>
-        <option value="2">Day 2</option>
+        <option value="1" ${day === '1' ? 'selected' : ''}>Day 1</option>
+        <option value="2" ${day === '2' ? 'selected' : ''}>Day 2</option>
       </select>
     </div>
     <div>
       <label>Category</label>
       <select id="multi-cat-${multiRowCount}">
-        <option value="food">🍽️ Food</option>
-        <option value="fuel">⛽ Fuel</option>
-        <option value="stay">🏨 Stay</option>
-        <option value="transport">🚙 Transport</option>
-        <option value="entry">🎟️ Entry</option>
-        <option value="misc">🛍️ Misc</option>
+        <option value="food" ${cat === 'food' ? 'selected' : ''}>🍽️ Food</option>
+        <option value="fuel" ${cat === 'fuel' ? 'selected' : ''}>⛽ Fuel</option>
+        <option value="stay" ${cat === 'stay' ? 'selected' : ''}>🏨 Stay</option>
+        <option value="transport" ${cat === 'transport' ? 'selected' : ''}>🚙 Transport</option>
+        <option value="entry" ${cat === 'entry' ? 'selected' : ''}>🎟️ Entry</option>
+        <option value="misc" ${cat === 'misc' ? 'selected' : ''}>🛍️ Misc</option>
       </select>
     </div>
     <div>
       <label>Description</label>
-      <input type="text" id="multi-desc-${multiRowCount}" placeholder="Description" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;width:100%;outline:none;" />
+      <input type="text" id="multi-desc-${multiRowCount}" value="${desc}" placeholder="Description" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;width:100%;outline:none;" />
     </div>
     <div>
       <label>Amount (₹)</label>
-      <input type="number" id="multi-amount-${multiRowCount}" placeholder="0" min="0" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;width:100%;outline:none;" />
+      <input type="number" id="multi-amount-${multiRowCount}" value="${amount}" placeholder="0" min="0" style="background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;width:100%;outline:none;" />
     </div>
     <div>
       <label>Paid by</label>
       <select id="multi-paidby-${multiRowCount}">
         <option value="">Select...</option>
-        <option value="Afsar">Afsar</option>
-        <option value="Adham">Adham</option>
-        <option value="Aakif">Aakif</option>
-        <option value="Sahlaan">Sahlaan</option>
+        <option value="Afsar" ${paidBy === 'Afsar' ? 'selected' : ''}>Afsar</option>
+        <option value="Adham" ${paidBy === 'Adham' ? 'selected' : ''}>Adham</option>
+        <option value="Aakif" ${paidBy === 'Aakif' ? 'selected' : ''}>Aakif</option>
+        <option value="Sahlaan" ${paidBy === 'Sahlaan' ? 'selected' : ''}>Sahlaan</option>
       </select>
     </div>
     <div style="visibility:hidden">
@@ -1431,14 +1418,25 @@ function addMultiRow() {
   `;
 
   entriesDiv.appendChild(rowDiv);
+
+  // Clear the main form
+  document.getElementById('inp-desc').value = '';
+  document.getElementById('inp-amount').value = '';
+  document.getElementById('inp-paidby').value = '';
 }
 
 function removeMultiRow(id) {
   const row = document.getElementById(`multi-row-${id}`);
   if (row) row.remove();
+
+  // Hide container if no rows left
+  const entriesDiv = document.getElementById('multiRowEntries');
+  if (entriesDiv.querySelectorAll('.multi-row-entry').length === 0) {
+    clearAllRows();
+  }
 }
 
-function cancelMultiRow() {
+function clearAllRows() {
   document.getElementById('multiRowContainer').classList.remove('active');
   document.getElementById('multiRowEntries').innerHTML = '';
   multiRowCount = 0;
@@ -1473,7 +1471,6 @@ async function saveMultipleExpenses() {
 
   // Save all entries
   showLoading(true);
-  setBusy(true);
   document.getElementById('multiSpinner').style.display = 'block';
 
   let savedCount = 0;
@@ -1494,11 +1491,10 @@ async function saveMultipleExpenses() {
 
   saveLocal();
   showLoading(false);
-  setBusy(false);
   document.getElementById('multiSpinner').style.display = 'none';
 
   showToast(`${savedCount} expense${savedCount > 1 ? 's' : ''} added!`, 'ok');
-  cancelMultiRow();
+  clearAllRows();
   render();
 }
 
@@ -1933,11 +1929,6 @@ function goToPage(day, page) {
 }
 
 // ─── UI HELPERS ───────────────────────────────────────────
-function setBusy(busy) {
-  isBusy = busy;
-  document.getElementById('addBtn').disabled = busy;
-  document.getElementById('addSpinner').style.display = busy ? 'block' : 'none';
-}
 function setStatus(state, text) {
   const dot = document.getElementById('statusDot');
   dot.className = 'status-dot' + (state ? ' ' + state : '');
@@ -1961,10 +1952,10 @@ function showToast(msg, type) {
 }
 
 document.getElementById('inp-amount').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveExpense();
+  if (e.key === 'Enter') addExpenseRow();
 });
 document.getElementById('inp-paidby').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveExpense();
+  if (e.key === 'Enter') addExpenseRow();
 });
 </script>
 </body>
