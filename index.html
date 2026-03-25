@@ -341,6 +341,28 @@
     color: var(--muted);
     border-bottom: 1px solid var(--border);
     background: var(--surface);
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s, background 0.15s;
+  }
+  thead th:hover {
+    color: var(--text);
+    background: #1a2620;
+  }
+  thead th.sortable::after {
+    content: ' ↕';
+    opacity: 0.3;
+    font-size: 9px;
+  }
+  thead th.sorted-asc::after {
+    content: ' ↑';
+    opacity: 1;
+    color: var(--accent);
+  }
+  thead th.sorted-desc::after {
+    content: ' ↓';
+    opacity: 1;
+    color: var(--accent);
   }
   tbody tr { border-bottom: 1px solid #1e2e27; transition: background 0.1s; }
   tbody tr:last-child { border-bottom: none; }
@@ -594,6 +616,29 @@
     vertical-align: middle;
   }
 
+  /* DESCRIPTION TRUNCATION */
+  .desc-truncated {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+  }
+  .desc-full {
+    line-height: 1.4;
+  }
+  .show-more-btn {
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    margin-top: 4px;
+    display: inline-block;
+  }
+  .show-more-btn:hover {
+    text-decoration: underline;
+  }
+
   /* SETTLEMENT */
   .settlement-grid {
     display: grid;
@@ -699,12 +744,12 @@
     <div class="emoji">👋</div>
     <h2>Who are you?</h2>
     <p>Select your name so everyone knows who added each expense. This is saved on your device — you'll only need to do this once.</p>
-    <select id="nameInput" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;text-align:center;margin-bottom:14px;transition:border-color 0.15s;">
+    <select id="nameInput" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:14px;transition:border-color 0.15s;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center;padding-right:35px;">
       <option value="">Select your name...</option>
       <option value="Afsar">Afsar</option>
       <option value="Adham">Adham</option>
       <option value="Aakif">Aakif</option>
-      <option value="Sehlaan">Sehlaan</option>
+      <option value="Sahlaan">Sahlaan</option>
     </select>
     <button onclick="saveName()">Let's Go →</button>
   </div>
@@ -779,8 +824,8 @@
     <div class="amount"><span class="currency">₹</span><span id="paidAakif">0</span></div>
   </div>
   <div class="sum-card">
-    <div class="label">💰 Sehlaan</div>
-    <div class="amount"><span class="currency">₹</span><span id="paidSehlaan">0</span></div>
+    <div class="label">💰 Sahlaan</div>
+    <div class="amount"><span class="currency">₹</span><span id="paidSahlaan">0</span></div>
   </div>
 </div>
 
@@ -809,7 +854,7 @@
     </div>
     <div>
       <label>Description</label>
-      <input type="text" id="inp-desc" placeholder="e.g. Masala Dosa at Mylari" maxlength="300" />
+      <input type="text" id="inp-desc" placeholder="e.g. Masala Dosa at Mylari" />
     </div>
     <div>
       <label>Category</label>
@@ -833,7 +878,7 @@
         <option value="Afsar">Afsar</option>
         <option value="Adham">Adham</option>
         <option value="Aakif">Aakif</option>
-        <option value="Sehlaan">Sehlaan</option>
+        <option value="Sahlaan">Sahlaan</option>
       </select>
     </div>
     <div>
@@ -851,12 +896,7 @@
     <option value="Afsar">Afsar</option>
     <option value="Adham">Adham</option>
     <option value="Aakif">Aakif</option>
-    <option value="Sehlaan">Sehlaan</option>
-  </select>
-  <select id="sortSelect" onchange="sortExpenses()" style="margin-left:8px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;">
-    <option value="time">Sort by Time</option>
-    <option value="name">Sort by Name</option>
-    <option value="amount">Sort by Amount</option>
+    <option value="Sahlaan">Sahlaan</option>
   </select>
 </div>
 
@@ -866,8 +906,14 @@
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>#</th><th>Description</th><th>Category</th>
-        <th>Added By</th><th>Paid By</th><th>Time</th><th style="text-align:right">Amount</th><th></th><th></th>
+        <th>#</th>
+        <th class="sortable" onclick="sortByColumn('desc')">Description</th>
+        <th class="sortable" onclick="sortByColumn('cat')">Category</th>
+        <th class="sortable" onclick="sortByColumn('name')">Added By</th>
+        <th class="sortable" onclick="sortByColumn('paidBy')">Paid By</th>
+        <th class="sortable" onclick="sortByColumn('time')">Time</th>
+        <th class="sortable" onclick="sortByColumn('amount')" style="text-align:right">Amount</th>
+        <th></th><th></th>
       </tr></thead>
       <tbody id="day1-body"></tbody>
     </table>
@@ -877,8 +923,14 @@
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>#</th><th>Description</th><th>Category</th>
-        <th>Added By</th><th>Paid By</th><th>Time</th><th style="text-align:right">Amount</th><th></th><th></th>
+        <th>#</th>
+        <th class="sortable" onclick="sortByColumn('desc')">Description</th>
+        <th class="sortable" onclick="sortByColumn('cat')">Category</th>
+        <th class="sortable" onclick="sortByColumn('name')">Added By</th>
+        <th class="sortable" onclick="sortByColumn('paidBy')">Paid By</th>
+        <th class="sortable" onclick="sortByColumn('time')">Time</th>
+        <th class="sortable" onclick="sortByColumn('amount')" style="text-align:right">Amount</th>
+        <th></th><th></th>
       </tr></thead>
       <tbody id="day2-body"></tbody>
     </table>
@@ -940,6 +992,7 @@ let isBusy = false;
 let editingId = null;
 let deleteTarget = null;
 let sortBy = 'time';
+let sortOrder = 'desc'; // 'asc' or 'desc'
 let filterBy = 'all';
 
 // ─── INIT ─────────────────────────────────────────────────
@@ -1135,7 +1188,7 @@ function startInlineEdit(day, id) {
 
   row.innerHTML = `
     <td class="num-col"></td>
-    <td><input class="edit-input" id="edit-desc-${id}" value="${exp.desc}" maxlength="300" /></td>
+    <td><input class="edit-input" id="edit-desc-${id}" value="${exp.desc}" /></td>
     <td>
       <select class="edit-select" id="edit-cat-${id}">
         <option value="food" ${exp.cat === 'food' ? 'selected' : ''}>🍽️ Food</option>
@@ -1152,7 +1205,7 @@ function startInlineEdit(day, id) {
         <option value="Afsar" ${exp.paidBy === 'Afsar' ? 'selected' : ''}>Afsar</option>
         <option value="Adham" ${exp.paidBy === 'Adham' ? 'selected' : ''}>Adham</option>
         <option value="Aakif" ${exp.paidBy === 'Aakif' ? 'selected' : ''}>Aakif</option>
-        <option value="Sehlaan" ${exp.paidBy === 'Sehlaan' ? 'selected' : ''}>Sehlaan</option>
+        <option value="Sahlaan" ${exp.paidBy === 'Sahlaan' ? 'selected' : ''}>Sahlaan</option>
       </select>
     </td>
     <td></td>
@@ -1267,11 +1320,44 @@ function render() {
     }
 
     // Sort expenses
-    if (sortBy === 'name') {
-      dayExpenses.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    } else if (sortBy === 'amount') {
-      dayExpenses.sort((a, b) => (b.amount || 0) - (a.amount || 0));
-    }
+    dayExpenses.sort((a, b) => {
+      let valA, valB;
+
+      switch(sortBy) {
+        case 'desc':
+          valA = (a.desc || '').toLowerCase();
+          valB = (b.desc || '').toLowerCase();
+          break;
+        case 'cat':
+          valA = (a.cat || '').toLowerCase();
+          valB = (b.cat || '').toLowerCase();
+          break;
+        case 'name':
+          valA = (a.name || '').toLowerCase();
+          valB = (b.name || '').toLowerCase();
+          break;
+        case 'paidBy':
+          valA = (a.paidBy || '').toLowerCase();
+          valB = (b.paidBy || '').toLowerCase();
+          break;
+        case 'amount':
+          valA = a.amount || 0;
+          valB = b.amount || 0;
+          break;
+        case 'time':
+        default:
+          valA = a.id || '';
+          valB = b.id || '';
+          break;
+      }
+
+      if (sortBy === 'amount') {
+        return sortOrder === 'asc' ? valA - valB : valB - valA;
+      } else {
+        const comparison = valA < valB ? -1 : valA > valB ? 1 : 0;
+        return sortOrder === 'asc' ? comparison : -comparison;
+      }
+    });
 
     if (dayExpenses.length === 0) {
       const tr = document.createElement('tr');
@@ -1315,14 +1401,23 @@ function render() {
         // Edited badge
         const editedBadge = exp.edited === 'Yes' ? '<span class="edited-badge">EDITED</span>' : '';
 
+        // Description with truncation
+        const descId = `desc-${exp.id}`;
+        const showTruncated = exp.desc.length > 100;
+
         tr.innerHTML = `
           <td class="num-col">${idx + 1}</td>
-          <td><div>${exp.desc}${editedBadge}</div></td>
-          <td><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
-          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)">${exp.name || '—'}</td>
-          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)">${exp.paidBy || '—'}</td>
-          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)">${timeStr}</td>
-          <td class="amount-col">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
+          <td>
+            <div id="${descId}" class="${showTruncated ? 'desc-truncated' : 'desc-full'}">
+              ${exp.desc}${editedBadge}
+            </div>
+            ${showTruncated ? `<span class="show-more-btn" onclick="toggleDesc('${descId}')">Show more...</span>` : ''}
+          </td>
+          <td style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
+          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
+          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
+          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
+          <td class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
           <td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>
           <td><button class="del-btn" onclick="showDeleteConfirm(${day}, '${exp.id}')" title="Remove">🗑️</button></td>
         `;
@@ -1343,7 +1438,7 @@ function updateSummary() {
   all.forEach(e => { if (cats[e.cat] !== undefined) cats[e.cat] += (e.amount || 0); });
 
   // Calculate paid-by totals
-  const paidBy = { Afsar: 0, Adham: 0, Aakif: 0, Sehlaan: 0 };
+  const paidBy = { Afsar: 0, Adham: 0, Aakif: 0, Sahlaan: 0 };
   all.forEach(e => {
     if (paidBy[e.paidBy] !== undefined) {
       paidBy[e.paidBy] += (e.amount || 0);
@@ -1361,7 +1456,7 @@ function updateSummary() {
   document.getElementById('paidAfsar').textContent = paidBy.Afsar.toLocaleString('en-IN');
   document.getElementById('paidAdham').textContent = paidBy.Adham.toLocaleString('en-IN');
   document.getElementById('paidAakif').textContent = paidBy.Aakif.toLocaleString('en-IN');
-  document.getElementById('paidSehlaan').textContent = paidBy.Sehlaan.toLocaleString('en-IN');
+  document.getElementById('paidSahlaan').textContent = paidBy.Sahlaan.toLocaleString('en-IN');
 }
 
 // ─── SETTLEMENT ───────────────────────────────────────────
@@ -1369,12 +1464,12 @@ function updateSettlement() {
   const all = [...expenses[1], ...expenses[2]];
   const total = all.reduce((s, e) => s + (e.amount || 0), 0);
 
-  // Only split among Afsar, Adham, Aakif (3 people)
-  const splitAmong = ['Afsar', 'Adham', 'Aakif'];
+  // Split among all 4 people
+  const splitAmong = ['Afsar', 'Adham', 'Aakif', 'Sahlaan'];
   const sharePerPerson = total / splitAmong.length;
 
   // Calculate how much each person paid
-  const paidBy = { Afsar: 0, Adham: 0, Aakif: 0 };
+  const paidBy = { Afsar: 0, Adham: 0, Aakif: 0, Sahlaan: 0 };
   all.forEach(e => {
     if (paidBy[e.paidBy] !== undefined) {
       paidBy[e.paidBy] += (e.amount || 0);
@@ -1415,9 +1510,11 @@ function updateSettlement() {
       });
     }
 
+    const emojiMap = { 'Afsar': '👨‍💻', 'Adham': '🧑‍💻', 'Aakif': '👨‍💼', 'Sahlaan': '🧑‍🔧' };
+
     card.innerHTML = `
       <div class="person-name">
-        <span class="emoji">${person === 'Afsar' ? '👨‍💻' : person === 'Adham' ? '🧑‍💻' : '👨‍💼'}</span>
+        <span class="emoji">${emojiMap[person] || '👤'}</span>
         ${person}
       </div>
       <div class="stat-row">
@@ -1481,15 +1578,48 @@ function calculateSettlements(balance) {
   return settlements;
 }
 
-// ─── SORT ─────────────────────────────────────────────────
-function sortExpenses() {
-  sortBy = document.getElementById('sortSelect').value;
+// ─── SORT & FILTER ────────────────────────────────────────
+function sortByColumn(column) {
+  if (sortBy === column) {
+    // Toggle sort order
+    sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+  } else {
+    // New column, default to ascending
+    sortBy = column;
+    sortOrder = 'asc';
+  }
+
+  // Update all table headers
+  document.querySelectorAll('thead th.sortable').forEach(th => {
+    th.classList.remove('sorted-asc', 'sorted-desc');
+  });
+
+  // Mark current sorted column
+  document.querySelectorAll(`thead th.sortable[onclick="sortByColumn('${column}')"]`).forEach(th => {
+    th.classList.add(sortOrder === 'asc' ? 'sorted-asc' : 'sorted-desc');
+  });
+
   render();
 }
 
 function filterExpenses() {
   filterBy = document.getElementById('filterSelect').value;
   render();
+}
+
+function toggleDesc(descId) {
+  const el = document.getElementById(descId);
+  const btn = el.nextElementSibling;
+
+  if (el.classList.contains('desc-truncated')) {
+    el.classList.remove('desc-truncated');
+    el.classList.add('desc-full');
+    if (btn) btn.textContent = 'Show less';
+  } else {
+    el.classList.remove('desc-full');
+    el.classList.add('desc-truncated');
+    if (btn) btn.textContent = 'Show more...';
+  }
 }
 
 // ─── UI HELPERS ───────────────────────────────────────────
