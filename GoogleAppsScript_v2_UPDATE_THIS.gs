@@ -20,6 +20,8 @@ function handleRequest(e) {
     if (action === "getAll") return respond(getAllExpenses());
     if (action === "add")    return respond(addExpense(e.parameter));
     if (action === "update") return respond(updateExpense(e.parameter));
+    if (action === "archive") return respond(archiveExpense(e.parameter));
+    if (action === "unarchive") return respond(unarchiveExpense(e.parameter));
     if (action === "delete") { deleteExpense(e.parameter.id); return respond({ success: true }); }
     if (action === "ping")   return respond({ success: true, message: "Connected!" });
     return respond({ error: "Unknown action" });
@@ -33,8 +35,8 @@ function getOrCreateSheet() {
   let sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
-    sheet.appendRow(["ID", "Day", "Name", "Description", "Category", "Amount", "Paid By", "Timestamp", "Edited"]);
-    sheet.getRange(1, 1, 1, 9).setFontWeight("bold");
+    sheet.appendRow(["ID", "Day", "Name", "Description", "Category", "Amount", "Paid By", "Timestamp", "Edited", "Archived"]);
+    sheet.getRange(1, 1, 1, 10).setFontWeight("bold");
     sheet.setFrozenRows(1);
     sheet.setColumnWidth(1, 120);
     sheet.setColumnWidth(2, 55);
@@ -45,6 +47,7 @@ function getOrCreateSheet() {
     sheet.setColumnWidth(7, 100);
     sheet.setColumnWidth(8, 160);
     sheet.setColumnWidth(9, 80);
+    sheet.setColumnWidth(10, 80);
   }
   return sheet;
 }
@@ -59,15 +62,16 @@ function getAllExpenses() {
     const r = data[i];
     if (r[0]) {
       expenses.push({
-        id:      String(r[0]),
-        day:     Number(r[1]),
-        name:    String(r[2]),
-        desc:    String(r[3]),
-        cat:     String(r[4]),
-        amount:  Number(r[5]),
-        paidBy:  String(r[6]),
-        ts:      String(r[7]),
-        edited:  r[8] ? String(r[8]) : ""
+        id:       String(r[0]),
+        day:      Number(r[1]),
+        name:     String(r[2]),
+        desc:     String(r[3]),
+        cat:      String(r[4]),
+        amount:   Number(r[5]),
+        paidBy:   String(r[6]),
+        ts:       String(r[7]),
+        edited:   r[8] ? String(r[8]) : "",
+        archived: r[9] ? String(r[9]) : ""
       });
     }
   }
@@ -79,7 +83,7 @@ function addExpense(p) {
   const id = "exp_" + new Date().getTime();
   const ts = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
-  sheet.appendRow([id, Number(p.day), p.name || "—", p.desc, p.cat, Number(p.amount), p.paidBy || "—", ts, ""]);
+  sheet.appendRow([id, Number(p.day), p.name || "—", p.desc, p.cat, Number(p.amount), p.paidBy || "—", ts, "", ""]);
 
   // Color-code category cell
   const catColors = {
@@ -134,6 +138,34 @@ function updateExpense(p) {
       };
       sheet.getRange(row, 5).setBackground(catColors[p.cat] || "#ffffff");
 
+      return { success: true };
+    }
+  }
+  return { error: "Expense not found" };
+}
+
+function archiveExpense(p) {
+  const sheet = getOrCreateSheet();
+  const data  = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(p.id)) {
+      const row = i + 1;
+      sheet.getRange(row, 10).setValue("Yes"); // Set Archived column
+      return { success: true };
+    }
+  }
+  return { error: "Expense not found" };
+}
+
+function unarchiveExpense(p) {
+  const sheet = getOrCreateSheet();
+  const data  = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(p.id)) {
+      const row = i + 1;
+      sheet.getRange(row, 10).setValue(""); // Clear Archived column
       return { success: true };
     }
   }

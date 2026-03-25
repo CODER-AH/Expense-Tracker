@@ -1084,23 +1084,25 @@
 </div>
 
 <!-- ARCHIVED SECTION -->
-<div class="section-title" style="margin-top:32px;cursor:pointer" onclick="toggleArchived()">
-  🗃️ Archived Expenses <span id="archivedCount" style="color:var(--muted);font-size:11px">(0)</span>
-  <span id="archivedToggle" style="margin-left:8px;font-size:12px">▼</span>
+<div style="max-width:860px;margin:32px auto 0;text-align:center">
+  <button class="add-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="toggleArchived()">
+    <span id="archivedToggleBtn">🗃️ Show Archived (<span id="archivedCount">0</span>)</span>
+  </button>
 </div>
-<div class="archived-container" id="archivedContainer" style="display:none">
+
+<div class="archived-container" id="archivedContainer" style="display:none;max-width:860px;margin:16px auto">
   <div class="timeline">
     <div class="table-wrap">
       <table>
         <thead><tr>
-          <th>#</th>
-          <th>Description</th>
-          <th>Category</th>
-          <th>Added By</th>
-          <th>Paid By</th>
-          <th>Amount</th>
-          <th>Day</th>
-          <th colspan="2">Actions</th>
+          <th style="white-space:nowrap">#</th>
+          <th style="white-space:nowrap">Description</th>
+          <th style="white-space:nowrap">Category</th>
+          <th style="white-space:nowrap">Added By</th>
+          <th style="white-space:nowrap">Paid By</th>
+          <th style="white-space:nowrap">Amount</th>
+          <th style="white-space:nowrap">Day</th>
+          <th style="white-space:nowrap" colspan="2">Actions</th>
         </tr></thead>
         <tbody id="archived-body"></tbody>
       </table>
@@ -1176,6 +1178,7 @@ let sortBy = 'time';
 let sortOrder = 'desc'; // 'asc' or 'desc'
 let filterBy = 'all';
 let currentPage = { 1: 1, 2: 1 };
+let showArchivedSection = false;
 const ITEMS_PER_PAGE = 10;
 
 // ─── INIT ─────────────────────────────────────────────────
@@ -1245,9 +1248,14 @@ async function loadFromSheet() {
     const res = await fetch(`${SCRIPT_URL}?action=getAll`);
     const data = await res.json();
     expenses = { 1: [], 2: [] };
+    archivedExpenses = [];
     (data.expenses || []).forEach(e => {
       const day = e.day === 1 || e.day === 2 ? e.day : 1;
-      expenses[day].push(e);
+      if (e.archived === "Yes") {
+        archivedExpenses.push({ ...e, archivedDay: day });
+      } else {
+        expenses[day].push(e);
+      }
     });
     saveLocal();
     render();
@@ -1293,6 +1301,16 @@ async function sheetUpdate(exp) {
 
 async function sheetDelete(id) {
   const params = new URLSearchParams({ action: 'delete', id });
+  await fetch(`${SCRIPT_URL}?${params}`);
+}
+
+async function sheetArchive(id) {
+  const params = new URLSearchParams({ action: 'archive', id });
+  await fetch(`${SCRIPT_URL}?${params}`);
+}
+
+async function sheetUnarchive(id) {
+  const params = new URLSearchParams({ action: 'unarchive', id });
   await fetch(`${SCRIPT_URL}?${params}`);
 }
 
@@ -1621,32 +1639,50 @@ async function confirmDelete() {
 
   const { day, id } = deleteTarget;
 
-  // Move to archived instead of deleting
+  document.getElementById('confirmOverlay').classList.add('hidden');
+  showLoading(true);
+  setStatus('syncing', 'Archiving…');
+
+  try {
+    await sheetArchive(id);
+    setStatus('ok', 'Synced ✓');
+    showToast('Expense archived', 'ok');
+  } catch(e) {
+    setStatus('err', 'Archive failed');
+    showToast('Archive failed — check connection', 'err');
+    showLoading(false);
+    return;
+  }
+
+  // Move to archived
   const expense = expenses[day].find(e => String(e.id) === String(id));
   if (expense) {
-    archivedExpenses.push({ ...expense, archivedDay: day });
+    archivedExpenses.push({ ...expense, archivedDay: day, archived: "Yes" });
   }
 
   expenses[day] = expenses[day].filter(e => String(e.id) !== String(id));
 
-  document.getElementById('confirmOverlay').classList.add('hidden');
   saveLocal();
+  showLoading(false);
   deleteTarget = null;
   render();
   renderArchived();
-  showToast('Expense archived', 'ok');
 }
 
 // ─── ARCHIVED FUNCTIONS ───────────────────────────────────
 function toggleArchived() {
   const container = document.getElementById('archivedContainer');
-  const toggle = document.getElementById('archivedToggle');
-  if (container.style.display === 'none') {
+  const btn = document.getElementById('archivedToggleBtn');
+  const count = archivedExpenses.length;
+
+  showArchivedSection = !showArchivedSection;
+
+  if (showArchivedSection) {
     container.style.display = 'block';
-    toggle.textContent = '▲';
+    btn.innerHTML = `🗃️ Hide Archived (<span id="archivedCount">${count}</span>)`;
   } else {
     container.style.display = 'none';
-    toggle.textContent = '▼';
+    btn.innerHTML = `🗃️ Show Archived (<span id="archivedCount">${count}</span>)`;
   }
 }
 
@@ -1654,7 +1690,11 @@ function renderArchived() {
   const tbody = document.getElementById('archived-body');
   tbody.innerHTML = '';
 
-  document.getElementById('archivedCount').textContent = `(${archivedExpenses.length})`;
+  const count = archivedExpenses.length;
+
+  // Update count in button
+  const countSpan = document.getElementById('archivedCount');
+  if (countSpan) countSpan.textContent = count;
 
   if (archivedExpenses.length === 0) {
     const tr = document.createElement('tr');
@@ -1684,20 +1724,35 @@ function renderArchived() {
   });
 }
 
-function unarchiveExpense(id) {
+async function unarchiveExpense(id) {
   const expense = archivedExpenses.find(e => String(e.id) === String(id));
   if (!expense) return;
 
+  showLoading(true);
+  setStatus('syncing', 'Unarchiving…');
+
+  try {
+    await sheetUnarchive(id);
+    setStatus('ok', 'Synced ✓');
+    showToast('Expense unarchived', 'ok');
+  } catch(e) {
+    setStatus('err', 'Unarchive failed');
+    showToast('Unarchive failed — check connection', 'err');
+    showLoading(false);
+    return;
+  }
+
   const day = expense.archivedDay;
   delete expense.archivedDay;
+  delete expense.archived;
 
   expenses[day].push(expense);
   archivedExpenses = archivedExpenses.filter(e => String(e.id) !== String(id));
 
   saveLocal();
+  showLoading(false);
   render();
   renderArchived();
-  showToast('Expense unarchived', 'ok');
 }
 
 function showPermanentDeleteConfirm(id) {
