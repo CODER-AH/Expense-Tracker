@@ -211,6 +211,15 @@
     max-width: 860px;
     margin: 24px auto 0;
   }
+  /* Make big cards take full width when on their own row */
+  @supports (grid-template-columns: subgrid) or (not (grid-template-columns: subgrid)) {
+    .summary-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .sum-card.big-card {
+      grid-column: span 4;
+    }
+  }
   .sum-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -235,9 +244,6 @@
     color: #fff;
   }
   .sum-card .amount .currency { font-size: 14px; color: var(--muted); }
-  .sum-card.big-card {
-    grid-column: span 2;
-  }
   .sum-card.big-card .amount {
     font-size: 32px;
   }
@@ -983,6 +989,13 @@
 
   /* RESPONSIVE */
   @media (max-width: 640px) {
+    .summary-grid {
+      grid-template-columns: 1fr;
+    }
+    .sum-card.big-card {
+      grid-column: span 1;
+    }
+
     .status-bar {
       top: 12px;
       right: 12px;
