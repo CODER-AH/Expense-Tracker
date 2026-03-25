@@ -2254,7 +2254,7 @@ function updateSettlement() {
       <div class="stat-row">
         <span class="label">Balance</span>
         <span class="value" style="color:${balance[person] >= 0 ? 'var(--accent)' : 'var(--accent3)'}">
-          ${balance[person] >= 0 ? '+' : ''}₹${Math.round(balance[person]).toLocaleString('en-IN')}
+          ${balance[person] >= 0 ? '+₹' : '−₹'}${Math.abs(Math.round(balance[person])).toLocaleString('en-IN')}
         </span>
       </div>
       ${actionHTML}
