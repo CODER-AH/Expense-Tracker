@@ -2277,12 +2277,14 @@ function render() {
   const tbody = document.getElementById('expenses-body');
   tbody.innerHTML = '';
 
-  // Combine all expenses with day property
+  // Combine all expenses from all days
   let allExpenses = [];
-  [1, 2].forEach(day => {
-    expenses[day].forEach(exp => {
-      allExpenses.push({ ...exp, day });
-    });
+  tripDays.forEach(dayObj => {
+    if (expenses[dayObj.day]) {
+      expenses[dayObj.day].forEach(exp => {
+        allExpenses.push({ ...exp, day: dayObj.day });
+      });
+    }
   });
 
   // Filter by day
@@ -2433,7 +2435,14 @@ function render() {
 }
 
 function updateSummary() {
-  const all = [...expenses[1], ...expenses[2]];
+  // Collect all expenses from all days
+  let all = [];
+  tripDays.forEach(dayObj => {
+    if (expenses[dayObj.day]) {
+      all = all.concat(expenses[dayObj.day]);
+    }
+  });
+
   const total = all.reduce((s, e) => s + (e.amount || 0), 0);
   const cats = { food: 0, fuel: 0, stay: 0, transport: 0, entry: 0, misc: 0 };
   all.forEach(e => { if (cats[e.cat] !== undefined) cats[e.cat] += (e.amount || 0); });
@@ -2465,7 +2474,14 @@ function updateSummary() {
 
 // ─── SETTLEMENT ───────────────────────────────────────────
 function updateSettlement() {
-  const all = [...expenses[1], ...expenses[2]];
+  // Collect all expenses from all days
+  let all = [];
+  tripDays.forEach(dayObj => {
+    if (expenses[dayObj.day]) {
+      all = all.concat(expenses[dayObj.day]);
+    }
+  });
+
   const total = all.reduce((s, e) => s + (e.amount || 0), 0);
 
   // Split among all 4 people
@@ -2796,7 +2812,13 @@ function confirmBudgetEdit() {
   tripBudget = budgetAmount;
   localStorage.setItem('coorg_budget', tripBudget);
 
-  const all = [...expenses[1], ...expenses[2]];
+  // Collect all expenses from all days
+  let all = [];
+  tripDays.forEach(dayObj => {
+    if (expenses[dayObj.day]) {
+      all = all.concat(expenses[dayObj.day]);
+    }
+  });
   const total = all.reduce((s, e) => s + (e.amount || 0), 0);
   updateBudgetDisplay(total);
 
