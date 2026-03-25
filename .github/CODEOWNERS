@@ -1,0 +1,20 @@
+# Code Owners for Coders Squad Expense Tracker
+# These owners will be automatically requested for review when someone opens a pull request
+
+# Default owner for everything in the repo
+* @CODER-AH
+
+# Specific file owners (optional - customize as needed)
+# HTML/Frontend
+*.html @CODER-AH
+*.css @CODER-AH
+*.js @CODER-AH
+
+# Google Apps Script
+*.gs @CODER-AH
+
+# Documentation
+*.md @CODER-AH
+
+# You can add more team members like this:
+# * @CODER-AH @teammate1 @teammate2
