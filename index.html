@@ -130,9 +130,17 @@
     gap: 8px;
     z-index: 100;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    transition: all 0.3s;
+    transition: all 0.3s, opacity 0.3s, transform 0.3s;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .status-bar.hidden-on-scroll {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-20px);
   }
   .status-bar:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.4); }
+  .status-bar.hidden-on-scroll:hover { transform: translateY(-20px); }
   .status-dot {
     width: 10px; height: 10px;
     border-radius: 50%;
@@ -972,7 +980,7 @@
 </div>
 
 <!-- STATUS BAR -->
-<div class="status-bar">
+<div class="status-bar" id="statusBar">
   <div class="status-dot" id="statusDot"></div>
   <div class="status-text" id="statusText">Connecting…</div>
   <div class="user-chip" id="userChip" onclick="changeName()" title="Tap to change name">
@@ -1314,6 +1322,23 @@ window.onload = () => {
     document.getElementById('nameOverlay').classList.remove('hidden');
     setTimeout(() => document.getElementById('nameInput').focus(), 100);
   }
+
+  // Hide status bar on scroll down, show on scroll up
+  let lastScrollTop = 0;
+  window.addEventListener('scroll', function() {
+    const statusBar = document.getElementById('statusBar');
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    if (scrollTop > lastScrollTop && scrollTop > 100) {
+      // Scrolling down and past 100px
+      statusBar.classList.add('hidden-on-scroll');
+    } else {
+      // Scrolling up or at the top
+      statusBar.classList.remove('hidden-on-scroll');
+    }
+
+    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+  }, false);
 };
 
 // ─── NAME HANDLING ────────────────────────────────────────
