@@ -28,13 +28,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Create .nojekyll file
+        run: touch webapp/.nojekyll
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './webapp'
+          path: 'webapp'
 
       - name: Deploy to GitHub Pages
         id: deployment
