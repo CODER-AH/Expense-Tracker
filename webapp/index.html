@@ -305,11 +305,44 @@
     <div style="margin-top:12px;color:var(--muted);font-size:13px;font-family:'DM Sans',sans-serif">Loading archived expenses...</div>
   </div>
   <div class="timeline">
-    <div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
-      <button id="archiveMultiSelectBtn" data-active="false" onclick="toggleArchiveMultiSelect()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">☑️ Select Multiple</button>
-      <div id="archiveBulkActions" style="display:none;gap:8px">
-        <button id="bulkUnarchiveBtn" onclick="bulkUnarchiveExpenses()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Unarchive Selected</button>
-        <button id="bulkDeleteBtn" onclick="bulkDeleteExpenses()" style="padding:8px 14px;background:rgba(232, 110, 138, 0.2);border:1px solid #e86e8a;color:#e86e8a;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Delete Selected</button>
+    <!-- Filters and Actions Row -->
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <!-- Filters -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <!-- Day Filter -->
+        <div class="filter-btn-group" style="position:relative">
+          <button class="filter-btn" onclick="toggleFilterDropdown('archivedDay')">
+            <span id="archivedDayFilterLabel">All Days</span>
+            <span style="font-size:10px;margin-left:4px">▾</span>
+          </button>
+          <div class="filter-dropdown" id="archivedDayFilterDropdown" style="min-width:180px">
+            <div class="filter-option selected" onclick="selectArchivedDayFilter('all', 'All Days')">All Days</div>
+          </div>
+        </div>
+
+        <!-- Person Filter -->
+        <div class="filter-btn-group" style="position:relative">
+          <button class="filter-btn" onclick="toggleFilterDropdown('archivedPerson')">
+            <span id="archivedPersonFilterLabel">All People</span>
+            <span style="font-size:10px;margin-left:4px">▾</span>
+          </button>
+          <div class="filter-dropdown" id="archivedPersonFilterDropdown">
+            <div class="filter-option selected" onclick="selectArchivedPersonFilter('all', 'All People')">All People</div>
+            <div class="filter-option" onclick="selectArchivedPersonFilter('Afsar', 'Afsar')">Afsar</div>
+            <div class="filter-option" onclick="selectArchivedPersonFilter('Adham', 'Adham')">Adham</div>
+            <div class="filter-option" onclick="selectArchivedPersonFilter('Aakif', 'Aakif')">Aakif</div>
+            <div class="filter-option" onclick="selectArchivedPersonFilter('Sahlaan', 'Sahlaan')">Sahlaan</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:8px">
+        <button id="archiveMultiSelectBtn" data-active="false" onclick="toggleArchiveMultiSelect()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">☑️ Select Multiple</button>
+        <div id="archiveBulkActions" style="display:none;gap:8px">
+          <button id="bulkUnarchiveBtn" onclick="bulkUnarchiveExpenses()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Unarchive Selected</button>
+          <button id="bulkDeleteBtn" onclick="bulkDeleteExpenses()" style="padding:8px 14px;background:rgba(232, 110, 138, 0.2);border:1px solid #e86e8a;color:#e86e8a;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Delete Selected</button>
+        </div>
       </div>
     </div>
     <div class="table-wrap">

@@ -27,6 +27,8 @@ let sortBy = 'time';
 let sortOrder = 'desc'; // 'asc' or 'desc'
 let filterBy = 'all';
 let dayFilterBy = 'all'; // New day filter
+let archivedDayFilterBy = 'all'; // Archived day filter
+let archivedPersonFilterBy = 'all'; // Archived person filter
 let currentPage = 1; // Single page state
 let tripBudget = 0; // Trip budget
 const ITEMS_PER_PAGE = 10;
@@ -158,6 +160,20 @@ function updateFilterOptions() {
     option.textContent = `Day ${dayObj.day} — ${dayObj.name}, ${dayObj.date}`;
     dayFilterDropdown.appendChild(option);
   });
+
+  // Update archived day filter dropdown
+  const archivedDayFilterDropdown = document.getElementById('archivedDayFilterDropdown');
+  if (archivedDayFilterDropdown) {
+    archivedDayFilterDropdown.innerHTML = '<div class="filter-option selected" onclick="selectArchivedDayFilter(\'all\', \'All Days\')">All Days</div>';
+
+    tripDays.forEach(dayObj => {
+      const option = document.createElement('div');
+      option.className = 'filter-option';
+      option.onclick = () => selectArchivedDayFilter(String(dayObj.day), `Day ${dayObj.day} — ${dayObj.name}, ${dayObj.date}`);
+      option.textContent = `Day ${dayObj.day} — ${dayObj.name}, ${dayObj.date}`;
+      archivedDayFilterDropdown.appendChild(option);
+    });
+  }
 }
 
 // ─── INIT ─────────────────────────────────────────────────
@@ -911,23 +927,36 @@ function renderArchived() {
   const tbody = document.getElementById('archived-body');
   tbody.innerHTML = '';
 
-  const count = archivedExpenses.length;
+  // Apply filters
+  let filteredArchived = archivedExpenses;
+
+  // Filter by day
+  if (archivedDayFilterBy !== 'all') {
+    filteredArchived = filteredArchived.filter(e => e.archivedDay === parseInt(archivedDayFilterBy));
+  }
+
+  // Filter by person
+  if (archivedPersonFilterBy !== 'all') {
+    filteredArchived = filteredArchived.filter(e => e.name === archivedPersonFilterBy);
+  }
+
+  const count = filteredArchived.length;
 
   // Update count in button
   const countSpan = document.getElementById('archivedCount');
-  if (countSpan) countSpan.textContent = count;
+  if (countSpan) countSpan.textContent = archivedExpenses.length; // Show total, not filtered
 
   const archiveMultiSelectMode = document.getElementById('archiveMultiSelectBtn')?.dataset.active === 'true';
 
-  if (archivedExpenses.length === 0) {
+  if (filteredArchived.length === 0) {
     const tr = document.createElement('tr');
     tr.className = 'empty-row';
-    tr.innerHTML = `<td colspan="${archiveMultiSelectMode ? 10 : 9}">No archived expenses</td>`;
+    tr.innerHTML = `<td colspan="${archiveMultiSelectMode ? 10 : 9}">No archived expenses${archivedDayFilterBy !== 'all' || archivedPersonFilterBy !== 'all' ? ' (filters active)' : ''}</td>`;
     tbody.appendChild(tr);
     return;
   }
 
-  archivedExpenses.forEach((exp, idx) => {
+  filteredArchived.forEach((exp, idx) => {
     const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
 
     // Checkbox for multi-select
@@ -1480,6 +1509,39 @@ function selectPersonFilter(value, label) {
 
   currentPage = 1;
   render();
+}
+
+// Archived filters
+function selectArchivedDayFilter(value, label) {
+  archivedDayFilterBy = value;
+  document.getElementById('archivedDayFilterLabel').textContent = label;
+
+  // Update selected state
+  document.querySelectorAll('#archivedDayFilterDropdown .filter-option').forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+
+  // Close dropdown
+  document.getElementById('archivedDayFilterDropdown').classList.remove('active');
+
+  renderArchived();
+}
+
+function selectArchivedPersonFilter(value, label) {
+  archivedPersonFilterBy = value;
+  document.getElementById('archivedPersonFilterLabel').textContent = label;
+
+  // Update selected state
+  document.querySelectorAll('#archivedPersonFilterDropdown .filter-option').forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+
+  // Close dropdown
+  document.getElementById('archivedPersonFilterDropdown').classList.remove('active');
+
+  renderArchived();
 }
 
 // Close dropdowns when clicking outside
