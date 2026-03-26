@@ -527,14 +527,15 @@ function addExpenseRow() {
   const paidBy = document.getElementById('inp-paidby').value;
 
   // Build day dropdown HTML
-  let dayDropdownHTML = '';
+  // Build day dropdown options
+  let dayOptionsHTML = '';
   tripDays.forEach(dayObj => {
     const selected = String(dayObj.day) === String(day) ? 'selected' : '';
-    dayDropdownHTML += `<div class="custom-select-option ${selected}" onclick="selectMultiRowOption('mr-day-${multiRowCount}', '${dayObj.day}', 'Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})')">Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})</div>`;
+    dayOptionsHTML += `<option value="${dayObj.day}" ${selected}>Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})</option>`;
   });
-  dayDropdownHTML += `<div class="custom-select-option" onclick="handleMultiRowAddDay('mr-day-${multiRowCount}')">➕ Add New Day</div>`;
+  dayOptionsHTML += `<option value="add">➕ Add New Day</option>`;
 
-  // Build category dropdown HTML
+  // Build category dropdown options
   const catOptions = [
     {value: 'food', label: '🍽️ Food'},
     {value: 'fuel', label: '⛽ Fuel'},
@@ -543,13 +544,13 @@ function addExpenseRow() {
     {value: 'entry', label: '🎟️ Entry'},
     {value: 'misc', label: '🛍️ Misc'}
   ];
-  let catDropdownHTML = '';
+  let catOptionsHTML = '';
   catOptions.forEach(opt => {
     const selected = opt.value === cat ? 'selected' : '';
-    catDropdownHTML += `<div class="custom-select-option ${selected}" onclick="selectMultiRowOption('multi-cat-${multiRowCount}', '${opt.value}', '${opt.label}')">${opt.label}</div>`;
+    catOptionsHTML += `<option value="${opt.value}" ${selected}>${opt.label}</option>`;
   });
 
-  // Build paid by dropdown HTML
+  // Build paid by dropdown options
   const paidByOptions = [
     {value: '', label: 'Select...'},
     {value: 'Afsar', label: '👨‍💻 Afsar'},
@@ -557,41 +558,24 @@ function addExpenseRow() {
     {value: 'Aakif', label: '👨‍💻 Aakif'},
     {value: 'Sahlaan', label: '👨‍⚕️ Sahlaan'}
   ];
-  let paidByDropdownHTML = '';
+  let paidByOptionsHTML = '';
   paidByOptions.forEach(opt => {
     const selected = opt.value === paidBy ? 'selected' : '';
-    paidByDropdownHTML += `<div class="custom-select-option ${selected}" onclick="selectMultiRowOption('multi-paidby-${multiRowCount}', '${opt.value}', '${opt.label}')">${opt.label}</div>`;
+    paidByOptionsHTML += `<option value="${opt.value}" ${selected}>${opt.label}</option>`;
   });
-
-  // Get current labels for the selected values
-  const currentDayLabel = tripDays.find(d => String(d.day) === String(day))
-    ? `Day ${day} (${tripDays.find(d => String(d.day) === String(day)).name}, ${tripDays.find(d => String(d.day) === String(day)).date})`
-    : 'Day 1';
-  const currentCatLabel = catOptions.find(o => o.value === cat)?.label || '🍽️ Food';
-  const currentPaidByLabel = paidByOptions.find(o => o.value === paidBy)?.label || 'Select...';
 
   rowDiv.innerHTML = `
     <div>
       <label>Day</label>
-      <div class="custom-select">
-        <div class="custom-select-btn" onclick="toggleCustomSelect('mr-day-${multiRowCount}')">
-          <span id="mr-day-${multiRowCount}-label">${currentDayLabel}</span>
-        </div>
-        <div class="custom-select-dropdown" id="mr-day-${multiRowCount}-dropdown">
-          ${dayDropdownHTML}
-        </div>
-      </div>
+      <select id="mr-day-${multiRowCount}" onchange="handleMultiRowDayChange(${multiRowCount}, this.value)">
+        ${dayOptionsHTML}
+      </select>
     </div>
     <div>
       <label>Category</label>
-      <div class="custom-select">
-        <div class="custom-select-btn" onclick="toggleCustomSelect('multi-cat-${multiRowCount}')">
-          <span id="multi-cat-${multiRowCount}-label">${currentCatLabel}</span>
-        </div>
-        <div class="custom-select-dropdown" id="multi-cat-${multiRowCount}-dropdown">
-          ${catDropdownHTML}
-        </div>
-      </div>
+      <select id="multi-cat-${multiRowCount}">
+        ${catOptionsHTML}
+      </select>
     </div>
     <div>
       <label>Description</label>
@@ -603,14 +587,9 @@ function addExpenseRow() {
     </div>
     <div>
       <label>Paid by</label>
-      <div class="custom-select">
-        <div class="custom-select-btn" onclick="toggleCustomSelect('multi-paidby-${multiRowCount}')">
-          <span id="multi-paidby-${multiRowCount}-label">${currentPaidByLabel}</span>
-        </div>
-        <div class="custom-select-dropdown" id="multi-paidby-${multiRowCount}-dropdown">
-          ${paidByDropdownHTML}
-        </div>
-      </div>
+      <select id="multi-paidby-${multiRowCount}">
+        ${paidByOptionsHTML}
+      </select>
     </div>
     <div style="visibility:hidden">
       <label>Added</label>
@@ -621,23 +600,12 @@ function addExpenseRow() {
     </div>
   `;
 
-  // Store initial values for multi-row
-  if (!customSelectValues['mr-day-' + multiRowCount]) {
-    customSelectValues['mr-day-' + multiRowCount] = day;
-  }
-  if (!customSelectValues['multi-cat-' + multiRowCount]) {
-    customSelectValues['multi-cat-' + multiRowCount] = cat;
-  }
-  if (!customSelectValues['multi-paidby-' + multiRowCount]) {
-    customSelectValues['multi-paidby-' + multiRowCount] = paidBy;
-  }
-
   entriesDiv.appendChild(rowDiv);
 
   // Clear the main form
   document.getElementById('inp-desc').value = '';
   document.getElementById('inp-amount').value = '';
-  selectCustomOption('inp-paidby', '', 'Select...');
+  document.getElementById('inp-paidby').value = '';
 }
 
 function removeMultiRow(id) {
@@ -648,6 +616,38 @@ function removeMultiRow(id) {
   const entriesDiv = document.getElementById('multiRowEntries');
   if (entriesDiv.querySelectorAll('.multi-row-entry').length === 0) {
     clearAllRows();
+  }
+}
+
+// Handle multi-row day change
+function handleMultiRowDayChange(rowId, value) {
+  if (value === 'add') {
+    const dayName = prompt('Enter day name (e.g., Saturday):');
+    const dayDate = prompt('Enter date (e.g., 28 March):');
+    if (dayName && dayDate) {
+      const newDay = tripDays.length + 1;
+      tripDays.push({ day: newDay, name: dayName, date: dayDate });
+
+      // Repopulate all day dropdowns
+      populateMainDayDropdown();
+
+      // Update this specific multi-row dropdown
+      const select = document.getElementById(`mr-day-${rowId}`);
+      select.innerHTML = '';
+      tripDays.forEach(dayObj => {
+        const option = document.createElement('option');
+        option.value = String(dayObj.day);
+        option.textContent = `Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})`;
+        select.appendChild(option);
+      });
+      const addOption = document.createElement('option');
+      addOption.value = 'add';
+      addOption.textContent = '➕ Add New Day';
+      select.appendChild(addOption);
+      select.value = String(newDay);
+    } else {
+      document.getElementById(`mr-day-${rowId}`).value = '1';
+    }
   }
 }
 
@@ -665,11 +665,11 @@ async function saveMultipleExpenses() {
   // Collect and validate all entries
   for (let row of rows) {
     const id = row.id.split('-')[2];
-    const day = parseInt(customSelectValues[`mr-day-${id}`] || '1');
-    const cat = customSelectValues[`multi-cat-${id}`] || 'food';
+    const day = parseInt(document.getElementById(`mr-day-${id}`)?.value || '1');
+    const cat = document.getElementById(`multi-cat-${id}`)?.value || 'food';
     const desc = document.getElementById(`multi-desc-${id}`)?.value.trim();
     const amount = parseFloat(document.getElementById(`multi-amount-${id}`)?.value) || 0;
-    const paidBy = customSelectValues[`multi-paidby-${id}`] || '';
+    const paidBy = document.getElementById(`multi-paidby-${id}`)?.value || '';
 
     if (!desc || amount <= 0 || !paidBy) {
       showToast('Please fill all fields in each row', 'err');
