@@ -6,15 +6,19 @@ function toggleMultiSelect() {
   selectedExpenses.clear();
 
   const btn = document.getElementById('multiSelectBtn');
+  const addBtn = document.getElementById('addExpenseBtn');
   const bulkActions = document.getElementById('bulkActions');
 
   if (isMultiSelectMode) {
     btn.textContent = 'Cancel Selection';
     btn.style.background = 'rgba(232, 110, 138, 0.2)';
-    bulkActions.style.display = 'flex';
+    if (addBtn) addBtn.style.display = 'none';
+    // Don't show bulk actions until at least one item is selected
+    updateBulkActionButtons();
   } else {
     btn.textContent = '☑️ Select Multiple';
     btn.style.background = 'rgba(72, 126, 98, 0.2)';
+    if (addBtn) addBtn.style.display = 'inline-block';
     bulkActions.style.display = 'none';
   }
 
@@ -35,7 +39,8 @@ function toggleArchiveMultiSelect() {
     document.getElementById('archiveMultiSelectBtn').dataset.active = 'true';
     document.getElementById('archiveMultiSelectBtn').textContent = 'Cancel Selection';
     document.getElementById('archiveMultiSelectBtn').style.background = 'rgba(232, 110, 138, 0.2)';
-    document.getElementById('archiveBulkActions').style.display = 'flex';
+    // Don't show bulk actions until at least one item is selected
+    updateArchiveBulkActionButtons();
   }
 
   renderArchived(); // Re-render to show/hide checkboxes
@@ -81,28 +86,43 @@ function toggleArchivedSelection(id) {
 // Update bulk action button states
 function updateBulkActionButtons() {
   const count = selectedExpenses.size;
+  const bulkActions = document.getElementById('bulkActions');
   const bulkArchiveBtn = document.getElementById('bulkArchiveBtn');
 
-  if (bulkArchiveBtn) {
-    bulkArchiveBtn.disabled = count === 0;
-    bulkArchiveBtn.textContent = count > 0 ? `Archive Selected (${count})` : 'Archive Selected';
+  if (count === 0) {
+    // Hide bulk actions when no selection
+    if (bulkActions) bulkActions.style.display = 'none';
+  } else {
+    // Show bulk actions when there's selection
+    if (bulkActions) bulkActions.style.display = 'flex';
+    if (bulkArchiveBtn) {
+      bulkArchiveBtn.disabled = false;
+      bulkArchiveBtn.textContent = `Archive Selected (${count})`;
+    }
   }
 }
 
 // Update archive bulk action button states
 function updateArchiveBulkActionButtons() {
   const count = selectedArchived.size;
+  const bulkActions = document.getElementById('archiveBulkActions');
   const bulkUnarchiveBtn = document.getElementById('bulkUnarchiveBtn');
   const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
 
-  if (bulkUnarchiveBtn) {
-    bulkUnarchiveBtn.disabled = count === 0;
-    bulkUnarchiveBtn.textContent = count > 0 ? `Unarchive Selected (${count})` : 'Unarchive Selected';
-  }
-
-  if (bulkDeleteBtn) {
-    bulkDeleteBtn.disabled = count === 0;
-    bulkDeleteBtn.textContent = count > 0 ? `Delete Selected (${count})` : 'Delete Selected';
+  if (count === 0) {
+    // Hide bulk actions when no selection
+    if (bulkActions) bulkActions.style.display = 'none';
+  } else {
+    // Show bulk actions when there's selection
+    if (bulkActions) bulkActions.style.display = 'flex';
+    if (bulkUnarchiveBtn) {
+      bulkUnarchiveBtn.disabled = false;
+      bulkUnarchiveBtn.textContent = `Unarchive Selected (${count})`;
+    }
+    if (bulkDeleteBtn) {
+      bulkDeleteBtn.disabled = false;
+      bulkDeleteBtn.textContent = `Delete Selected (${count})`;
+    }
   }
 }
 

@@ -29,8 +29,21 @@ const loadingMessages = [
   'One sec...'
 ];
 
+const authMessages = [
+  'Authenticating...',
+  'Verifying credentials...',
+  'Checking password...',
+  'Logging you in...',
+  'Securing connection...',
+  'Almost there...'
+];
+
 function getRandomLoadingMessage() {
   return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+}
+
+function getRandomAuthMessage() {
+  return authMessages[Math.floor(Math.random() * authMessages.length)];
 }
 
 // ─── PASSWORD VISIBILITY TOGGLE ───────────────────────────
@@ -304,9 +317,14 @@ async function proceedToPassword() {
 
   selectedLoginUser = name;
 
+  // Show loading overlay
+  showLoading(true, 'auth');
+
   // Check if user has a password set
   try {
     const userCreds = await firestoreGetUserCredentials(name);
+
+    showLoading(false);
 
     if (!userCreds || !userCreds.passwordHash) {
       // No password set, show set password step
@@ -324,6 +342,7 @@ async function proceedToPassword() {
     }
   } catch (error) {
     console.error('Error checking user credentials:', error);
+    showLoading(false);
     showToast('Connection error - check your internet', 'err');
   }
 }
@@ -339,6 +358,9 @@ async function handlePasswordSubmit() {
   btn.disabled = true;
   btn.textContent = 'Verifying...';
 
+  // Show loading overlay with auth messages
+  showLoading(true, 'auth');
+
   try {
     const isValid = await firestoreVerifyPassword(selectedLoginUser, password);
 
@@ -351,9 +373,12 @@ async function handlePasswordSubmit() {
 
       if (!dataLoaded) {
         loadFromSheet();
+      } else {
+        showLoading(false);
       }
     } else {
       // Invalid password
+      showLoading(false);
       showToast('Incorrect password', 'err');
       document.getElementById('passwordInput').value = '';
       document.getElementById('passwordInput').focus();
@@ -362,6 +387,7 @@ async function handlePasswordSubmit() {
     }
   } catch (error) {
     console.error('Error verifying password:', error);
+    showLoading(false);
     showToast('Login failed - check your connection', 'err');
     btn.disabled = false;
     btn.textContent = 'Login →';
@@ -1057,12 +1083,12 @@ function renderArchived() {
     tr.innerHTML = `
       ${archiveMultiSelectMode ? `<td style="text-align:center">${checkboxHtml}</td>` : ''}
       <td class="num-col">${idx + 1}</td>
-      <td data-column="desc" style="font-size:13px;${!archivedVisibleColumns.desc ? 'display:none;' : ''}">${exp.desc}</td>
-      <td data-column="cat" style="white-space:nowrap;${!archivedVisibleColumns.cat ? 'display:none;' : ''}"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
-      <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!archivedVisibleColumns.name ? 'display:none;' : ''}">${exp.name || '—'}</td>
-      <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!archivedVisibleColumns.paidBy ? 'display:none;' : ''}">${exp.paidBy || '—'}</td>
-      <td data-column="amount" class="amount-col" style="white-space:nowrap;text-align:right;${!archivedVisibleColumns.amount ? 'display:none;' : ''}">₹${Number(exp.amount).toLocaleString('en-IN')}</td>
-      <td data-column="day" style="font-size:11px;color:var(--muted);${!archivedVisibleColumns.day ? 'display:none;' : ''}">Day ${exp.archivedDay}</td>
+      <td data-column="desc" style="font-size:13px">${exp.desc}</td>
+      <td data-column="cat" style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
+      <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
+      <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
+      <td data-column="amount" class="amount-col" style="white-space:nowrap;text-align:right">₹${Number(exp.amount).toLocaleString('en-IN')}</td>
+      <td data-column="day" style="font-size:11px;color:var(--muted)">Day ${exp.archivedDay}</td>
       ${!archiveMultiSelectMode ? `<td><button class="del-btn" onclick="showUnarchiveConfirm('${exp.id}')" title="Unarchive" style="background:var(--accent);color:#0e1412">↩️</button></td>` : ''}
       ${!archiveMultiSelectMode ? `<td><button class="del-btn" onclick="showPermanentDeleteConfirm('${exp.id}')" title="Delete Permanently">🗑️</button></td>` : ''}
     `;
@@ -1321,19 +1347,19 @@ function render() {
       tr.innerHTML = `
         ${isMultiSelectMode ? `<td style="text-align:center">${checkboxHtml}</td>` : ''}
         <td class="num-col">${startIdx + idx + 1}</td>
-        <td data-column="day" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.day ? 'display:none;' : ''}">Day ${exp.day}</td>
-        <td data-column="desc" style="${!visibleColumns.desc ? 'display:none;' : ''}">
+        <td data-column="day" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">Day ${exp.day}</td>
+        <td data-column="desc">
           ${editedBadge ? `<div style="margin-bottom:4px">${editedBadge}</div>` : ''}
           <div id="${descId}" class="${showTruncated ? 'desc-truncated' : 'desc-full'}">
             ${exp.desc}
           </div>
           ${showTruncated ? `<span class="show-more-btn" onclick="toggleDesc('${descId}')">Show more...</span>` : ''}
         </td>
-        <td data-column="cat" style="white-space:nowrap;${!visibleColumns.cat ? 'display:none;' : ''}"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
-        <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.name ? 'display:none;' : ''}">${exp.name || '—'}</td>
-        <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.paidBy ? 'display:none;' : ''}">${exp.paidBy || '—'}</td>
-        <td data-column="time" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.time ? 'display:none;' : ''}">${timeStr}</td>
-        <td data-column="amount" class="amount-col" style="white-space:nowrap;${!visibleColumns.amount ? 'display:none;' : ''}">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
+        <td data-column="cat" style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
+        <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
+        <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
+        <td data-column="time" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
+        <td data-column="amount" class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
         ${!isMultiSelectMode ? `<td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${exp.day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>` : ''}
         ${!isMultiSelectMode ? `<td><button class="del-btn" onclick="showDeleteConfirm(${exp.day}, '${exp.id}')" title="Archive">🗃️</button></td>` : ''}
       `;
@@ -1755,14 +1781,14 @@ function setStatus(state, text) {
   document.getElementById('statusText').textContent = text;
 }
 // ─── LOADING & TOAST ──────────────────────────────────────
-function showLoading(show) {
+function showLoading(show, type = 'default') {
   const overlay = document.getElementById('loadingOverlay');
   const loadingText = document.getElementById('loadingText');
 
   if (show) {
-    // Set a random loading message
+    // Set a random loading message based on type
     if (loadingText) {
-      loadingText.textContent = getRandomLoadingMessage();
+      loadingText.textContent = type === 'auth' ? getRandomAuthMessage() : getRandomLoadingMessage();
     }
     overlay.classList.remove('hidden');
   } else {
@@ -1975,6 +2001,8 @@ function renderNotes() {
     const isCompleted = note.completed || false;
     const textStyle = isCompleted ? 'text-decoration:line-through;opacity:0.6' : '';
     const createdBy = note.createdBy || '—';
+    const isOwner = note.createdBy === currentUser;
+    const isEdited = note.edited || false;
 
     // Handle timestamp - prefer createdAtLocal (formatted string), fallback to Firebase timestamp
     let createdAt = '—';
@@ -2006,22 +2034,31 @@ function renderNotes() {
             onclick="event.stopPropagation()"
             style="margin-top:2px;flex-shrink:0"
           />
-        ` : ''}
-        <input
-          type="checkbox"
-          ${isCompleted ? 'checked' : ''}
-          onchange="event.stopPropagation();toggleNoteComplete('${note.id}')"
-          onclick="event.stopPropagation()"
-          style="margin-top:2px;flex-shrink:0"
-          ${isNoteMultiSelectMode ? 'disabled' : ''}
-        />
+        ` : `
+          <input
+            type="radio"
+            ${isCompleted ? 'checked' : ''}
+            onchange="event.stopPropagation();showMarkCompleteDialog('${note.id}')"
+            onclick="event.stopPropagation()"
+            style="margin-top:2px;flex-shrink:0"
+            ${isCompleted ? 'disabled' : ''}
+          />
+        `}
         <div style="flex:1;${textStyle}">
-          <div style="font-size:14px;line-height:1.5;margin-bottom:4px">${note.text}</div>
+          <div style="font-size:14px;line-height:1.5;margin-bottom:4px">
+            ${note.text}
+            ${isEdited ? '<span style="font-size:10px;color:var(--muted);margin-left:6px;font-family:\'DM Mono\',monospace">(edited)</span>' : ''}
+          </div>
           <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">
             👤 ${createdBy} • 🕐 ${createdAt}
           </div>
         </div>
-        ${!isNoteMultiSelectMode ? `
+        ${!isNoteMultiSelectMode && isOwner ? `
+          <button
+            onclick="event.stopPropagation();showEditNoteDialog('${note.id}')"
+            style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px;margin-right:4px"
+            title="Edit note"
+          >✏️</button>
           <button
             onclick="event.stopPropagation();showDeleteNoteDialog('${note.id}')"
             style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px"
@@ -2093,6 +2130,93 @@ async function addNote() {
 }
 
 // Toggle note completion
+let markCompleteTargetId = null;
+let editNoteTargetId = null;
+
+function showMarkCompleteDialog(id) {
+  markCompleteTargetId = id;
+  document.getElementById('markCompleteOverlay').classList.remove('hidden');
+}
+
+function cancelMarkComplete() {
+  markCompleteTargetId = null;
+  document.getElementById('markCompleteOverlay').classList.add('hidden');
+  // Re-render notes to reset radio button state
+  renderNotes();
+}
+
+async function confirmMarkComplete() {
+  if (!markCompleteTargetId) return;
+
+  document.getElementById('markCompleteOverlay').classList.add('hidden');
+  showLoading(true);
+
+  try {
+    const note = notes.find(n => n.id === markCompleteTargetId);
+    if (!note) return;
+
+    note.completed = true;
+    await dbUpdateNote(markCompleteTargetId, { completed: true });
+
+    renderNotes();
+    showToast('Note marked as complete', 'ok');
+  } catch (error) {
+    console.error('Error marking note complete:', error);
+    showToast('Failed to mark note complete', 'err');
+  } finally {
+    showLoading(false);
+    markCompleteTargetId = null;
+  }
+}
+
+// Edit note functions
+function showEditNoteDialog(id) {
+  const note = notes.find(n => n.id === id);
+  if (!note) return;
+
+  editNoteTargetId = id;
+  document.getElementById('editNoteText').value = note.text;
+  document.getElementById('editNoteOverlay').classList.remove('hidden');
+  setTimeout(() => document.getElementById('editNoteText').focus(), 100);
+}
+
+function cancelEditNote() {
+  editNoteTargetId = null;
+  document.getElementById('editNoteText').value = '';
+  document.getElementById('editNoteOverlay').classList.add('hidden');
+}
+
+async function saveEditNote() {
+  if (!editNoteTargetId) return;
+
+  const newText = document.getElementById('editNoteText').value.trim();
+  if (!newText) {
+    showToast('Note cannot be empty', 'err');
+    return;
+  }
+
+  document.getElementById('editNoteOverlay').classList.add('hidden');
+  showLoading(true);
+
+  try {
+    const note = notes.find(n => n.id === editNoteTargetId);
+    if (!note) return;
+
+    note.text = newText;
+    note.edited = true;
+    await dbUpdateNote(editNoteTargetId, { text: newText, edited: true });
+
+    renderNotes();
+    showToast('Note updated', 'ok');
+  } catch (error) {
+    console.error('Error updating note:', error);
+    showToast('Failed to update note', 'err');
+  } finally {
+    showLoading(false);
+    editNoteTargetId = null;
+  }
+}
+
 async function toggleNoteComplete(id) {
   showLoading(true);
 
@@ -2183,20 +2307,104 @@ function toggleNoteMultiSelect() {
   selectedNotes.clear();
 
   const btn = document.getElementById('noteMultiSelectBtn');
-  const bulkActions = document.getElementById('noteBulkActions');
+  const addBtn = document.getElementById('addNoteBtn');
 
   if (isNoteMultiSelectMode) {
     btn.textContent = 'Cancel Selection';
     btn.style.background = 'rgba(232, 110, 138, 0.2)';
-    bulkActions.style.display = 'block';
+    if (addBtn) addBtn.style.display = 'none';
+    updateNoteBulkActions(); // Update which actions to show
   } else {
     btn.textContent = '☑️ Select Multiple';
     btn.style.background = 'rgba(72, 126, 98, 0.2)';
-    bulkActions.style.display = 'none';
+    if (addBtn) addBtn.style.display = 'inline-block';
+    const bulkActions = document.getElementById('noteBulkActions');
+    if (bulkActions) bulkActions.style.display = 'none';
   }
 
   renderNotes();
 }
+
+// Toggle note selection
+function toggleNoteSelection(id) {
+  if (selectedNotes.has(id)) {
+    selectedNotes.delete(id);
+  } else {
+    selectedNotes.add(id);
+  }
+
+  // Update checkbox visual state
+  const checkbox = document.getElementById(`check-note-${id}`);
+  if (checkbox) {
+    checkbox.checked = selectedNotes.has(id);
+  }
+
+  // Update bulk action buttons
+  updateNoteBulkActions();
+}
+
+// Update note bulk action buttons based on selection
+function updateNoteBulkActions() {
+  const bulkActions = document.getElementById('noteBulkActions');
+  const completeBtn = document.getElementById('bulkCompleteNotesBtn');
+  const deleteBtn = document.getElementById('bulkDeleteNotesBtn');
+
+  if (selectedNotes.size === 0) {
+    // No selection - hide entire bulk actions container
+    if (bulkActions) bulkActions.style.display = 'none';
+    return;
+  }
+
+  // Show bulk actions container when there's selection
+  if (bulkActions) bulkActions.style.display = 'flex';
+
+  // Check if selection includes any completed notes
+  let hasCompleted = false;
+  let hasIncomplete = false;
+
+  selectedNotes.forEach(id => {
+    const note = notes.find(n => n.id === id);
+    if (note) {
+      if (note.completed) {
+        hasCompleted = true;
+      } else {
+        hasIncomplete = true;
+      }
+    }
+  });
+
+  // Show/hide buttons based on selection
+  if (hasCompleted && hasIncomplete) {
+    // Mixed selection - only show delete
+    if (completeBtn) completeBtn.style.display = 'none';
+    if (deleteBtn) {
+      deleteBtn.style.display = 'inline-block';
+      deleteBtn.disabled = false;
+      deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
+    }
+  } else if (hasCompleted) {
+    // Only completed notes - only show delete
+    if (completeBtn) completeBtn.style.display = 'none';
+    if (deleteBtn) {
+      deleteBtn.style.display = 'inline-block';
+      deleteBtn.disabled = false;
+      deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
+    }
+  } else {
+    // Only incomplete notes - show both
+    if (completeBtn) {
+      completeBtn.style.display = 'inline-block';
+      completeBtn.disabled = false;
+      completeBtn.textContent = `Mark as Complete (${selectedNotes.size})`;
+    }
+    if (deleteBtn) {
+      deleteBtn.style.display = 'inline-block';
+      deleteBtn.disabled = false;
+      deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
+    }
+  }
+}
+
 
 function toggleNoteSelection(id) {
   if (selectedNotes.has(id)) {
@@ -2211,17 +2419,38 @@ function toggleNoteSelection(id) {
     checkbox.checked = selectedNotes.has(id);
   }
 
-  // Update bulk action button
-  updateNoteBulkActionButtons();
+  // Update bulk action buttons
+  updateNoteBulkActions();
 }
 
-function updateNoteBulkActionButtons() {
-  const count = selectedNotes.size;
-  const bulkDeleteBtn = document.getElementById('bulkDeleteNotesBtn');
+async function bulkCompleteNotes() {
+  if (selectedNotes.size === 0) return;
 
-  if (bulkDeleteBtn) {
-    bulkDeleteBtn.disabled = count === 0;
-    bulkDeleteBtn.textContent = count > 0 ? `Delete Selected (${count})` : 'Delete Selected';
+  showLoading(true);
+
+  try {
+    const updatePromises = [];
+    selectedNotes.forEach(id => {
+      const note = notes.find(n => n.id === id);
+      if (note && !note.completed) {
+        note.completed = true;
+        updatePromises.push(dbUpdateNote(id, { completed: true }));
+      }
+    });
+
+    await Promise.all(updatePromises);
+
+    // Clear selection and exit multi-select mode
+    selectedNotes.clear();
+    toggleNoteMultiSelect();
+
+    renderNotes();
+    showToast('Notes marked as complete', 'ok');
+  } catch (error) {
+    console.error('Error marking notes complete:', error);
+    showToast('Failed to complete notes', 'err');
+  } finally {
+    showLoading(false);
   }
 }
 
@@ -2645,17 +2874,17 @@ let visibleColumns = {
   day: true,
   desc: true,
   cat: true,
-  name: false,
-  paidBy: false,
-  time: false,
+  name: true,
+  paidBy: true,
+  time: true,
   amount: true
 };
 
 let archivedVisibleColumns = {
   desc: true,
   cat: true,
-  name: false,
-  paidBy: false,
+  name: true,
+  paidBy: true,
   amount: true,
   day: true
 };

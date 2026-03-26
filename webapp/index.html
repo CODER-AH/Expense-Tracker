@@ -228,8 +228,8 @@
     </div>
 
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <button onclick="showBatchAddDialog()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">+ Add</button>
       <button id="multiSelectBtn" onclick="toggleMultiSelect()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">☑️ Select Multiple</button>
+      <button id="addExpenseBtn" onclick="showBatchAddDialog()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">+ Add</button>
       <div id="bulkActions" style="display:none;gap:8px">
         <button id="bulkArchiveBtn" onclick="bulkArchiveExpenses()" style="padding:8px 14px;background:rgba(232, 110, 138, 0.2);border:1px solid #e86e8a;color:#e86e8a;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Archive Selected</button>
       </div>
@@ -243,9 +243,9 @@
         <th data-column="day">Day</th>
         <th data-column="desc" class="sortable" onclick="sortByColumn('desc')">Description</th>
         <th data-column="cat" class="sortable" onclick="sortByColumn('cat')">Category</th>
-        <th data-column="name" class="sortable" onclick="sortByColumn('name')" style="display:none">Added By</th>
-        <th data-column="paidBy" class="sortable" onclick="sortByColumn('paidBy')" style="display:none">Paid By</th>
-        <th data-column="time" class="sortable" onclick="sortByColumn('time')" style="display:none">Time</th>
+        <th data-column="name" class="sortable" onclick="sortByColumn('name')">Added By</th>
+        <th data-column="paidBy" class="sortable" onclick="sortByColumn('paidBy')">Paid By</th>
+        <th data-column="time" class="sortable" onclick="sortByColumn('time')">Time</th>
         <th data-column="amount" class="sortable" onclick="sortByColumn('amount')" style="text-align:right">Amount</th>
         <th></th><th></th>
       </tr></thead>
@@ -261,15 +261,15 @@
 
 <!-- NOTES SECTION -->
 <div class="notes-container" id="notes-section" style="display:none;max-width:1000px;margin:16px auto">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-    <div style="font-size:13px;color:var(--muted);font-family:'DM Sans',sans-serif">Tasks & Reminders</div>
+  <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button id="noteMultiSelectBtn" onclick="event.stopPropagation();toggleNoteMultiSelect()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">☑️ Select Multiple</button>
-      <button onclick="event.stopPropagation();showAddNoteDialog()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">+ Add Note</button>
+      <button id="addNoteBtn" onclick="event.stopPropagation();showAddNoteDialog()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">+ Add</button>
+      <div id="noteBulkActions" style="display:none;gap:8px">
+        <button id="bulkCompleteNotesBtn" onclick="bulkCompleteNotes()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Mark as Complete</button>
+        <button id="bulkDeleteNotesBtn" onclick="bulkDeleteNotes()" style="padding:8px 14px;background:rgba(232, 110, 138, 0.2);border:1px solid #e86e8a;color:#e86e8a;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Delete Selected</button>
+      </div>
     </div>
-  </div>
-  <div id="noteBulkActions" style="display:none;margin-bottom:12px">
-    <button id="bulkDeleteNotesBtn" onclick="bulkDeleteNotes()" style="padding:8px 14px;background:rgba(232, 110, 138, 0.2);border:1px solid #e86e8a;color:#e86e8a;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Delete Selected</button>
   </div>
   <!-- Notes section loader -->
   <div id="notesLoader" style="display:none;text-align:center;padding:40px">
@@ -336,8 +336,8 @@
           <th style="white-space:nowrap">#</th>
           <th data-column="desc" style="white-space:nowrap">Description</th>
           <th data-column="cat" style="white-space:nowrap">Category</th>
-          <th data-column="name" style="white-space:nowrap;display:none">Added By</th>
-          <th data-column="paidBy" style="white-space:nowrap;display:none">Paid By</th>
+          <th data-column="name" style="white-space:nowrap">Added By</th>
+          <th data-column="paidBy" style="white-space:nowrap">Paid By</th>
           <th data-column="amount" style="white-space:nowrap;text-align:right">Amount</th>
           <th data-column="day" style="white-space:nowrap">Day</th>
           <th style="white-space:nowrap" colspan="2">Actions</th>
@@ -507,6 +507,36 @@
     <div class="confirm-buttons">
       <button class="btn-cancel" onclick="cancelAddNote()">Cancel</button>
       <button class="btn-delete" style="background:var(--accent);color:#0e1412" onclick="addNote()">Add Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- MARK NOTE COMPLETE DIALOG -->
+<div class="confirm-overlay hidden" id="markCompleteOverlay">
+  <div class="confirm-box">
+    <div class="icon">✅</div>
+    <h3>Mark as Complete?</h3>
+    <p>This will mark the note as completed.</p>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelMarkComplete()">Cancel</button>
+      <button class="btn-delete" style="background:var(--accent);color:#0e1412" onclick="confirmMarkComplete()">Mark Complete</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT NOTE DIALOG -->
+<div class="confirm-overlay hidden" id="editNoteOverlay">
+  <div class="confirm-box" style="max-width:500px">
+    <div class="icon">✏️</div>
+    <h3>Edit Note</h3>
+    <div style="margin:20px 0">
+      <label style="display:block;margin-bottom:8px;font-size:13px;color:var(--muted);font-family:'DM Sans',sans-serif">Note text</label>
+      <textarea id="editNoteText" placeholder="Enter your note or task..." rows="4"
+        style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.15s;resize:vertical"></textarea>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelEditNote()">Cancel</button>
+      <button class="btn-delete" style="background:var(--accent);color:#0e1412" onclick="saveEditNote()">Save Changes</button>
     </div>
   </div>
 </div>
