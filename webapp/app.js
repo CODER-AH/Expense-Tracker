@@ -2001,6 +2001,8 @@ function renderNotes() {
     const isCompleted = note.completed || false;
     const textStyle = isCompleted ? 'text-decoration:line-through;opacity:0.6' : '';
     const createdBy = note.createdBy || '—';
+    const isOwner = note.createdBy === currentUser;
+    const isEdited = note.edited || false;
 
     // Handle timestamp - prefer createdAtLocal (formatted string), fallback to Firebase timestamp
     let createdAt = '—';
@@ -2043,12 +2045,15 @@ function renderNotes() {
           />
         `}
         <div style="flex:1;${textStyle}">
-          <div style="font-size:14px;line-height:1.5;margin-bottom:4px">${note.text}</div>
+          <div style="font-size:14px;line-height:1.5;margin-bottom:4px">
+            ${note.text}
+            ${isEdited ? '<span style="font-size:10px;color:var(--muted);margin-left:6px;font-family:\'DM Mono\',monospace">(edited)</span>' : ''}
+          </div>
           <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">
             👤 ${createdBy} • 🕐 ${createdAt}
           </div>
         </div>
-        ${!isNoteMultiSelectMode ? `
+        ${!isNoteMultiSelectMode && isOwner ? `
           <button
             onclick="event.stopPropagation();showEditNoteDialog('${note.id}')"
             style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px;margin-right:4px"
@@ -2198,7 +2203,8 @@ async function saveEditNote() {
     if (!note) return;
 
     note.text = newText;
-    await dbUpdateNote(editNoteTargetId, { text: newText });
+    note.edited = true;
+    await dbUpdateNote(editNoteTargetId, { text: newText, edited: true });
 
     renderNotes();
     showToast('Note updated', 'ok');
@@ -2302,19 +2308,18 @@ function toggleNoteMultiSelect() {
 
   const btn = document.getElementById('noteMultiSelectBtn');
   const addBtn = document.getElementById('addNoteBtn');
-  const bulkActions = document.getElementById('noteBulkActions');
 
   if (isNoteMultiSelectMode) {
     btn.textContent = 'Cancel Selection';
     btn.style.background = 'rgba(232, 110, 138, 0.2)';
     if (addBtn) addBtn.style.display = 'none';
-    bulkActions.style.display = 'flex';
     updateNoteBulkActions(); // Update which actions to show
   } else {
     btn.textContent = '☑️ Select Multiple';
     btn.style.background = 'rgba(72, 126, 98, 0.2)';
     if (addBtn) addBtn.style.display = 'inline-block';
-    bulkActions.style.display = 'none';
+    const bulkActions = document.getElementById('noteBulkActions');
+    if (bulkActions) bulkActions.style.display = 'none';
   }
 
   renderNotes();
