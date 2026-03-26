@@ -5,6 +5,54 @@
 const USE_FIREBASE = window.APP_CONFIG?.database?.useFirebase ?? true;
 const ENABLE_SHEETS_BACKUP = window.APP_CONFIG?.database?.enableSheetsBackup ?? false;
 
+// Cache configuration (5 minutes)
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
+// ============================================
+// CACHE HELPERS
+// ============================================
+
+function getCachedData(key) {
+  try {
+    const cached = localStorage.getItem(`cache_${key}`);
+    if (!cached) return null;
+
+    const { data, timestamp } = JSON.parse(cached);
+    const now = Date.now();
+
+    // Check if cache is still valid
+    if (now - timestamp < CACHE_DURATION_MS) {
+      console.log(`Using cached ${key} (${Math.round((now - timestamp) / 1000)}s old)`);
+      return data;
+    } else {
+      // Cache expired, remove it
+      localStorage.removeItem(`cache_${key}`);
+      return null;
+    }
+  } catch (e) {
+    console.warn('Cache read error:', e);
+    return null;
+  }
+}
+
+function setCachedData(key, data) {
+  try {
+    const cacheEntry = {
+      data: data,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(`cache_${key}`, JSON.stringify(cacheEntry));
+    console.log(`Cached ${key}`);
+  } catch (e) {
+    console.warn('Cache write error:', e);
+  }
+}
+
+function invalidateCache(key) {
+  localStorage.removeItem(`cache_${key}`);
+  console.log(`Invalidated cache: ${key}`);
+}
+
 // ============================================
 // UNIFIED DATABASE API
 // ============================================
@@ -38,6 +86,10 @@ async function dbAddExpense(expense) {
       id = await sheetAdd(expense);
     }
 
+    // Invalidate cache since data changed
+    invalidateCache('expenses');
+    invalidateCache('archivedExpenses');
+
     return id;
   } catch (error) {
     console.error('Error adding expense:', error);
@@ -47,12 +99,21 @@ async function dbAddExpense(expense) {
 
 async function dbGetAllExpenses() {
   try {
+    // Try cache first
+    const cached = getCachedData('expenses');
+    if (cached) return cached;
+
+    // Fetch from database
+    let data;
     if (USE_FIREBASE) {
-      return await firestoreGetAllExpenses();
+      data = await firestoreGetAllExpenses();
     } else {
-      const data = await fetch(SCRIPT_URL + '?action=getAll').then(r => r.json());
-      return data;
+      data = await fetch(SCRIPT_URL + '?action=getAll').then(r => r.json());
     }
+
+    // Cache the result
+    setCachedData('expenses', data);
+    return data;
   } catch (error) {
     console.error('Error getting expenses:', error);
     throw error;
@@ -78,6 +139,10 @@ async function dbUpdateExpense(id, updates) {
     if (!USE_FIREBASE) {
       await sheetUpdate(id, updates);
     }
+
+    // Invalidate cache since data changed
+    invalidateCache('expenses');
+    invalidateCache('archivedExpenses');
 
     return true;
   } catch (error) {
