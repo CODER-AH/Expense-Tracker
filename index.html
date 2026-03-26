@@ -326,7 +326,7 @@
   }
   .multi-row-entry {
     display: grid;
-    grid-template-columns: 80px 100px 1fr 110px 120px 110px 40px;
+    grid-template-columns: 120px 100px 1fr 110px 120px 110px 40px;
     gap: 10px;
     align-items: end;
     margin-bottom: 10px;
@@ -361,6 +361,7 @@
     background-repeat: no-repeat;
     background-position: right 8px center;
     padding-right: 32px;
+    cursor: pointer;
   }
   .multi-row-entry input:focus,
   .multi-row-entry select:focus {
@@ -1495,7 +1496,9 @@ function handleDaySelect(select) {
     addNewDay();
     // Reset to last actual day
     select.value = maxDay;
+    return false;
   }
+  return true;
 }
 
 // Add a new day to the trip
