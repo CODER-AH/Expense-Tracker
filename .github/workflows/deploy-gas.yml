@@ -26,8 +26,19 @@ jobs:
 
       - name: Create clasp credentials
         run: |
+          mkdir -p ~/.config/@google
           echo '${{ secrets.CLASP_CREDENTIALS }}' > ~/.clasprc.json
-          cat ~/.clasprc.json
+          echo "Credentials file created"
+          echo "File size: $(wc -c < ~/.clasprc.json)"
+
+      - name: Verify .clasp.json exists
+        run: |
+          if [ ! -f .clasp.json ]; then
+            echo "Error: .clasp.json not found!"
+            exit 1
+          fi
+          echo ".clasp.json found"
+          cat .clasp.json
 
       - name: Deploy to Apps Script
         run: clasp push
