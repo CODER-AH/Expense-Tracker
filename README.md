@@ -33,8 +33,8 @@ A modern, feature-rich expense tracking application designed for group trips wit
 
 ### 2. Update the HTML File
 
-1. Open `index.html`
-2. Find the line with: `const SCRIPT_URL = '...'` (around line 1120)
+1. Open `webapp/app.js`
+2. Find line with: `const SCRIPT_URL = '...'`
 3. Replace with your Google Apps Script URL
 4. Save the file
 
@@ -53,7 +53,7 @@ git push -u origin main
 
 3. Go to your repository settings on GitHub
 4. Navigate to **Pages** section
-5. Under **Source**, select **main** branch
+5. Under **Source**, select **main** branch and **/webapp** folder
 6. Click **Save**
 7. Your app will be live at: `https://YOUR_USERNAME.github.io/YOUR_REPO_NAME/`
 
@@ -102,38 +102,23 @@ Share the GitHub Pages URL with your friends. They can:
 
 ## Local Testing
 
-Open `index.html` directly in your browser to test locally before deploying.
+Open `webapp/index.html` directly in your browser to test locally before deploying.
 
 ## Configuration
 
 ### Update Participant Names
 
-Edit the names in the dropdowns (in `index.html`):
+Edit the names in the dropdowns (in `webapp/app.js`):
 
-**Login page select (around line 850):**
-```html
-<option value="Afsar">Afsar</option>
-<option value="Adham">Adham</option>
-<option value="Aakif">Aakif</option>
-<option value="Sahlaan">Sahlaan</option>
-```
-
-**Paid by dropdown (around line 950):**
-```html
-<option value="Afsar">Afsar</option>
-<option value="Adham">Adham</option>
-<option value="Aakif">Aakif</option>
-<option value="Sahlaan">Sahlaan</option>
-```
-
-**Update settlement calculator (around line 1787):**
+**Find the person arrays and update:**
 ```javascript
+const persons = ['Afsar', 'Adham', 'Aakif', 'Sahlaan'];
 const splitAmong = ['Afsar', 'Adham', 'Aakif', 'Sahlaan'];
 ```
 
 ### Customize Trip Details
 
-Edit the header section (around line 862-866):
+Edit the header section in `webapp/index.html`:
 ```html
 <div class="route">📍 Your Route</div>
 <h1>Your <span>Trip</span> Name</h1>
@@ -153,10 +138,23 @@ Edit the header section (around line 862-866):
 
 ```
 /
-├── index.html          # Main HTML structure
-├── styles.css          # All CSS styles (1107 lines)
-├── app.js             # All JavaScript logic (1731 lines)
-└── README.md          # Documentation
+├── webapp/                # Frontend application
+│   ├── index.html        # Main HTML structure
+│   ├── styles.css        # All CSS styles (1107 lines)
+│   ├── app.js            # All JavaScript logic (1731 lines)
+│   └── README.md         # Frontend documentation
+│
+├── backend/              # Google Apps Script backend
+│   ├── Code.js           # Apps Script backend code (v3)
+│   ├── appsscript.json   # Apps Script manifest
+│   └── README.md         # Backend documentation
+│
+├── .github/workflows/    # GitHub Actions
+│   └── deploy-gas.yml    # Auto-deploy to Google Apps Script
+│
+├── README.md            # Main documentation (this file)
+├── CHANGELOG.md         # Version history
+└── DEPLOYMENT.md        # Deployment setup guide
 ```
 
 ## Recent Updates
