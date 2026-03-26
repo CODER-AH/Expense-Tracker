@@ -879,6 +879,8 @@
     border-radius: 8px;
     padding: 6px;
     min-width: 160px;
+    width: max-content;
+    max-width: 300px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     z-index: 1000;
     display: none;
@@ -895,6 +897,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
   }
   .filter-option:hover { background: var(--surface); color: var(--accent); }
   .filter-option.selected {
