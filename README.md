@@ -34,7 +34,7 @@ A modern, feature-rich expense tracking application designed for group trips wit
 ### 2. Update the HTML File
 
 1. Open `index.html`
-2. Find line ~607: `const SCRIPT_URL = '...'`
+2. Find the line with: `const SCRIPT_URL = '...'` (around line 1120)
 3. Replace with your Google Apps Script URL
 4. Save the file
 
@@ -60,10 +60,45 @@ git push -u origin main
 ### 4. Share with Friends
 
 Share the GitHub Pages URL with your friends. They can:
-- Add their name on first visit (saved in browser)
-- Add expenses in real-time
-- Edit and delete their entries
+- Select their name on first visit (saved in browser)
+- Add expenses using multi-row entry or inline editing
+- Edit and delete their own entries
 - View everyone's expenses synced via Google Sheets
+- See settlement calculations showing who owes whom
+
+## Usage
+
+### Adding Expenses
+
+**Multi-row Entry (Recommended for multiple expenses):**
+1. Fill in the expense details in the form
+2. Click "Add Row" to add it to the batch
+3. Repeat to add more expenses
+4. Click "Save All" to save all expenses at once
+5. Use "Clear All" to discard all rows without saving
+
+**Single Expense:**
+1. Fill in the expense details in the form
+2. Click "Add Row" once
+3. Click "Save All" immediately
+
+### Editing Expenses
+
+- Click the ✏️ icon next to any expense you added
+- Edit the fields inline
+- Click ✅ to save or ❌ to cancel
+
+### Deleting Expenses
+
+- Click the 🗑️ icon next to any expense you added
+- Confirm deletion in the popup dialog
+
+### Viewing & Filtering
+
+- Use the dropdown to filter expenses by person
+- Click column headers to sort (click again to reverse)
+- Navigate between pages using the pagination buttons
+- View settlement calculations showing optimal payment transfers
 
 ## Local Testing
 
@@ -71,11 +106,38 @@ Open `index.html` directly in your browser to test locally before deploying.
 
 ## Configuration
 
-Edit the names in the "Paid by" dropdown (line ~556 in index.html):
+### Update Participant Names
+
+Edit the names in the dropdowns (in `index.html`):
+
+**Login page select (around line 850):**
 ```html
+<option value="Afsar">Afsar</option>
 <option value="Adham">Adham</option>
 <option value="Aakif">Aakif</option>
+<option value="Sahlaan">Sahlaan</option>
+```
+
+**Paid by dropdown (around line 950):**
+```html
 <option value="Afsar">Afsar</option>
+<option value="Adham">Adham</option>
+<option value="Aakif">Aakif</option>
+<option value="Sahlaan">Sahlaan</option>
+```
+
+**Update settlement calculator (around line 1787):**
+```javascript
+const splitAmong = ['Afsar', 'Adham', 'Aakif', 'Sahlaan'];
+```
+
+### Customize Trip Details
+
+Edit the header section (around line 862-866):
+```html
+<div class="route">📍 Your Route</div>
+<h1>Your <span>Trip</span> Name</h1>
+<div class="dates">Days · Dates</div>
 ```
 
 ## Categories

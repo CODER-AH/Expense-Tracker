@@ -294,6 +294,42 @@
   </div>
 </div>
 
+<!-- NOTES SECTION -->
+<div class="notes-container" id="notes-section" style="display:none;max-width:1000px;margin:16px auto">
+  <div class="notes-bar">
+    <div class="note-item">✔️ Carry cash for jeep at Mandalpatti (~₹2500 shared)</div>
+    <div class="note-item">✔️ Abbey Falls entry: ₹10/person + ₹50 parking</div>
+    <div class="note-item">✔️ Raja's Seat entry: ₹20/person</div>
+    <div class="note-item">⛽ Fuel up at Mysore & Kushalnagar</div>
+    <div class="note-item">🌄 Ghat roads after Kushalnagar — drive safe!</div>
+  </div>
+</div>
+
+<div class="section-title" style="cursor:pointer;user-select:none" onclick="toggleSection('archived')">
+  🗃️ Archived (<span id="archivedCount">0</span>) <span id="archived-icon" style="font-size:12px;margin-left:4px">▶</span>
+</div>
+
+<!-- ARCHIVED SECTION -->
+<div class="archived-container" id="archived-section" style="display:none;max-width:1000px;margin:16px auto">
+  <div class="timeline">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th style="white-space:nowrap">#</th>
+          <th style="white-space:nowrap">Description</th>
+          <th style="white-space:nowrap">Category</th>
+          <th style="white-space:nowrap">Added By</th>
+          <th style="white-space:nowrap">Paid By</th>
+          <th style="white-space:nowrap">Amount</th>
+          <th style="white-space:nowrap">Day</th>
+          <th style="white-space:nowrap" colspan="2">Actions</th>
+        </tr></thead>
+        <tbody id="archived-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
