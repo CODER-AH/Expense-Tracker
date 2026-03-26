@@ -2050,6 +2050,11 @@ function renderNotes() {
         </div>
         ${!isNoteMultiSelectMode ? `
           <button
+            onclick="event.stopPropagation();showEditNoteDialog('${note.id}')"
+            style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px;margin-right:4px"
+            title="Edit note"
+          >✏️</button>
+          <button
             onclick="event.stopPropagation();showDeleteNoteDialog('${note.id}')"
             style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px"
             title="Delete note"
@@ -2121,6 +2126,7 @@ async function addNote() {
 
 // Toggle note completion
 let markCompleteTargetId = null;
+let editNoteTargetId = null;
 
 function showMarkCompleteDialog(id) {
   markCompleteTargetId = id;
@@ -2130,6 +2136,8 @@ function showMarkCompleteDialog(id) {
 function cancelMarkComplete() {
   markCompleteTargetId = null;
   document.getElementById('markCompleteOverlay').classList.add('hidden');
+  // Re-render notes to reset radio button state
+  renderNotes();
 }
 
 async function confirmMarkComplete() {
@@ -2153,6 +2161,53 @@ async function confirmMarkComplete() {
   } finally {
     showLoading(false);
     markCompleteTargetId = null;
+  }
+}
+
+// Edit note functions
+function showEditNoteDialog(id) {
+  const note = notes.find(n => n.id === id);
+  if (!note) return;
+
+  editNoteTargetId = id;
+  document.getElementById('editNoteText').value = note.text;
+  document.getElementById('editNoteOverlay').classList.remove('hidden');
+  setTimeout(() => document.getElementById('editNoteText').focus(), 100);
+}
+
+function cancelEditNote() {
+  editNoteTargetId = null;
+  document.getElementById('editNoteText').value = '';
+  document.getElementById('editNoteOverlay').classList.add('hidden');
+}
+
+async function saveEditNote() {
+  if (!editNoteTargetId) return;
+
+  const newText = document.getElementById('editNoteText').value.trim();
+  if (!newText) {
+    showToast('Note cannot be empty', 'err');
+    return;
+  }
+
+  document.getElementById('editNoteOverlay').classList.add('hidden');
+  showLoading(true);
+
+  try {
+    const note = notes.find(n => n.id === editNoteTargetId);
+    if (!note) return;
+
+    note.text = newText;
+    await dbUpdateNote(editNoteTargetId, { text: newText });
+
+    renderNotes();
+    showToast('Note updated', 'ok');
+  } catch (error) {
+    console.error('Error updating note:', error);
+    showToast('Failed to update note', 'err');
+  } finally {
+    showLoading(false);
+    editNoteTargetId = null;
   }
 }
 
@@ -2289,9 +2344,17 @@ function updateNoteBulkActions() {
   const deleteBtn = document.getElementById('bulkDeleteNotesBtn');
 
   if (selectedNotes.size === 0) {
-    // No selection - hide both buttons
-    if (completeBtn) completeBtn.style.display = 'none';
-    if (deleteBtn) deleteBtn.style.display = 'none';
+    // No selection - show both buttons but disabled
+    if (completeBtn) {
+      completeBtn.style.display = 'inline-block';
+      completeBtn.disabled = true;
+      completeBtn.textContent = 'Mark as Complete';
+    }
+    if (deleteBtn) {
+      deleteBtn.style.display = 'inline-block';
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = 'Delete Selected';
+    }
     return;
   }
 
@@ -2316,6 +2379,7 @@ function updateNoteBulkActions() {
     if (completeBtn) completeBtn.style.display = 'none';
     if (deleteBtn) {
       deleteBtn.style.display = 'inline-block';
+      deleteBtn.disabled = false;
       deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
     }
   } else if (hasCompleted) {
@@ -2323,16 +2387,19 @@ function updateNoteBulkActions() {
     if (completeBtn) completeBtn.style.display = 'none';
     if (deleteBtn) {
       deleteBtn.style.display = 'inline-block';
+      deleteBtn.disabled = false;
       deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
     }
   } else {
     // Only incomplete notes - show both
     if (completeBtn) {
       completeBtn.style.display = 'inline-block';
+      completeBtn.disabled = false;
       completeBtn.textContent = `Mark as Complete (${selectedNotes.size})`;
     }
     if (deleteBtn) {
       deleteBtn.style.display = 'inline-block';
+      deleteBtn.disabled = false;
       deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
     }
   }

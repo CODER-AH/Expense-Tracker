@@ -525,6 +525,23 @@
   </div>
 </div>
 
+<!-- EDIT NOTE DIALOG -->
+<div class="confirm-overlay hidden" id="editNoteOverlay">
+  <div class="confirm-box" style="max-width:500px">
+    <div class="icon">✏️</div>
+    <h3>Edit Note</h3>
+    <div style="margin:20px 0">
+      <label style="display:block;margin-bottom:8px;font-size:13px;color:var(--muted);font-family:'DM Sans',sans-serif">Note text</label>
+      <textarea id="editNoteText" placeholder="Enter your note or task..." rows="4"
+        style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.15s;resize:vertical"></textarea>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelEditNote()">Cancel</button>
+      <button class="btn-delete" style="background:var(--accent);color:#0e1412" onclick="saveEditNote()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- BULK ARCHIVE CONFIRMATION MODAL -->
 <div class="confirm-overlay hidden" id="bulkArchiveOverlay">
   <div class="confirm-box">
