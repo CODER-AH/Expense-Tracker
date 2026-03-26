@@ -130,14 +130,9 @@
   <div class="add-form">
     <div>
       <label>Day</label>
-      <div class="custom-select">
-        <div class="custom-select-btn" id="inp-day-btn" onclick="toggleCustomSelect('inp-day')">
-          <span id="inp-day-label">Day 1</span>
-        </div>
-        <div class="custom-select-dropdown" id="inp-day-dropdown">
-          <!-- Populated dynamically -->
-        </div>
-      </div>
+      <select id="inp-day">
+        <option value="1">Day 1</option>
+      </select>
     </div>
     <div>
       <label>Added by</label>
@@ -149,19 +144,14 @@
     </div>
     <div>
       <label>Category</label>
-      <div class="custom-select">
-        <div class="custom-select-btn" id="inp-cat-btn" onclick="toggleCustomSelect('inp-cat')">
-          <span id="inp-cat-label">🍽️ Food</span>
-        </div>
-        <div class="custom-select-dropdown" id="inp-cat-dropdown">
-          <div class="custom-select-option selected" onclick="selectCustomOption('inp-cat', 'food', '🍽️ Food')">🍽️ Food</div>
-          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'fuel', '⛽ Fuel')">⛽ Fuel</div>
-          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'stay', '🏨 Stay')">🏨 Stay</div>
-          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'transport', '🚙 Transport')">🚙 Transport</div>
-          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'entry', '🎟️ Entry Fees')">🎟️ Entry Fees</div>
-          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'misc', '🛍️ Miscellaneous')">🛍️ Miscellaneous</div>
-        </div>
-      </div>
+      <select id="inp-cat">
+        <option value="food">🍽️ Food</option>
+        <option value="fuel">⛽ Fuel</option>
+        <option value="stay">🏨 Stay</option>
+        <option value="transport">🚙 Transport</option>
+        <option value="entry">🎟️ Entry Fees</option>
+        <option value="misc">🛍️ Miscellaneous</option>
+      </select>
     </div>
     <div>
       <label>Amount (₹) *</label>
@@ -169,18 +159,13 @@
     </div>
     <div>
       <label>Paid by *</label>
-      <div class="custom-select">
-        <div class="custom-select-btn" id="inp-paidby-btn" onclick="toggleCustomSelect('inp-paidby')">
-          <span id="inp-paidby-label">Select...</span>
-        </div>
-        <div class="custom-select-dropdown" id="inp-paidby-dropdown">
-          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', '', 'Select...')">Select...</div>
-          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', 'Afsar', '👨‍💻 Afsar')">👨‍💻 Afsar</div>
-          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', 'Adham', '👨‍💻 Adham')">👨‍💻 Adham</div>
-          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', 'Aakif', '👨‍💻 Aakif')">👨‍💻 Aakif</div>
-          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', 'Sahlaan', '👨‍⚕️ Sahlaan')">👨‍⚕️ Sahlaan</div>
-        </div>
-      </div>
+      <select id="inp-paidby">
+        <option value="">Select...</option>
+        <option value="Afsar">👨‍💻 Afsar</option>
+        <option value="Adham">👨‍💻 Adham</option>
+        <option value="Aakif">👨‍💻 Aakif</option>
+        <option value="Sahlaan">👨‍⚕️ Sahlaan</option>
+      </select>
     </div>
     <div>
       <button class="add-btn" id="addBtn" onclick="addExpenseRow()">

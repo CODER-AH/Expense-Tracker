@@ -519,12 +519,12 @@ function addExpenseRow() {
   rowDiv.className = 'multi-row-entry';
   rowDiv.id = `multi-row-${multiRowCount}`;
 
-  // Get current form values from custom selects
-  const day = getCustomSelectValue('inp-day');
-  const cat = getCustomSelectValue('inp-cat');
+  // Get current form values from inputs/selects
+  const day = document.getElementById('inp-day').value;
+  const cat = document.getElementById('inp-cat').value;
   const desc = document.getElementById('inp-desc').value.trim();
   const amount = document.getElementById('inp-amount').value;
-  const paidBy = getCustomSelectValue('inp-paidby');
+  const paidBy = document.getElementById('inp-paidby').value;
 
   // Build day dropdown HTML
   let dayDropdownHTML = '';
@@ -1423,27 +1423,37 @@ function getCustomSelectValue(selectId) {
 
 // Populate main form day dropdown
 function populateMainDayDropdown() {
-  const dropdown = document.getElementById('inp-day-dropdown');
+  const dropdown = document.getElementById('inp-day');
   dropdown.innerHTML = '';
 
   tripDays.forEach(dayObj => {
-    const option = document.createElement('div');
-    option.className = 'custom-select-option';
-    if (String(dayObj.day) === String(customSelectValues['inp-day'])) {
-      option.classList.add('selected');
-    }
-    const label = `Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})`;
-    option.onclick = () => selectCustomOption('inp-day', String(dayObj.day), label);
-    option.textContent = label;
+    const option = document.createElement('option');
+    option.value = String(dayObj.day);
+    option.textContent = `Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})`;
     dropdown.appendChild(option);
   });
 
   // Add "Add New Day" option
-  const addOption = document.createElement('div');
-  addOption.className = 'custom-select-option';
-  addOption.onclick = () => selectCustomOption('inp-day', 'add', '➕ Add New Day');
+  const addOption = document.createElement('option');
+  addOption.value = 'add';
   addOption.textContent = '➕ Add New Day';
   dropdown.appendChild(addOption);
+
+  // Handle "Add New Day" selection
+  dropdown.addEventListener('change', function() {
+    if (this.value === 'add') {
+      const dayName = prompt('Enter day name (e.g., Saturday):');
+      const dayDate = prompt('Enter date (e.g., 28 March):');
+      if (dayName && dayDate) {
+        const newDay = tripDays.length + 1;
+        tripDays.push({ day: newDay, name: dayName, date: dayDate });
+        populateMainDayDropdown();
+        this.value = String(newDay);
+      } else {
+        this.value = '1';
+      }
+    }
+  });
 }
 
 // Select option in multi-row custom select
