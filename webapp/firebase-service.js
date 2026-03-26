@@ -1,14 +1,12 @@
 // Firebase configuration and initialization
-// Replace this with your actual Firebase config after creating the project
-
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID"  // For Google Analytics
+  apiKey: "AIzaSyD1WLpghE_WWEW_XX8QzN46qHeS2duBdVc",
+  authDomain: "trip-expense-tracker-d04fe.firebaseapp.com",
+  projectId: "trip-expense-tracker-d04fe",
+  storageBucket: "trip-expense-tracker-d04fe.firebasestorage.app",
+  messagingSenderId: "321319814690",
+  appId: "1:321319814690:web:2301031119c354d6bfec7b",
+  measurementId: "G-RMRGTVVTHZ"
 };
 
 // Initialize Firebase
