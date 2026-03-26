@@ -1,5 +1,10 @@
 // ─── CONFIG ───────────────────────────────────────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxscbDaRJezz07nggUqUvzxk4UGtYoIIvYqnEfhTRNzB8YscjXgsnU008YsN3jcvE8ZQA/exec';
+// Config is loaded from config.js (not committed to git)
+const SCRIPT_URL = window.APP_CONFIG?.googleSheets?.scriptUrl || 'MISSING_CONFIG';
+
+if (SCRIPT_URL === 'MISSING_CONFIG') {
+  console.error("⚠️ Google Sheets config not found! Please create webapp/config.js from config.template.js");
+}
 
 const CAT_CONFIG = {
   food:      { label: '🍽️ Food',   color: '#f5c842', bg: '#2a2410' },
@@ -142,6 +147,9 @@ function updateFilterOptions() {
 
 // ─── INIT ─────────────────────────────────────────────────
 window.onload = () => {
+  // Initialize Firebase first
+  dbInit();
+
   showLoading(true);
   loadTripDays();
 
@@ -249,9 +257,13 @@ async function loadFromSheet() {
   showLoading(true);
   setStatus('syncing', 'Loading…');
   try {
-    // Load expenses
-    const res = await fetch(`${SCRIPT_URL}?action=getAll`);
-    const data = await res.json();
+    // Load active expenses from Firebase
+    const data = await dbGetAllExpenses();
+    console.log('Loaded active expenses from Firebase:', data);
+
+    // Load archived expenses from Firebase
+    const archivedData = await dbGetArchivedExpenses();
+    console.log('Loaded archived expenses from Firebase:', archivedData);
 
     // Initialize expenses object for all trip days
     expenses = {};
@@ -259,25 +271,25 @@ async function loadFromSheet() {
       expenses[dayObj.day] = [];
     });
 
-    archivedExpenses = [];
-    (data.expenses || []).forEach(e => {
+    // Process active expenses
+    (data || []).forEach(e => {
       // Ensure the day exists in our expenses object
       if (!expenses[e.day]) {
         expenses[e.day] = [];
       }
-
-      if (e.archived === "Yes") {
-        archivedExpenses.push({ ...e, archivedDay: e.day });
-      } else {
-        expenses[e.day].push(e);
-      }
+      expenses[e.day].push(e);
     });
 
-    // Load budget from Google Sheets
-    const budgetRes = await fetch(`${SCRIPT_URL}?action=getBudget`);
-    const budgetData = await budgetRes.json();
-    if (budgetData.budget !== undefined) {
-      tripBudget = budgetData.budget;
+    // Process archived expenses
+    archivedExpenses = [];
+    (archivedData || []).forEach(e => {
+      archivedExpenses.push({ ...e, archivedDay: e.day });
+    });
+
+    // Load budget from Firebase
+    tripBudget = await dbGetBudget();
+    console.log('Loaded budget from Firebase:', tripBudget);
+    if (tripBudget) {
       localStorage.setItem('coorg_budget', tripBudget);
     }
 
@@ -285,6 +297,7 @@ async function loadFromSheet() {
     render();
     setStatus('ok', 'Synced ✓');
   } catch(e) {
+    console.error('Error loading from Firebase:', e);
     setStatus('err', 'Offline — showing local data');
     loadFromLocal();
     render();
@@ -370,16 +383,24 @@ async function saveExpense() {
   setStatus('syncing', 'Saving…');
 
   try {
-    const exp = { id: 'local_' + Date.now(), day, name, desc, cat, amount, paidBy };
-    const newId = await sheetAdd(exp);
-    if (newId) exp.id = newId;
-    exp.ts = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-    exp.edited = "";
+    // Don't pass a local ID - let Firebase generate it
+    const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+    const exp = { day, name, desc, cat, amount, paidBy, archived: false, ts: timestamp, edited: "" };
+    const newId = await dbAddExpense(exp);
+    exp.id = newId; // Use the Firebase-generated ID
     expenses[day].push(exp);
 
     setStatus('ok', 'Synced ✓');
     showToast('Expense added!', 'ok');
   } catch(e) {
+    // If offline, create local ID and mark it
+    const localExp = {
+      id: 'local_' + Date.now(),
+      day, name, desc, cat, amount, paidBy, archived: false,
+      ts: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+      edited: ""
+    };
+    expenses[day].push(localExp);
     setStatus('err', 'Saved locally only');
     showToast('No internet — saved locally', 'err');
   }
@@ -461,25 +482,26 @@ async function saveEdit() {
   setStatus('syncing', 'Saving…');
 
   // Update local data
+  const newTimestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
   exp.desc = desc;
   exp.cat = cat;
   exp.amount = amount;
   exp.paidBy = paidBy;
   exp.edited = "Yes";
+  exp.ts = newTimestamp; // Update timestamp on edit
 
-  // Update on sheet
+  // Update via db layer (Firebase + Sheets backup)
   try {
-    const params = new URLSearchParams({
-      action: 'update',
-      id: exp.id,
+    await dbUpdateExpense(exp.id, {
       day: currentEditDay,
       name: exp.name,
       desc: desc,
       cat: cat,
       amount: amount,
-      paidBy: paidBy
+      paidBy: paidBy,
+      edited: "Yes",
+      ts: newTimestamp
     });
-    await fetch(`${SCRIPT_URL}?${params}`);
     saveLocal();
     render();
     setStatus('ok', 'Synced ✓');
@@ -691,11 +713,11 @@ async function saveMultipleExpenses() {
   let savedCount = 0;
   for (let entry of entries) {
     try {
-      const exp = { id: 'local_' + Date.now() + '_' + savedCount, ...entry };
-      const newId = await sheetAdd(exp);
-      if (newId) exp.id = newId;
-      exp.ts = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-      exp.edited = "";
+      // Don't pass local ID - let Firebase generate it
+      const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+      const exp = { ...entry, archived: false, ts: timestamp, edited: "" };
+      const newId = await dbAddExpense(exp);
+      exp.id = newId; // Use the Firebase-generated ID
       expenses[entry.day].push(exp);
       savedCount++;
       await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between requests
@@ -744,7 +766,8 @@ async function confirmDelete() {
   setStatus('syncing', 'Archiving…');
 
   try {
-    await sheetArchive(id);
+    // Use dbUpdateExpense to set archived flag (works for both Firebase and Sheets)
+    await dbUpdateExpense(id, { archived: true });
     setStatus('ok', 'Synced ✓');
     showToast('Expense archived', 'ok');
   } catch(e) {
@@ -860,7 +883,8 @@ async function unarchiveExpense(id) {
   setStatus('syncing', 'Unarchiving…');
 
   try {
-    await sheetUnarchive(id);
+    // Use dbUpdateExpense to clear archived flag (works for both Firebase and Sheets)
+    await dbUpdateExpense(id, { archived: false });
     setStatus('ok', 'Synced ✓');
     showToast('Expense unarchived', 'ok');
   } catch(e) {
@@ -944,7 +968,7 @@ async function confirmPermanentDelete() {
   setStatus('syncing', 'Deleting permanently…');
 
   try {
-    await sheetDelete(id);
+    await dbDeleteExpense(null, id);
     setStatus('ok', 'Synced ✓');
     showToast('Expense deleted permanently', 'ok');
   } catch(e) {
@@ -1011,8 +1035,19 @@ function render() {
         break;
       case 'time':
       default:
-        valA = parseInt((a.id || 'exp_0').split('_')[1]) || 0;
-        valB = parseInt((b.id || 'exp_0').split('_')[1]) || 0;
+        // Use createdAt timestamp if available, otherwise parse ts string
+        if (a.createdAt && b.createdAt) {
+          valA = a.createdAt.seconds || 0;
+          valB = b.createdAt.seconds || 0;
+        } else if (a.ts && b.ts) {
+          // Parse timestamp string to Date for comparison
+          valA = new Date(a.ts).getTime() || 0;
+          valB = new Date(b.ts).getTime() || 0;
+        } else {
+          // Fallback to ID-based sorting (for old entries)
+          valA = parseInt((a.id || 'exp_0').split('_')[1]) || 0;
+          valB = parseInt((b.id || 'exp_0').split('_')[1]) || 0;
+        }
         break;
     }
 
@@ -1652,12 +1687,12 @@ async function confirmBudgetEdit() {
   tripBudget = budgetAmount;
   localStorage.setItem('coorg_budget', tripBudget);
 
-  // Save budget to Google Sheets
+  // Save budget to Firebase (and optionally to Sheets as backup)
   try {
-    await fetch(`${SCRIPT_URL}?action=setBudget&budget=${budgetAmount}`);
+    await dbSetBudget(budgetAmount);
     setStatus('ok', 'Synced ✓');
   } catch(e) {
-    console.error('Failed to save budget to Google Sheets:', e);
+    console.error('Failed to save budget:', e);
     setStatus('err', 'Saved locally only');
     // Continue anyway - saved locally
   }

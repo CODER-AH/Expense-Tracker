@@ -1,187 +1,165 @@
 # Coorg Trip Expense Tracker
 
-A modern, feature-rich expense tracking application designed for group trips with real-time Google Sheets synchronization, custom styled UI components, and full mobile responsiveness.
+A modern, feature-rich expense tracking application designed for group trips with **Firebase Realtime Database**, Google Sheets backup, custom styled UI components, and full mobile responsiveness.
 
 ## Features
 
+- ✅ **Firebase Backend**: Fast, real-time database with offline support
+- ✅ **Google Sheets Backup**: Automatic async backup to Sheets (non-blocking)
+- ✅ **Three-State System**: Active → Archived → Deleted (soft delete)
 - ✅ Add, edit, and archive expenses (single or bulk entry)
 - ✅ Track expenses by day, category, and payer
 - ✅ Multiple payer support with custom names
-- ✅ Real-time sync with Google Sheets backend
-- ✅ Offline support with localStorage fallback
 - ✅ Beautiful dark theme with custom styled dropdowns
 - ✅ Fully responsive design (mobile-first)
 - ✅ Budget tracking with visual indicators
 - ✅ Settlement calculations and summary cards
 - ✅ Filter and sort functionality
 - ✅ Edit history tracking with timestamps
+- ✅ Automatic timestamp updates on edit
 
-## Deployment Instructions
+## Tech Stack
 
-### 1. Deploy Google Apps Script
+- **Frontend**: Vanilla JavaScript, HTML5, CSS3
+- **Primary Database**: Firebase Firestore
+- **Backup**: Google Apps Script + Google Sheets
+- **Analytics**: Firebase Analytics
+- **Hosting**: GitHub Pages
 
-1. Go to [Google Apps Script](https://script.google.com/)
-2. Create a new project
-3. Copy the contents of `GoogleAppsScript_v2_UPDATE_THIS.gs` into the script editor
-4. Click **Deploy** → **New deployment**
-5. Choose type: **Web app**
-6. Settings:
-   - Execute as: **Me**
-   - Who has access: **Anyone**
-7. Click **Deploy**
-8. Copy the Web app URL
+## Quick Start
 
-### 2. Update the HTML File
+### 1. Firebase Setup
 
-1. Open `webapp/app.js`
-2. Find line with: `const SCRIPT_URL = '...'`
-3. Replace with your Google Apps Script URL
-4. Save the file
+The app is already configured with Firebase. To use your own:
 
-### 3. Deploy to GitHub Pages
+1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+2. Enable Firestore Database
+3. Enable Analytics (optional)
+4. Update `webapp/firebase-service.js` with your config
 
-1. Create a new repository on GitHub
-2. Initialize and push your code:
+### 2. Google Sheets Backup (Optional)
 
+1. Deploy the Google Apps Script from `backend/Code.js`
+2. Update `SCRIPT_URL` in `webapp/app.js`
+3. Set `ENABLE_SHEETS_BACKUP = true` in `webapp/db-layer.js`
+
+### 3. Deploy
+
+**GitHub Pages:**
 ```bash
-git add .
-git commit -m "Initial commit: Coorg trip expense tracker"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-git push -u origin main
+git push origin main
 ```
+Enable GitHub Pages: Settings → Pages → Source: main branch, /webapp folder
 
-3. Go to your repository settings on GitHub
-4. Navigate to **Pages** section
-5. Under **Source**, select **main** branch and **/webapp** folder
-6. Click **Save**
-7. Your app will be live at: `https://YOUR_USERNAME.github.io/YOUR_REPO_NAME/`
-
-### 4. Share with Friends
-
-Share the GitHub Pages URL with your friends. They can:
-- Select their name on first visit (saved in browser)
-- Add expenses using multi-row entry or inline editing
-- Edit and delete their own entries
-- View everyone's expenses synced via Google Sheets
-- See settlement calculations showing who owes whom
+**Local Testing:**
+Open `webapp/index.html` in your browser
 
 ## Usage
 
-### Adding Expenses
+### Managing Expenses
 
-**Multi-row Entry (Recommended for multiple expenses):**
-1. Fill in the expense details in the form
-2. Click "Add Row" to add it to the batch
-3. Repeat to add more expenses
-4. Click "Save All" to save all expenses at once
-5. Use "Clear All" to discard all rows without saving
+**Add:** Fill form → Click "Add Row" → Click "Save All"
 
-**Single Expense:**
-1. Fill in the expense details in the form
-2. Click "Add Row" once
-3. Click "Save All" immediately
+**Edit:** Click ✏️ icon → Modify fields → Click ✅
 
-### Editing Expenses
+**Archive:** Click 🗑️ icon → Expense moves to archived section
 
-- Click the ✏️ icon next to any expense you added
-- Edit the fields inline
-- Click ✅ to save or ❌ to cancel
+**Delete:** In archived section, click 🗑️ icon → Permanently hidden (kept in DB)
 
-### Deleting Expenses
+### Three-State System
 
-- Click the 🗑️ icon next to any expense you added
-- Confirm deletion in the popup dialog
+1. **Active** (visible in main list, can edit/archive)
+2. **Archived** (visible in archived section, can unarchive/delete)
+3. **Deleted** (hidden from UI, kept in database for auditing)
 
-### Viewing & Filtering
-
-- Use the dropdown to filter expenses by person
-- Click column headers to sort (click again to reverse)
-- Navigate between pages using the pagination buttons
-- View settlement calculations showing optimal payment transfers
-
-## Local Testing
-
-Open `webapp/index.html` directly in your browser to test locally before deploying.
+See `docs/THREE_STATE_SYSTEM.md` for details.
 
 ## Configuration
 
-### Update Participant Names
+### Update Participants
 
-Edit the names in the dropdowns (in `webapp/app.js`):
-
-**Find the person arrays and update:**
+Edit `webapp/app.js`:
 ```javascript
 const persons = ['Afsar', 'Adham', 'Aakif', 'Sahlaan'];
-const splitAmong = ['Afsar', 'Adham', 'Aakif', 'Sahlaan'];
 ```
 
-### Customize Trip Details
+### Firebase Toggle
 
-Edit the header section in `webapp/index.html`:
-```html
-<div class="route">📍 Your Route</div>
-<h1>Your <span>Trip</span> Name</h1>
-<div class="dates">Days · Dates</div>
+Edit `webapp/db-layer.js`:
+```javascript
+const USE_FIREBASE = true;  // false to use only Sheets
+const ENABLE_SHEETS_BACKUP = true;  // false to disable backup
 ```
-
-## Categories
-
-- ⛽ Fuel
-- 🍽️ Food
-- 🏨 Stay
-- 🎟️ Entry
-- 🚙 Jeep/Transport
-- 🛍️ Misc
 
 ## Project Structure
 
 ```
 /
-├── webapp/                # Frontend application
-│   ├── index.html        # Main HTML structure
-│   ├── styles.css        # All CSS styles (1107 lines)
-│   ├── app.js            # All JavaScript logic (1731 lines)
-│   └── README.md         # Frontend documentation
+├── webapp/                    # Frontend application
+│   ├── index.html            # Main HTML structure
+│   ├── styles.css            # All CSS styles
+│   ├── app.js                # Application logic
+│   ├── db-layer.js           # Database abstraction layer
+│   ├── firebase-service.js   # Firebase operations
+│   └── README.md             # Frontend documentation
 │
-├── backend/              # Google Apps Script backend
-│   ├── Code.js           # Apps Script backend code (v3)
-│   ├── appsscript.json   # Apps Script manifest
-│   └── README.md         # Backend documentation
+├── backend/                  # Google Apps Script backend
+│   ├── Code.js               # Apps Script backend code
+│   └── appsscript.json       # Apps Script manifest
 │
-├── .github/workflows/    # GitHub Actions
-│   └── deploy-gas.yml    # Auto-deploy to Google Apps Script
+├── docs/                     # Documentation
+│   ├── THREE_STATE_SYSTEM.md # Expense state management
+│   ├── DEPLOYMENT.md         # Deployment guide
+│   └── CHANGELOG.md          # Version history
 │
-├── README.md            # Main documentation (this file)
-├── CHANGELOG.md         # Version history
-└── DEPLOYMENT.md        # Deployment setup guide
+├── .github/workflows/        # GitHub Actions
+│   └── deploy-gas.yml        # Auto-deploy to Google Apps Script
+│
+└── README.md                 # This file
 ```
 
-## Recent Updates
+## Key Features
 
-### UI/UX Improvements
-- **Custom Dropdowns**: Replaced native select elements with styled custom dropdowns matching the filter/sort design
-- **Responsive Layout**: Enhanced mobile responsiveness with single-column layout for screens < 640px
-- **Section Width**: Increased from 860px to 1000px for better laptop viewing
-- **Settlement Cards**: Set to 2x2 grid layout (2 cards per row)
-- **Tile Centering**: Centered tiles in summary/settlement grids when fewer items in last row
-- **Delete Button**: Fixed overflow issue in add multiple items section (reduced width to 40px)
-- **Dropdown Visibility**: Fixed clipping issues by adjusting overflow handling
-- **Font**: Added Playfair Display for numbers in tiles, DM Mono and DM Sans for UI
+### Database Abstraction Layer
 
-### Code Organization
-- Separated monolithic 3271-line HTML file into modular structure:
-  - HTML (431 lines) - structure only
-  - CSS (1107 lines) - all styles
-  - JS (1731 lines) - all logic
-- Maintained exact functionality during reorganization
+The `db-layer.js` provides a unified API that works with both Firebase and Google Sheets:
 
-### Mobile Optimization
-- Single-column layout for screens < 640px
-- Horizontal scroll for medium screens (641-900px)
-- Proper dropdown positioning across all screen sizes
+- **Firebase Primary**: Fast reads/writes with real-time updates
+- **Sheets Backup**: Async background sync (non-blocking)
+- **Seamless Switch**: Toggle between backends with a single flag
 
-### User Experience
-- Consistent placeholder text across single and multi-row entry forms
-- Better visual feedback for custom dropdown interactions
-- Improved touch targets for mobile users
+### Soft Delete Architecture
+
+Never lose data - everything is preserved:
+- Archive for temporary removal
+- Delete to hide permanently (still in DB)
+- Full audit trail maintained
+
+### Performance Optimizations
+
+- Firebase queries filtered by archived status
+- Client-side filtering for deleted items
+- Async Sheets backup (fire and forget)
+- localStorage caching for offline mode
+- Efficient timestamp-based sorting
+
+## Browser Support
+
+- ✅ Chrome/Edge (recommended)
+- ✅ Firefox
+- ✅ Safari
+- ✅ Mobile browsers
+
+## Documentation
+
+- [Three-State System](docs/THREE_STATE_SYSTEM.md) - Expense lifecycle
+- [Deployment Guide](docs/DEPLOYMENT.md) - Detailed deployment instructions
+- [Changelog](docs/CHANGELOG.md) - Version history
+
+## License
+
+Private project for personal use.
+
+## Credits
+
+Built with ❤️ for group trip expense tracking.
