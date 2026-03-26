@@ -4,737 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Coders Squad Expense Tracker</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0e1412;
-    --surface: #151e1a;
-    --card: #1a2620;
-    --border: #2a3d35;
-    --accent: #5dba8a;
-    --accent2: #f5c842;
-    --accent3: #e87c4e;
-    --text: #d8e8e0;
-    --muted: #6b8a78;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 24px 16px 60px;
-  }
-
-  /* HEADER */
-  .header { text-align: center; padding: 32px 0 20px; }
-  .header .route {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .header h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(28px, 6vw, 46px);
-    font-weight: 700;
-    color: #fff;
-    line-height: 1.1;
-  }
-  .header h1 span { color: var(--accent); }
-  .header .dates {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 6px;
-    font-family: 'DM Mono', monospace;
-  }
-
-  /* NAME PROMPT OVERLAY */
-  .name-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(14,20,18,0.96);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    padding: 24px;
-  }
-  .name-overlay.hidden { display: none; }
-  .name-box {
-    background: var(--card);
-    border: 1px solid var(--accent);
-    border-radius: 20px;
-    padding: 36px 32px;
-    max-width: 380px;
-    width: 100%;
-    text-align: center;
-  }
-  .name-box .emoji { font-size: 36px; margin-bottom: 12px; }
-  .name-box h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    color: #fff;
-    margin-bottom: 6px;
-  }
-  .name-box p {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 20px;
-    line-height: 1.5;
-  }
-  .name-box input {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 10px;
-    padding: 11px 14px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    outline: none;
-    text-align: center;
-    margin-bottom: 14px;
-    transition: border-color 0.15s;
-  }
-  .name-box input:focus { border-color: var(--accent); }
-  .name-box button {
-    width: 100%;
-    background: var(--accent);
-    color: #0e1412;
-    border: none;
-    border-radius: 10px;
-    padding: 11px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: opacity 0.15s;
-  }
-  .name-box button:hover { opacity: 0.85; }
-
-  /* STATUS BAR */
-  .status-bar {
-    max-width: 860px;
-    margin: 16px auto 0;
-    background: linear-gradient(135deg, #1a2c20, #1e2e28);
-    border: 1px solid var(--accent);
-    border-radius: 14px;
-    padding: 11px 18px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .status-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #3a5545;
-    flex-shrink: 0;
-    transition: background 0.3s;
-  }
-  .status-dot.syncing { background: var(--accent2); animation: pulse 1s infinite; }
-  .status-dot.ok      { background: var(--accent); }
-  .status-dot.err     { background: var(--accent3); }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .status-bar .title {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .status-text {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    margin-left: auto;
-  }
-  .user-chip {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 3px 10px 3px 6px;
-    font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    color: var(--accent);
-    cursor: pointer;
-    transition: border-color 0.15s;
-  }
-  .user-chip:hover { border-color: var(--accent); }
-  .user-chip .avatar {
-    width: 20px; height: 20px;
-    background: var(--accent);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px;
-    color: #0e1412;
-    font-weight: 700;
-  }
-
-  /* SUMMARY CARDS */
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    max-width: 860px;
-    margin: 24px auto 0;
-  }
-  .sum-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px;
-    text-align: center;
-    transition: transform 0.15s;
-  }
-  .sum-card:hover { transform: translateY(-2px); }
-  .sum-card .label {
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-    font-family: 'DM Mono', monospace;
-  }
-  .sum-card .amount {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: #fff;
-  }
-  .sum-card .amount .currency { font-size: 14px; color: var(--muted); }
-  .sum-card.total-card {
-    background: linear-gradient(135deg, #1c3028, #243d30);
-    border-color: var(--accent);
-  }
-  .sum-card.total-card .amount { color: var(--accent); font-size: 28px; }
-  .sum-card .sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
-
-  /* SECTION TITLE */
-  .section-title {
-    font-family: 'DM Mono', monospace;
-    font-size: 14px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text);
-    margin: 32px auto 14px;
-    max-width: 860px;
-    text-align: center;
-    font-weight: 500;
-  }
-
-  /* ADD FORM */
-  .add-section { max-width: 860px; margin: 0 auto 16px; }
-  .add-form {
-    background: var(--card);
-    border: 1px dashed var(--border);
-    border-radius: 14px;
-    padding: 18px;
-    display: grid;
-    grid-template-columns: 80px 100px 1fr 110px 120px 110px auto;
-    gap: 10px;
-    align-items: end;
-  }
-  .add-form label {
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    display: block;
-    margin-bottom: 5px;
-    font-family: 'DM Mono', monospace;
-  }
-  .add-form input, .add-form select {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .add-form input:focus, .add-form select:focus { border-color: var(--accent); }
-  .add-form select option { background: var(--surface); }
-  .name-readonly {
-    background: var(--surface) !important;
-    color: var(--accent) !important;
-    cursor: default;
-  }
-  .add-btn {
-    background: var(--accent);
-    color: #0e1412;
-    border: none;
-    border-radius: 8px;
-    padding: 9px 18px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 500;
-    font-size: 13px;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .add-btn:hover { opacity: 0.88; transform: translateY(-1px); }
-  .add-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-  .spinner {
-    width: 12px; height: 12px;
-    border: 2px solid #0e1412;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-    display: none;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* TIMELINE */
-  .timeline {
-    max-width: 860px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .day-label {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px;
-    color: var(--accent2);
-    padding: 10px 0 4px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .day-label .day-total {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-    margin-left: auto;
-  }
-
-  /* TABLE */
-  .table-wrap {
-    overflow-x: auto;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    margin-bottom: 8px;
-  }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead th {
-    padding: 12px 14px;
-    text-align: left;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--muted);
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    cursor: pointer;
-    user-select: none;
-    transition: color 0.15s, background 0.15s;
-  }
-  thead th:hover {
-    color: var(--text);
-    background: #1a2620;
-  }
-  thead th.sortable::after {
-    content: ' ↕';
-    opacity: 0.3;
-    font-size: 9px;
-  }
-  thead th.sorted-asc::after {
-    content: ' ↑';
-    opacity: 1;
-    color: var(--accent);
-  }
-  thead th.sorted-desc::after {
-    content: ' ↓';
-    opacity: 1;
-    color: var(--accent);
-  }
-  tbody tr { border-bottom: 1px solid #1e2e27; transition: background 0.1s; }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: #1e2e27; }
-  td { padding: 10px 14px; vertical-align: middle; }
-  td.amount-col {
-    font-family: 'DM Mono', monospace;
-    font-weight: 500;
-    color: #fff;
-    text-align: right;
-    white-space: nowrap;
-  }
-  td.num-col {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    white-space: nowrap;
-    width: 32px;
-  }
-  td .cat-badge {
-    display: inline-flex;
-    align-items: center;
-    font-size: 10px;
-    border-radius: 20px;
-    padding: 2px 9px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.05em;
-  }
-  td .name-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    font-family: 'DM Mono', monospace;
-    color: var(--muted);
-    margin-top: 3px;
-  }
-  td .name-tag .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    flex-shrink: 0;
-  }
-  .del-btn {
-    background: none;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 15px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    transition: color 0.15s, background 0.15s, opacity 0.15s;
-  }
-  .del-btn:hover { color: var(--accent3); background: #2a1a16; }
-  .del-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-  .del-btn.edit-btn {
-    opacity: 0.4;
-  }
-  .del-btn.edit-btn:hover {
-    opacity: 1;
-    color: var(--accent);
-    background: #0e2418;
-  }
-
-  /* EMPTY STATE */
-  .empty-row td {
-    text-align: center;
-    color: var(--muted);
-    font-size: 12px;
-    padding: 24px;
-    font-family: 'DM Mono', monospace;
-  }
-
-  /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 20px;
-    font-size: 12px;
-    font-family: 'DM Mono', monospace;
-    color: var(--text);
-    transition: transform 0.3s ease;
-    z-index: 999;
-    white-space: nowrap;
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast.ok { border-color: var(--accent); color: var(--accent); }
-  .toast.err { border-color: var(--accent3); color: var(--accent3); }
-
-  /* LOADING OVERLAY */
-  .loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(14,20,18,0.85);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 99;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .loading-overlay.hidden { display: none; }
-  .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  .loading-overlay .loading-text {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-  }
-
-  /* DELETE CONFIRMATION MODAL */
-  .confirm-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(14,20,18,0.92);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 101;
-    padding: 24px;
-  }
-  .confirm-overlay.hidden { display: none; }
-  .confirm-box {
-    background: var(--card);
-    border: 1px solid var(--accent3);
-    border-radius: 16px;
-    padding: 28px 24px;
-    max-width: 400px;
-    width: 100%;
-    text-align: center;
-  }
-  .confirm-box .icon { font-size: 32px; margin-bottom: 12px; }
-  .confirm-box h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 19px;
-    color: #fff;
-    margin-bottom: 8px;
-  }
-  .confirm-box p {
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 20px;
-    line-height: 1.5;
-  }
-  .confirm-box .expense-details {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 20px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-  }
-  .confirm-box .expense-details .desc {
-    color: var(--text);
-    margin-bottom: 6px;
-  }
-  .confirm-box .expense-details .amount {
-    color: var(--accent3);
-    font-weight: 600;
-    font-size: 16px;
-  }
-  .confirm-buttons {
-    display: flex;
-    gap: 10px;
-  }
-  .confirm-buttons button {
-    flex: 1;
-    border: none;
-    border-radius: 8px;
-    padding: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 500;
-    font-size: 13px;
-    cursor: pointer;
-    transition: opacity 0.15s;
-  }
-  .confirm-buttons button:hover { opacity: 0.85; }
-  .btn-cancel {
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .btn-delete {
-    background: var(--accent3);
-    color: #0e1412;
-  }
-
-  /* INLINE EDIT */
-  .edit-mode {
-    background: #1e2e27 !important;
-  }
-  .edit-input {
-    background: var(--surface);
-    border: 1px solid var(--accent);
-    color: var(--text);
-    border-radius: 6px;
-    padding: 5px 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    outline: none;
-    width: 100%;
-  }
-  .edit-select {
-    background: var(--surface);
-    border: 1px solid var(--accent);
-    color: var(--text);
-    border-radius: 6px;
-    padding: 5px 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    outline: none;
-    width: 100%;
-  }
-  .edit-actions {
-    display: flex;
-    gap: 4px;
-  }
-  .edit-actions button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: background 0.15s;
-  }
-  .edit-actions button:hover { background: var(--border); }
-  .edited-badge {
-    display: inline-block;
-    font-size: 9px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.05em;
-    color: var(--accent2);
-    background: rgba(245,200,66,0.1);
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-left: 6px;
-    vertical-align: middle;
-  }
-
-  /* DESCRIPTION TRUNCATION */
-  .desc-truncated {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    line-height: 1.4;
-  }
-  .desc-full {
-    line-height: 1.4;
-  }
-  .show-more-btn {
-    color: var(--accent);
-    cursor: pointer;
-    font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    margin-top: 4px;
-    display: inline-block;
-  }
-  .show-more-btn:hover {
-    text-decoration: underline;
-  }
-
-  /* SETTLEMENT */
-  .settlement-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 12px;
-    max-width: 860px;
-    margin: 0 auto;
-  }
-  .settlement-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 18px;
-  }
-  .settlement-card.balanced {
-    border-color: var(--accent);
-    background: linear-gradient(135deg, rgba(93,186,138,0.05), rgba(93,186,138,0.02));
-  }
-  .settlement-card .person-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px;
-    color: #fff;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .settlement-card .person-name .emoji { font-size: 20px; }
-  .settlement-card .stat-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    margin-bottom: 6px;
-    font-family: 'DM Mono', monospace;
-  }
-  .settlement-card .stat-row .label { color: var(--muted); }
-  .settlement-card .stat-row .value { color: var(--text); font-weight: 500; }
-  .settlement-card .divider {
-    height: 1px;
-    background: var(--border);
-    margin: 10px 0;
-  }
-  .settlement-card .action {
-    font-size: 13px;
-    font-weight: 500;
-    margin-top: 8px;
-    padding: 8px 12px;
-    border-radius: 8px;
-  }
-  .settlement-card .action.owes {
-    background: rgba(232,124,78,0.1);
-    color: var(--accent3);
-    border: 1px solid rgba(232,124,78,0.2);
-  }
-  .settlement-card .action.gets {
-    background: rgba(93,186,138,0.1);
-    color: var(--accent);
-    border: 1px solid rgba(93,186,138,0.2);
-  }
-  .settlement-card .action.settled {
-    background: rgba(93,186,138,0.08);
-    color: var(--accent);
-    text-align: center;
-  }
-
-  /* NOTES */
-  .notes-bar {
-    max-width: 860px;
-    margin: 28px auto 0;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-  .note-item {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  /* RESPONSIVE */
-  @media (max-width: 640px) {
-    .add-form {
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto auto auto auto;
-    }
-    .add-form > div:nth-child(3) { grid-column: span 2; }
-    .add-form > div:last-child   { grid-column: span 2; }
-    .add-btn { width: 100%; justify-content: center; }
-  }
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -746,10 +16,10 @@
     <p>Select your name so everyone knows who added each expense. This is saved on your device — you'll only need to do this once.</p>
     <select id="nameInput" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:14px;transition:border-color 0.15s;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center;padding-right:35px;">
       <option value="">Select your name...</option>
-      <option value="Afsar">Afsar</option>
-      <option value="Adham">Adham</option>
-      <option value="Aakif">Aakif</option>
-      <option value="Sahlaan">Sahlaan</option>
+      <option value="Afsar">👨‍💻 Afsar</option>
+      <option value="Adham">👨‍💻 Adham</option>
+      <option value="Aakif">👨‍💻 Aakif</option>
+      <option value="Sahlaan">👨‍⚕️ Sahlaan</option>
     </select>
     <button onclick="saveName()">Let's Go →</button>
   </div>
@@ -759,25 +29,33 @@
 <div class="header">
   <div class="route">📍 Bangalore → Mysore → Madikeri → Coorg</div>
   <h1>The <span>Coders</span> Trip</h1>
-  <div class="dates">2D / 1N &nbsp;·&nbsp; Saturday – Sunday</div>
+  <div class="dates">Saturday, 28 March – Sunday, 29 March 2026</div>
 </div>
 
 <!-- STATUS BAR -->
-<div class="status-bar">
+<div class="status-bar" id="statusBar">
   <div class="status-dot" id="statusDot"></div>
-  <div class="title">Google Sheets Sync</div>
+  <div class="status-text" id="statusText">Connecting…</div>
   <div class="user-chip" id="userChip" onclick="changeName()" title="Tap to change name">
     <div class="avatar" id="userAvatar">?</div>
     <span id="userChipName">—</span>
   </div>
-  <div class="status-text" id="statusText">Connecting…</div>
 </div>
 
-<div class="section-title" style="margin-top: 28px;">📊 Insights</div>
+<div class="section-title" style="margin-top: 28px;cursor:pointer;user-select:none" onclick="toggleSection('insights')">
+  📊 Insights <span id="insights-icon" style="font-size:12px;margin-left:4px">▼</span>
+</div>
 
 <!-- SUMMARY CARDS -->
-<div class="summary-grid">
-  <div class="sum-card total-card">
+<div class="summary-grid" id="insights-section">
+  <div class="sum-card big-card" id="budgetCard" style="cursor:pointer" onclick="editBudget()">
+    <div class="label">💰 Budget</div>
+    <div class="amount" style="display:flex;flex-direction:column;gap:4px">
+      <div><span class="currency">₹</span><span id="budgetAmount">0</span></div>
+      <div id="budgetRemaining" style="font-size:12px;font-family:'DM Mono',monospace;color:var(--muted)">Set budget</div>
+    </div>
+  </div>
+  <div class="sum-card total-card big-card" id="totalCard">
     <div class="label">Total Spent</div>
     <div class="amount"><span class="currency">₹</span><span id="totalAll">0</span></div>
   </div>
@@ -807,10 +85,12 @@
   </div>
 </div>
 
-<div class="section-title">💳 Who Paid What</div>
+<div class="section-title" style="cursor:pointer;user-select:none" onclick="toggleSection('whoPaid')">
+  💳 Who Paid What <span id="whoPaid-icon" style="font-size:12px;margin-left:4px">▼</span>
+</div>
 
 <!-- PAID BY TOTALS -->
-<div class="summary-grid">
+<div class="summary-grid" id="whoPaid-section">
   <div class="sum-card">
     <div class="label">💰 Afsar</div>
     <div class="amount"><span class="currency">₹</span><span id="paidAfsar">0</span></div>
@@ -829,24 +109,32 @@
   </div>
 </div>
 
-<div class="section-title">💸 Settlement</div>
+<div class="section-title" style="cursor:pointer;user-select:none" onclick="toggleSection('settlement')">
+  💸 Settlement <span id="settlement-icon" style="font-size:12px;margin-left:4px">▼</span>
+</div>
 
 <!-- SETTLEMENT CARDS -->
-<div class="settlement-grid" id="settlementGrid">
+<div class="settlement-grid" id="settlement-section">
   <!-- Generated by JavaScript -->
 </div>
 
-<div class="section-title">✍️ Add New Expense</div>
+<div class="section-title" style="cursor:pointer;user-select:none" onclick="toggleSection('addExpense')">
+  ✍️ Add New Expense <span id="addExpense-icon" style="font-size:12px;margin-left:4px">▼</span>
+</div>
 
 <!-- ADD FORM -->
-<div class="add-section">
+<div class="add-section" id="addExpense-section">
   <div class="add-form">
     <div>
       <label>Day</label>
-      <select id="inp-day">
-        <option value="1">Day 1 — Sat</option>
-        <option value="2">Day 2 — Sun</option>
-      </select>
+      <div class="custom-select">
+        <div class="custom-select-btn" id="inp-day-btn" onclick="toggleCustomSelect('inp-day')">
+          <span id="inp-day-label">Day 1</span>
+        </div>
+        <div class="custom-select-dropdown" id="inp-day-dropdown">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
     </div>
     <div>
       <label>Added by</label>
@@ -858,14 +146,19 @@
     </div>
     <div>
       <label>Category</label>
-      <select id="inp-cat">
-        <option value="food">🍽️ Food</option>
-        <option value="fuel">⛽ Fuel</option>
-        <option value="stay">🏨 Stay</option>
-        <option value="transport">🚙 Transport</option>
-        <option value="entry">🎟️ Entry Fees</option>
-        <option value="misc">🛍️ Miscellaneous</option>
-      </select>
+      <div class="custom-select">
+        <div class="custom-select-btn" id="inp-cat-btn" onclick="toggleCustomSelect('inp-cat')">
+          <span id="inp-cat-label">🍽️ Food</span>
+        </div>
+        <div class="custom-select-dropdown" id="inp-cat-dropdown">
+          <div class="custom-select-option selected" onclick="selectCustomOption('inp-cat', 'food', '🍽️ Food')">🍽️ Food</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'fuel', '⛽ Fuel')">⛽ Fuel</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'stay', '🏨 Stay')">🏨 Stay</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'transport', '🚙 Transport')">🚙 Transport</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'entry', '🎟️ Entry Fees')">🎟️ Entry Fees</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'misc', '🛍️ Miscellaneous')">🛍️ Miscellaneous</div>
+        </div>
+      </div>
     </div>
     <div>
       <label>Amount (₹) *</label>
@@ -873,77 +166,131 @@
     </div>
     <div>
       <label>Paid by *</label>
-      <select id="inp-paidby" required>
-        <option value="">Select...</option>
-        <option value="Afsar">Afsar</option>
-        <option value="Adham">Adham</option>
-        <option value="Aakif">Aakif</option>
-        <option value="Sahlaan">Sahlaan</option>
-      </select>
+      <div class="custom-select">
+        <div class="custom-select-btn" id="inp-paidby-btn" onclick="toggleCustomSelect('inp-paidby')">
+          <span id="inp-paidby-label">Select...</span>
+        </div>
+        <div class="custom-select-dropdown" id="inp-paidby-dropdown">
+          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', '', 'Select...')">Select...</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', 'Afsar', '👨‍💻 Afsar')">👨‍💻 Afsar</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', 'Adham', '👨‍💻 Adham')">👨‍💻 Adham</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', 'Aakif', '👨‍💻 Aakif')">👨‍💻 Aakif</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', 'Sahlaan', '👨‍⚕️ Sahlaan')">👨‍⚕️ Sahlaan</div>
+        </div>
+      </div>
     </div>
     <div>
-      <button class="add-btn" id="addBtn" onclick="saveExpense()">
-        <div class="spinner" id="addSpinner"></div>
-        <span id="addBtnText">+ Add</span>
+      <button class="add-btn" id="addBtn" onclick="addExpenseRow()">
+        <span id="addBtnText">+ Add Row</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MULTI-ROW ADD SECTION -->
+  <div class="multi-row-container" id="multiRowContainer">
+    <div id="multiRowEntries"></div>
+    <div class="multi-row-actions">
+      <button class="add-btn" onclick="saveMultipleExpenses()">
+        <div class="spinner" id="multiSpinner" style="display:none"></div>
+        💾 Save All
+      </button>
+      <button class="add-btn" style="background:var(--surface);color:var(--text);border:1px solid var(--border)" onclick="clearAllRows()">
+        Clear All
       </button>
     </div>
   </div>
 </div>
 
-<div class="section-title">📝 Expense History
-  <select id="filterSelect" onchange="filterExpenses()" style="margin-left:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;">
-    <option value="all">All People</option>
-    <option value="Afsar">Afsar</option>
-    <option value="Adham">Adham</option>
-    <option value="Aakif">Aakif</option>
-    <option value="Sahlaan">Sahlaan</option>
-  </select>
+<div class="section-title" style="cursor:pointer;user-select:none" onclick="toggleSection('expenseHistory')">
+  📝 Expense History <span id="expenseHistory-icon" style="font-size:12px;margin-left:4px">▼</span>
 </div>
 
-<!-- EXPENSE TABLES -->
-<div class="timeline">
-  <div class="day-label">🗓 Day 1 — Saturday <span class="day-total" id="day1-total">₹0</span></div>
+<!-- EXPENSE TABLE -->
+<div class="timeline" id="expenseHistory-section">
+  <!-- FILTERS AND SORT ROW -->
+  <div style="display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-bottom:12px" id="expenseHistory-filters">
+    <div style="position:relative">
+      <div class="filter-btn" id="dayFilterBtn" onclick="toggleFilterDropdown('day')">
+        <span id="dayFilterLabel">All Days</span>
+      </div>
+      <div class="filter-dropdown" id="dayFilterDropdown">
+        <div class="filter-option selected" onclick="selectDayFilter('all', 'All Days')">All Days</div>
+        <div class="filter-option" onclick="selectDayFilter('1', 'Day 1 — Sat, 28 Mar')">Day 1 — Sat, 28 Mar</div>
+        <div class="filter-option" onclick="selectDayFilter('2', 'Day 2 — Sun, 29 Mar')">Day 2 — Sun, 29 Mar</div>
+      </div>
+    </div>
+
+    <div style="position:relative">
+      <div class="filter-btn" id="personFilterBtn" onclick="toggleFilterDropdown('person')">
+        <span id="personFilterLabel">All People</span>
+      </div>
+      <div class="filter-dropdown" id="personFilterDropdown">
+        <div class="filter-option selected" onclick="selectPersonFilter('all', 'All People')">All People</div>
+        <div class="filter-option" onclick="selectPersonFilter('Afsar', '👨‍💻 Afsar')">👨‍💻 Afsar</div>
+        <div class="filter-option" onclick="selectPersonFilter('Adham', '👨‍💻 Adham')">👨‍💻 Adham</div>
+        <div class="filter-option" onclick="selectPersonFilter('Aakif', '👨‍💻 Aakif')">👨‍💻 Aakif</div>
+        <div class="filter-option" onclick="selectPersonFilter('Sahlaan', '👨‍⚕️ Sahlaan')">👨‍⚕️ Sahlaan</div>
+      </div>
+    </div>
+  </div>
+
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>#</th>
-        <th class="sortable" onclick="sortByColumn('desc')">Description</th>
-        <th class="sortable" onclick="sortByColumn('cat')">Category</th>
-        <th class="sortable" onclick="sortByColumn('name')">Added By</th>
-        <th class="sortable" onclick="sortByColumn('paidBy')">Paid By</th>
-        <th class="sortable" onclick="sortByColumn('time')">Time</th>
-        <th class="sortable" onclick="sortByColumn('amount')" style="text-align:right">Amount</th>
-        <th></th><th></th>
+        <th style="white-space:nowrap">#</th>
+        <th style="white-space:nowrap">Day</th>
+        <th class="sortable" onclick="sortByColumn('desc')" style="white-space:nowrap">Description</th>
+        <th class="sortable" onclick="sortByColumn('cat')" style="white-space:nowrap">Category</th>
+        <th class="sortable" onclick="sortByColumn('name')" style="white-space:nowrap">Added By</th>
+        <th class="sortable" onclick="sortByColumn('paidBy')" style="white-space:nowrap">Paid By</th>
+        <th class="sortable" onclick="sortByColumn('time')" style="white-space:nowrap">Time</th>
+        <th class="sortable" onclick="sortByColumn('amount')" style="text-align:right;white-space:nowrap">Amount</th>
+        <th style="white-space:nowrap"></th><th style="white-space:nowrap"></th>
       </tr></thead>
-      <tbody id="day1-body"></tbody>
+      <tbody id="expenses-body"></tbody>
     </table>
   </div>
+  <div class="pagination" id="expenses-pagination"></div>
+</div>
 
-  <div class="day-label" style="margin-top:18px">🗓 Day 2 — Sunday <span class="day-total" id="day2-total">₹0</span></div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>#</th>
-        <th class="sortable" onclick="sortByColumn('desc')">Description</th>
-        <th class="sortable" onclick="sortByColumn('cat')">Category</th>
-        <th class="sortable" onclick="sortByColumn('name')">Added By</th>
-        <th class="sortable" onclick="sortByColumn('paidBy')">Paid By</th>
-        <th class="sortable" onclick="sortByColumn('time')">Time</th>
-        <th class="sortable" onclick="sortByColumn('amount')" style="text-align:right">Amount</th>
-        <th></th><th></th>
-      </tr></thead>
-      <tbody id="day2-body"></tbody>
-    </table>
+<div class="section-title" style="cursor:pointer;user-select:none;margin-top:32px" onclick="toggleSection('notes')">
+  📝 Notes <span id="notes-icon" style="font-size:12px;margin-left:4px">▶</span>
+</div>
+
+<!-- NOTES SECTION -->
+<div class="notes-container" id="notes-section" style="display:none;max-width:1000px;margin:16px auto">
+  <div class="notes-bar">
+    <div class="note-item">✔️ Carry cash for jeep at Mandalpatti (~₹2500 shared)</div>
+    <div class="note-item">✔️ Abbey Falls entry: ₹10/person + ₹50 parking</div>
+    <div class="note-item">✔️ Raja's Seat entry: ₹20/person</div>
+    <div class="note-item">⛽ Fuel up at Mysore & Kushalnagar</div>
+    <div class="note-item">🌄 Ghat roads after Kushalnagar — drive safe!</div>
   </div>
 </div>
 
-<!-- NOTES -->
-<div class="notes-bar">
-  <div class="note-item">✔️ Carry cash for jeep at Mandalpatti (~₹2500 shared)</div>
-  <div class="note-item">✔️ Abbey Falls entry: ₹10/person + ₹50 parking</div>
-  <div class="note-item">✔️ Raja's Seat entry: ₹20/person</div>
-  <div class="note-item">⛽ Fuel up at Mysore & Kushalnagar</div>
-  <div class="note-item">🌄 Ghat roads after Kushalnagar — drive safe!</div>
+<div class="section-title" style="cursor:pointer;user-select:none" onclick="toggleSection('archived')">
+  🗃️ Archived (<span id="archivedCount">0</span>) <span id="archived-icon" style="font-size:12px;margin-left:4px">▶</span>
+</div>
+
+<!-- ARCHIVED SECTION -->
+<div class="archived-container" id="archived-section" style="display:none;max-width:1000px;margin:16px auto">
+  <div class="timeline">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th style="white-space:nowrap">#</th>
+          <th style="white-space:nowrap">Description</th>
+          <th style="white-space:nowrap">Category</th>
+          <th style="white-space:nowrap">Added By</th>
+          <th style="white-space:nowrap">Paid By</th>
+          <th style="white-space:nowrap">Amount</th>
+          <th style="white-space:nowrap">Day</th>
+          <th style="white-space:nowrap" colspan="2">Actions</th>
+        </tr></thead>
+        <tbody id="archived-body"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <!-- TOAST -->
@@ -953,15 +300,121 @@
 <div class="confirm-overlay hidden" id="confirmOverlay">
   <div class="confirm-box">
     <div class="icon">⚠️</div>
-    <h3>Delete Expense?</h3>
-    <p>This action cannot be undone.</p>
+    <h3>Archive Expense?</h3>
+    <p>This will move the expense to archived section.</p>
     <div class="expense-details" id="confirmDetails">
       <div class="desc"></div>
       <div class="amount"></div>
+      <div class="added-by" style="margin-top:6px;font-size:11px;color:var(--muted)"></div>
+      <div class="paid-by" style="margin-top:4px;font-size:11px;color:var(--muted)"></div>
     </div>
     <div class="confirm-buttons">
       <button class="btn-cancel" onclick="cancelDelete()">Cancel</button>
-      <button class="btn-delete" onclick="confirmDelete()">Delete</button>
+      <button class="btn-delete" onclick="confirmDelete()">Archive</button>
+    </div>
+  </div>
+</div>
+
+<!-- PERMANENT DELETE CONFIRMATION MODAL -->
+<div class="confirm-overlay hidden" id="permanentDeleteOverlay">
+  <div class="confirm-box">
+    <div class="icon">🗑️</div>
+    <h3>Delete Permanently?</h3>
+    <p style="color:var(--accent3)">This action cannot be undone. The expense will be deleted forever.</p>
+    <div class="expense-details" id="permanentDeleteDetails">
+      <div class="desc"></div>
+      <div class="amount"></div>
+      <div class="added-by" style="margin-top:6px;font-size:11px;color:var(--muted)"></div>
+      <div class="paid-by" style="margin-top:4px;font-size:11px;color:var(--muted)"></div>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelPermanentDelete()">Cancel</button>
+      <button class="btn-delete" onclick="confirmPermanentDelete()">Delete Forever</button>
+    </div>
+  </div>
+</div>
+
+<!-- UNARCHIVE CONFIRMATION MODAL -->
+<div class="confirm-overlay hidden" id="unarchiveOverlay">
+  <div class="confirm-box">
+    <div class="icon">↩️</div>
+    <h3>Unarchive Expense?</h3>
+    <p>This will restore the expense to the active list.</p>
+    <div class="expense-details" id="unarchiveDetails">
+      <div class="desc"></div>
+      <div class="amount"></div>
+      <div class="added-by" style="margin-top:6px;font-size:11px;color:var(--muted)"></div>
+      <div class="paid-by" style="margin-top:4px;font-size:11px;color:var(--muted)"></div>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelUnarchive()">Cancel</button>
+      <button class="btn-delete" style="background:var(--accent)" onclick="confirmUnarchive()">Unarchive</button>
+    </div>
+  </div>
+</div>
+
+<!-- BUDGET DIALOG -->
+<div class="confirm-overlay hidden" id="budgetOverlay">
+  <div class="confirm-box">
+    <div class="icon">💰</div>
+    <h3>Set Trip Budget</h3>
+    <p>Enter your total budget for this trip</p>
+    <div style="margin: 16px 0;position:relative">
+      <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-family:'DM Mono',monospace;font-size:16px;pointer-events:none">₹</span>
+      <input type="number" id="budgetInput" placeholder="Enter amount" min="0"
+        style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px 10px 28px;font-family:'DM Mono',monospace;font-size:16px;outline:none;transition:border-color 0.15s">
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelBudgetEdit()">Cancel</button>
+      <button class="btn-delete" style="background:var(--accent)" onclick="confirmBudgetEdit()">Save Budget</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT EXPENSE OVERLAY -->
+<div class="confirm-overlay hidden" id="editOverlay">
+  <div class="confirm-box" style="max-width:500px">
+    <div class="icon">✏️</div>
+    <h3>Edit Expense</h3>
+    <div style="margin: 20px 0;display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Description</label>
+        <textarea id="editDesc" placeholder="Enter description" rows="3"
+          style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.15s;resize:vertical"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Category</label>
+          <select id="editCat"
+            style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+            <option value="food">🍽️ Food</option>
+            <option value="fuel">⛽ Fuel</option>
+            <option value="stay">🏨 Stay</option>
+            <option value="transport">🚙 Transport</option>
+            <option value="entry">🎟️ Entry Fees</option>
+            <option value="misc">🛍️ Miscellaneous</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Amount (₹)</label>
+          <input type="number" id="editAmount" placeholder="0" min="0"
+            style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:14px;outline:none;transition:border-color 0.15s">
+        </div>
+      </div>
+      <div>
+        <label style="display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Paid By</label>
+        <select id="editPaidBy"
+          style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+          <option value="Afsar">👨‍💻 Afsar</option>
+          <option value="Adham">👨‍💻 Adham</option>
+          <option value="Aakif">👨‍💻 Aakif</option>
+          <option value="Sahlaan">👨‍⚕️ Sahlaan</option>
+        </select>
+      </div>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+      <button class="btn-delete" style="background:var(--accent)" onclick="saveEdit()">Save Changes</button>
     </div>
   </div>
 </div>
@@ -972,690 +425,7 @@
   <div class="loading-text">LOADING...</div>
 </div>
 
-<script>
-// ─── CONFIG ───────────────────────────────────────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxscbDaRJezz07nggUqUvzxk4UGtYoIIvYqnEfhTRNzB8YscjXgsnU008YsN3jcvE8ZQA/exec';
 
-const CAT_CONFIG = {
-  food:      { label: '🍽️ Food',   color: '#f5c842', bg: '#2a2410' },
-  fuel:      { label: '⛽ Fuel',   color: '#e87c4e', bg: '#2a1a10' },
-  stay:      { label: '🏨 Stay',   color: '#7ec8e3', bg: '#0f2228' },
-  transport: { label: '🚙 Transport',  color: '#e86e8a', bg: '#2a1018' },
-  entry:     { label: '🎟️ Entry Fees', color: '#b07fe8', bg: '#1e1430' },
-  misc:      { label: '🛍️ Miscellaneous',  color: '#5dba8a', bg: '#0e2418' },
-};
-
-// ─── STATE ────────────────────────────────────────────────
-let expenses = { 1: [], 2: [] };
-let currentUser = '';
-let isBusy = false;
-let editingId = null;
-let deleteTarget = null;
-let sortBy = 'time';
-let sortOrder = 'desc'; // 'asc' or 'desc'
-let filterBy = 'all';
-
-// ─── INIT ─────────────────────────────────────────────────
-window.onload = () => {
-  showLoading(true);
-  const saved = localStorage.getItem('coorg_username');
-  if (saved) {
-    currentUser = saved;
-    hideNameOverlay();
-    loadFromSheet();
-  } else {
-    showLoading(false);
-    document.getElementById('nameOverlay').classList.remove('hidden');
-    setTimeout(() => document.getElementById('nameInput').focus(), 100);
-  }
-};
-
-// ─── NAME HANDLING ────────────────────────────────────────
-function saveName() {
-  const name = document.getElementById('nameInput').value.trim();
-  if (!name) { document.getElementById('nameInput').focus(); return; }
-  currentUser = name;
-  localStorage.setItem('coorg_username', name);
-  hideNameOverlay();
-  loadFromSheet();
-}
-
-function hideNameOverlay() {
-  document.getElementById('nameOverlay').classList.add('hidden');
-  document.getElementById('inp-name').value = currentUser;
-  const initial = currentUser.charAt(0).toUpperCase();
-  document.getElementById('userAvatar').textContent = initial;
-  document.getElementById('userChipName').textContent = currentUser;
-}
-
-function changeName() {
-  document.getElementById('nameInput').value = currentUser;
-  document.getElementById('nameOverlay').classList.remove('hidden');
-  setTimeout(() => document.getElementById('nameInput').focus(), 100);
-}
-
-document.getElementById('nameInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveName();
-});
-document.getElementById('nameInput').addEventListener('change', e => {
-  if (e.target.value) saveName();
-});
-
-// ─── LOCAL STORAGE FALLBACK ───────────────────────────────
-function saveLocal() {
-  localStorage.setItem('coorg_expenses', JSON.stringify(expenses));
-}
-function loadFromLocal() {
-  const saved = localStorage.getItem('coorg_expenses');
-  expenses = saved ? JSON.parse(saved) : { 1: [], 2: [] };
-}
-
-// ─── GOOGLE SHEETS ────────────────────────────────────────
-async function loadFromSheet() {
-  showLoading(true);
-  setStatus('syncing', 'Loading…');
-  try {
-    const res = await fetch(`${SCRIPT_URL}?action=getAll`);
-    const data = await res.json();
-    expenses = { 1: [], 2: [] };
-    (data.expenses || []).forEach(e => {
-      const day = e.day === 1 || e.day === 2 ? e.day : 1;
-      expenses[day].push(e);
-    });
-    saveLocal();
-    render();
-    setStatus('ok', 'Synced ✓');
-  } catch(e) {
-    setStatus('err', 'Offline — showing local data');
-    loadFromLocal();
-    render();
-  } finally {
-    showLoading(false);
-  }
-}
-
-async function sheetAdd(exp) {
-  const params = new URLSearchParams({
-    action: 'add',
-    day: exp.day,
-    name: exp.name,
-    desc: exp.desc,
-    cat: exp.cat,
-    amount: exp.amount,
-    paidBy: exp.paidBy
-  });
-  const res = await fetch(`${SCRIPT_URL}?${params}`);
-  const data = await res.json();
-  return data.id;
-}
-
-async function sheetUpdate(exp) {
-  const params = new URLSearchParams({
-    action: 'update',
-    id: exp.id,
-    day: exp.day,
-    name: exp.name,
-    desc: exp.desc,
-    cat: exp.cat,
-    amount: exp.amount,
-    paidBy: exp.paidBy
-  });
-  const res = await fetch(`${SCRIPT_URL}?${params}`);
-  return await res.json();
-}
-
-async function sheetDelete(id) {
-  const params = new URLSearchParams({ action: 'delete', id });
-  await fetch(`${SCRIPT_URL}?${params}`);
-}
-
-// ─── ADD/EDIT EXPENSE ─────────────────────────────────────
-async function saveExpense() {
-  if (isBusy) return;
-  const day    = parseInt(document.getElementById('inp-day').value);
-  const desc   = document.getElementById('inp-desc').value.trim();
-  const cat    = document.getElementById('inp-cat').value;
-  const amount = parseFloat(document.getElementById('inp-amount').value) || 0;
-  const paidBy = document.getElementById('inp-paidby').value;
-  const name   = currentUser;
-
-  // Validation
-  if (!desc) {
-    showToast('Please enter a description', 'err');
-    document.getElementById('inp-desc').focus();
-    return;
-  }
-  if (amount <= 0) {
-    showToast('Please enter a valid amount', 'err');
-    document.getElementById('inp-amount').focus();
-    return;
-  }
-  if (!paidBy) {
-    showToast('Please select who paid', 'err');
-    document.getElementById('inp-paidby').focus();
-    return;
-  }
-
-  setBusy(true);
-  showLoading(true);
-  setStatus('syncing', 'Saving…');
-
-  try {
-    const exp = { id: 'local_' + Date.now(), day, name, desc, cat, amount, paidBy };
-    const newId = await sheetAdd(exp);
-    if (newId) exp.id = newId;
-    exp.ts = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-    exp.edited = "";
-    expenses[day].push(exp);
-
-    setStatus('ok', 'Synced ✓');
-    showToast('Expense added!', 'ok');
-  } catch(e) {
-    setStatus('err', 'Saved locally only');
-    showToast('No internet — saved locally', 'err');
-  }
-
-  saveLocal();
-  clearForm();
-  setBusy(false);
-  showLoading(false);
-  render();
-}
-
-function clearForm() {
-  document.getElementById('inp-desc').value = '';
-  document.getElementById('inp-amount').value = '';
-  document.getElementById('inp-paidby').value = '';
-  document.getElementById('inp-day').value = '1';
-  document.getElementById('inp-cat').value = 'food';
-  editingId = null;
-  document.getElementById('addBtnText').textContent = '+ Add';
-}
-
-// ─── INLINE EDIT ──────────────────────────────────────────
-function startInlineEdit(day, id) {
-  const exp = expenses[day].find(e => String(e.id) === String(id));
-  if (!exp || exp.name !== currentUser) {
-    showToast('You can only edit your own expenses', 'err');
-    return;
-  }
-
-  const row = document.getElementById(`row-${id}`);
-  if (!row) return;
-
-  row.classList.add('edit-mode');
-  const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
-
-  row.innerHTML = `
-    <td class="num-col"></td>
-    <td><input class="edit-input" id="edit-desc-${id}" value="${exp.desc}" /></td>
-    <td>
-      <select class="edit-select" id="edit-cat-${id}">
-        <option value="food" ${exp.cat === 'food' ? 'selected' : ''}>🍽️ Food</option>
-        <option value="fuel" ${exp.cat === 'fuel' ? 'selected' : ''}>⛽ Fuel</option>
-        <option value="stay" ${exp.cat === 'stay' ? 'selected' : ''}>🏨 Stay</option>
-        <option value="transport" ${exp.cat === 'transport' ? 'selected' : ''}>🚙 Transport</option>
-        <option value="entry" ${exp.cat === 'entry' ? 'selected' : ''}>🎟️ Entry Fees</option>
-        <option value="misc" ${exp.cat === 'misc' ? 'selected' : ''}>🛍️ Miscellaneous</option>
-      </select>
-    </td>
-    <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)">${exp.name}</td>
-    <td>
-      <select class="edit-select" id="edit-paidby-${id}">
-        <option value="Afsar" ${exp.paidBy === 'Afsar' ? 'selected' : ''}>Afsar</option>
-        <option value="Adham" ${exp.paidBy === 'Adham' ? 'selected' : ''}>Adham</option>
-        <option value="Aakif" ${exp.paidBy === 'Aakif' ? 'selected' : ''}>Aakif</option>
-        <option value="Sahlaan" ${exp.paidBy === 'Sahlaan' ? 'selected' : ''}>Sahlaan</option>
-      </select>
-    </td>
-    <td></td>
-    <td><input class="edit-input" type="number" id="edit-amount-${id}" value="${exp.amount}" style="width:80px;" /></td>
-    <td colspan="2">
-      <div class="edit-actions">
-        <button onclick="saveInlineEdit(${day}, '${id}')" title="Save">✅</button>
-        <button onclick="cancelInlineEdit(${day}, '${id}')" title="Cancel">❌</button>
-      </div>
-    </td>
-  `;
-}
-
-async function saveInlineEdit(day, id) {
-  const desc = document.getElementById(`edit-desc-${id}`)?.value.trim();
-  const cat = document.getElementById(`edit-cat-${id}`)?.value;
-  const amount = parseFloat(document.getElementById(`edit-amount-${id}`)?.value) || 0;
-  const paidBy = document.getElementById(`edit-paidby-${id}`)?.value;
-
-  if (!desc || amount <= 0 || !paidBy) {
-    showToast('Please fill all fields correctly', 'err');
-    return;
-  }
-
-  showLoading(true);
-  setBusy(true);
-
-  const exp = expenses[day].find(e => String(e.id) === String(id));
-  const updated = { id, day, name: exp.name, desc, cat, amount, paidBy };
-
-  try {
-    await sheetUpdate(updated);
-
-    // Update local
-    const idx = expenses[day].findIndex(e => String(e.id) === String(id));
-    if (idx !== -1) {
-      expenses[day][idx] = { ...expenses[day][idx], desc, cat, amount, paidBy, edited: 'Yes', ts: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) };
-    }
-
-    saveLocal();
-    showToast('Expense updated!', 'ok');
-  } catch(e) {
-    showToast('Update failed', 'err');
-  }
-
-  showLoading(false);
-  setBusy(false);
-  render();
-}
-
-function cancelInlineEdit(day, id) {
-  render();
-}
-
-// ─── DELETE EXPENSE ───────────────────────────────────────
-function showDeleteConfirm(day, id) {
-  const exp = expenses[day].find(e => String(e.id) === String(id));
-  if (!exp) return;
-
-  deleteTarget = { day, id };
-
-  const detailsEl = document.getElementById('confirmDetails');
-  detailsEl.querySelector('.desc').textContent = exp.desc;
-  detailsEl.querySelector('.amount').textContent = `₹${exp.amount.toLocaleString('en-IN')}`;
-
-  document.getElementById('confirmOverlay').classList.remove('hidden');
-}
-
-function cancelDelete() {
-  deleteTarget = null;
-  document.getElementById('confirmOverlay').classList.add('hidden');
-}
-
-async function confirmDelete() {
-  if (!deleteTarget) return;
-
-  const { day, id } = deleteTarget;
-
-  document.getElementById('confirmOverlay').classList.add('hidden');
-  showLoading(true);
-  setBusy(true);
-  setStatus('syncing', 'Deleting…');
-
-  try {
-    await sheetDelete(id);
-    setStatus('ok', 'Synced ✓');
-    showToast('Expense deleted', 'ok');
-  } catch(e) {
-    setStatus('err', 'Delete failed');
-    showToast('Delete failed — check connection', 'err');
-  }
-
-  expenses[day] = expenses[day].filter(e => String(e.id) !== String(id));
-  saveLocal();
-  setBusy(false);
-  showLoading(false);
-  deleteTarget = null;
-  render();
-}
-
-// ─── RENDER ───────────────────────────────────────────────
-function render() {
-  [1, 2].forEach(day => {
-    const tbody = document.getElementById(`day${day}-body`);
-    tbody.innerHTML = '';
-    let dayTotal = 0;
-
-    // Filter expenses
-    let dayExpenses = [...expenses[day]];
-    if (filterBy !== 'all') {
-      dayExpenses = dayExpenses.filter(e => e.name === filterBy);
-    }
-
-    // Sort expenses
-    dayExpenses.sort((a, b) => {
-      let valA, valB;
-
-      switch(sortBy) {
-        case 'desc':
-          valA = (a.desc || '').toLowerCase();
-          valB = (b.desc || '').toLowerCase();
-          break;
-        case 'cat':
-          valA = (a.cat || '').toLowerCase();
-          valB = (b.cat || '').toLowerCase();
-          break;
-        case 'name':
-          valA = (a.name || '').toLowerCase();
-          valB = (b.name || '').toLowerCase();
-          break;
-        case 'paidBy':
-          valA = (a.paidBy || '').toLowerCase();
-          valB = (b.paidBy || '').toLowerCase();
-          break;
-        case 'amount':
-          valA = a.amount || 0;
-          valB = b.amount || 0;
-          break;
-        case 'time':
-        default:
-          valA = a.id || '';
-          valB = b.id || '';
-          break;
-      }
-
-      if (sortBy === 'amount') {
-        return sortOrder === 'asc' ? valA - valB : valB - valA;
-      } else {
-        const comparison = valA < valB ? -1 : valA > valB ? 1 : 0;
-        return sortOrder === 'asc' ? comparison : -comparison;
-      }
-    });
-
-    if (dayExpenses.length === 0) {
-      const tr = document.createElement('tr');
-      tr.className = 'empty-row';
-      const msg = filterBy !== 'all'
-        ? `No expenses from ${filterBy} for Day ${day}`
-        : `No expenses yet for Day ${day} — add one above!`;
-      tr.innerHTML = `<td colspan="9">${msg}</td>`;
-      tbody.appendChild(tr);
-    } else {
-      dayExpenses.forEach((exp, idx) => {
-        dayTotal += exp.amount || 0;
-        const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
-
-        // Format time without seconds
-        let timeStr = '—';
-        if (exp.ts) {
-          try {
-            const parts = exp.ts.split(',');
-            if (parts.length >= 2) {
-              const timePart = parts[1].trim();
-              const timeMatch = timePart.match(/(\d{1,2}:\d{2})/);
-              if (timeMatch) {
-                timeStr = timeMatch[1];
-                if (timePart.toLowerCase().includes('am')) timeStr += ' AM';
-                else if (timePart.toLowerCase().includes('pm')) timeStr += ' PM';
-              }
-            }
-          } catch(e) {
-            timeStr = '—';
-          }
-        }
-
-        const tr = document.createElement('tr');
-        tr.id = `row-${exp.id}`;
-
-        // Check if user can edit
-        const canEdit = currentUser === exp.name;
-        const editIcon = canEdit ? '✏️' : '';
-
-        // Edited badge
-        const editedBadge = exp.edited === 'Yes' ? '<span class="edited-badge">EDITED</span>' : '';
-
-        // Description with truncation
-        const descId = `desc-${exp.id}`;
-        const showTruncated = exp.desc.length > 100;
-
-        tr.innerHTML = `
-          <td class="num-col">${idx + 1}</td>
-          <td>
-            <div id="${descId}" class="${showTruncated ? 'desc-truncated' : 'desc-full'}">
-              ${exp.desc}${editedBadge}
-            </div>
-            ${showTruncated ? `<span class="show-more-btn" onclick="toggleDesc('${descId}')">Show more...</span>` : ''}
-          </td>
-          <td style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
-          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
-          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
-          <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
-          <td class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
-          <td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>
-          <td><button class="del-btn" onclick="showDeleteConfirm(${day}, '${exp.id}')" title="Remove">🗑️</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-    document.getElementById(`day${day}-total`).textContent =
-      dayTotal > 0 ? '₹' + dayTotal.toLocaleString('en-IN') : '₹0';
-  });
-  updateSummary();
-  updateSettlement();
-}
-
-function updateSummary() {
-  const all = [...expenses[1], ...expenses[2]];
-  const total = all.reduce((s, e) => s + (e.amount || 0), 0);
-  const cats = { food: 0, fuel: 0, stay: 0, transport: 0, entry: 0, misc: 0 };
-  all.forEach(e => { if (cats[e.cat] !== undefined) cats[e.cat] += (e.amount || 0); });
-
-  // Calculate paid-by totals
-  const paidBy = { Afsar: 0, Adham: 0, Aakif: 0, Sahlaan: 0 };
-  all.forEach(e => {
-    if (paidBy[e.paidBy] !== undefined) {
-      paidBy[e.paidBy] += (e.amount || 0);
-    }
-  });
-
-  document.getElementById('totalAll').textContent = total.toLocaleString('en-IN');
-  document.getElementById('totalFood').textContent = cats.food.toLocaleString('en-IN');
-  document.getElementById('totalFuel').textContent = cats.fuel.toLocaleString('en-IN');
-  document.getElementById('totalStay').textContent = cats.stay.toLocaleString('en-IN');
-  document.getElementById('totalTransport').textContent = cats.transport.toLocaleString('en-IN');
-  document.getElementById('totalEntry').textContent = cats.entry.toLocaleString('en-IN');
-  document.getElementById('totalMisc').textContent = cats.misc.toLocaleString('en-IN');
-
-  document.getElementById('paidAfsar').textContent = paidBy.Afsar.toLocaleString('en-IN');
-  document.getElementById('paidAdham').textContent = paidBy.Adham.toLocaleString('en-IN');
-  document.getElementById('paidAakif').textContent = paidBy.Aakif.toLocaleString('en-IN');
-  document.getElementById('paidSahlaan').textContent = paidBy.Sahlaan.toLocaleString('en-IN');
-}
-
-// ─── SETTLEMENT ───────────────────────────────────────────
-function updateSettlement() {
-  const all = [...expenses[1], ...expenses[2]];
-  const total = all.reduce((s, e) => s + (e.amount || 0), 0);
-
-  // Split among all 4 people
-  const splitAmong = ['Afsar', 'Adham', 'Aakif', 'Sahlaan'];
-  const sharePerPerson = total / splitAmong.length;
-
-  // Calculate how much each person paid
-  const paidBy = { Afsar: 0, Adham: 0, Aakif: 0, Sahlaan: 0 };
-  all.forEach(e => {
-    if (paidBy[e.paidBy] !== undefined) {
-      paidBy[e.paidBy] += (e.amount || 0);
-    }
-  });
-
-  // Calculate balance (positive = gets money, negative = owes money)
-  const balance = {};
-  splitAmong.forEach(person => {
-    balance[person] = paidBy[person] - sharePerPerson;
-  });
-
-  // Generate settlement instructions
-  const settlements = calculateSettlements(balance);
-
-  // Render settlement cards
-  const grid = document.getElementById('settlementGrid');
-  grid.innerHTML = '';
-
-  splitAmong.forEach(person => {
-    const card = document.createElement('div');
-    const isBalanced = Math.abs(balance[person]) < 1;
-
-    card.className = `settlement-card${isBalanced ? ' balanced' : ''}`;
-
-    let actionHTML = '';
-    const personSettlements = settlements.filter(s => s.from === person || s.to === person);
-
-    if (isBalanced) {
-      actionHTML = '<div class="action settled">✅ All settled up!</div>';
-    } else if (personSettlements.length > 0) {
-      personSettlements.forEach(s => {
-        if (s.from === person) {
-          actionHTML += `<div class="action owes">Pay ₹${s.amount.toLocaleString('en-IN')} to ${s.to}</div>`;
-        } else {
-          actionHTML += `<div class="action gets">Gets ₹${s.amount.toLocaleString('en-IN')} from ${s.from}</div>`;
-        }
-      });
-    }
-
-    const emojiMap = { 'Afsar': '👨‍💻', 'Adham': '🧑‍💻', 'Aakif': '👨‍💼', 'Sahlaan': '🧑‍🔧' };
-
-    card.innerHTML = `
-      <div class="person-name">
-        <span class="emoji">${emojiMap[person] || '👤'}</span>
-        ${person}
-      </div>
-      <div class="stat-row">
-        <span class="label">Paid</span>
-        <span class="value">₹${paidBy[person].toLocaleString('en-IN')}</span>
-      </div>
-      <div class="stat-row">
-        <span class="label">Share</span>
-        <span class="value">₹${Math.round(sharePerPerson).toLocaleString('en-IN')}</span>
-      </div>
-      <div class="divider"></div>
-      <div class="stat-row">
-        <span class="label">Balance</span>
-        <span class="value" style="color:${balance[person] >= 0 ? 'var(--accent)' : 'var(--accent3)'}">
-          ${balance[person] >= 0 ? '+' : ''}₹${Math.round(balance[person]).toLocaleString('en-IN')}
-        </span>
-      </div>
-      ${actionHTML}
-    `;
-
-    grid.appendChild(card);
-  });
-}
-
-function calculateSettlements(balance) {
-  // Create arrays of people who owe and who should receive
-  const owes = [];
-  const gets = [];
-
-  Object.keys(balance).forEach(person => {
-    const amount = Math.round(balance[person]);
-    if (amount < -0.5) {
-      owes.push({ person, amount: Math.abs(amount) });
-    } else if (amount > 0.5) {
-      gets.push({ person, amount });
-    }
-  });
-
-  // Calculate minimum transactions
-  const settlements = [];
-  let i = 0, j = 0;
-
-  while (i < owes.length && j < gets.length) {
-    const ower = owes[i];
-    const receiver = gets[j];
-    const amount = Math.min(ower.amount, receiver.amount);
-
-    settlements.push({
-      from: ower.person,
-      to: receiver.person,
-      amount: amount
-    });
-
-    ower.amount -= amount;
-    receiver.amount -= amount;
-
-    if (ower.amount === 0) i++;
-    if (receiver.amount === 0) j++;
-  }
-
-  return settlements;
-}
-
-// ─── SORT & FILTER ────────────────────────────────────────
-function sortByColumn(column) {
-  if (sortBy === column) {
-    // Toggle sort order
-    sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-  } else {
-    // New column, default to ascending
-    sortBy = column;
-    sortOrder = 'asc';
-  }
-
-  // Update all table headers
-  document.querySelectorAll('thead th.sortable').forEach(th => {
-    th.classList.remove('sorted-asc', 'sorted-desc');
-  });
-
-  // Mark current sorted column
-  document.querySelectorAll(`thead th.sortable[onclick="sortByColumn('${column}')"]`).forEach(th => {
-    th.classList.add(sortOrder === 'asc' ? 'sorted-asc' : 'sorted-desc');
-  });
-
-  render();
-}
-
-function filterExpenses() {
-  filterBy = document.getElementById('filterSelect').value;
-  render();
-}
-
-function toggleDesc(descId) {
-  const el = document.getElementById(descId);
-  const btn = el.nextElementSibling;
-
-  if (el.classList.contains('desc-truncated')) {
-    el.classList.remove('desc-truncated');
-    el.classList.add('desc-full');
-    if (btn) btn.textContent = 'Show less';
-  } else {
-    el.classList.remove('desc-full');
-    el.classList.add('desc-truncated');
-    if (btn) btn.textContent = 'Show more...';
-  }
-}
-
-// ─── UI HELPERS ───────────────────────────────────────────
-function setBusy(busy) {
-  isBusy = busy;
-  document.getElementById('addBtn').disabled = busy;
-  document.getElementById('addSpinner').style.display = busy ? 'block' : 'none';
-}
-function setStatus(state, text) {
-  const dot = document.getElementById('statusDot');
-  dot.className = 'status-dot' + (state ? ' ' + state : '');
-  document.getElementById('statusText').textContent = text;
-}
-function showLoading(show) {
-  const overlay = document.getElementById('loadingOverlay');
-  if (show) {
-    overlay.classList.remove('hidden');
-  } else {
-    overlay.classList.add('hidden');
-  }
-}
-let toastTimer;
-function showToast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (type ? ' ' + type : '');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.className = 'toast', 2800);
-}
-
-document.getElementById('inp-amount').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveExpense();
-});
-document.getElementById('inp-paidby').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveExpense();
-});
-</script>
+<script src="app.js"></script>
 </body>
 </html>
