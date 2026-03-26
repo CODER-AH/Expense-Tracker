@@ -2246,20 +2246,98 @@ function toggleNoteMultiSelect() {
   selectedNotes.clear();
 
   const btn = document.getElementById('noteMultiSelectBtn');
+  const addBtn = document.getElementById('addNoteBtn');
   const bulkActions = document.getElementById('noteBulkActions');
 
   if (isNoteMultiSelectMode) {
     btn.textContent = 'Cancel Selection';
     btn.style.background = 'rgba(232, 110, 138, 0.2)';
-    bulkActions.style.display = 'block';
+    if (addBtn) addBtn.style.display = 'none';
+    bulkActions.style.display = 'flex';
+    updateNoteBulkActions(); // Update which actions to show
   } else {
     btn.textContent = '☑️ Select Multiple';
     btn.style.background = 'rgba(72, 126, 98, 0.2)';
+    if (addBtn) addBtn.style.display = 'inline-block';
     bulkActions.style.display = 'none';
   }
 
   renderNotes();
 }
+
+// Toggle note selection
+function toggleNoteSelection(id) {
+  if (selectedNotes.has(id)) {
+    selectedNotes.delete(id);
+  } else {
+    selectedNotes.add(id);
+  }
+
+  // Update checkbox visual state
+  const checkbox = document.getElementById(`check-note-${id}`);
+  if (checkbox) {
+    checkbox.checked = selectedNotes.has(id);
+  }
+
+  // Update bulk action buttons
+  updateNoteBulkActions();
+}
+
+// Update note bulk action buttons based on selection
+function updateNoteBulkActions() {
+  const completeBtn = document.getElementById('bulkCompleteNotesBtn');
+  const deleteBtn = document.getElementById('bulkDeleteNotesBtn');
+
+  if (selectedNotes.size === 0) {
+    // No selection - hide both buttons
+    if (completeBtn) completeBtn.style.display = 'none';
+    if (deleteBtn) deleteBtn.style.display = 'none';
+    return;
+  }
+
+  // Check if selection includes any completed notes
+  let hasCompleted = false;
+  let hasIncomplete = false;
+
+  selectedNotes.forEach(id => {
+    const note = notes.find(n => n.id === id);
+    if (note) {
+      if (note.completed) {
+        hasCompleted = true;
+      } else {
+        hasIncomplete = true;
+      }
+    }
+  });
+
+  // Show/hide buttons based on selection
+  if (hasCompleted && hasIncomplete) {
+    // Mixed selection - only show delete
+    if (completeBtn) completeBtn.style.display = 'none';
+    if (deleteBtn) {
+      deleteBtn.style.display = 'inline-block';
+      deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
+    }
+  } else if (hasCompleted) {
+    // Only completed notes - only show delete
+    if (completeBtn) completeBtn.style.display = 'none';
+    if (deleteBtn) {
+      deleteBtn.style.display = 'inline-block';
+      deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
+    }
+  } else {
+    // Only incomplete notes - show both
+    if (completeBtn) {
+      completeBtn.style.display = 'inline-block';
+      completeBtn.textContent = `Mark as Complete (${selectedNotes.size})`;
+    }
+    if (deleteBtn) {
+      deleteBtn.style.display = 'inline-block';
+      deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
+    }
+  }
+}
+
 
 function toggleNoteSelection(id) {
   if (selectedNotes.has(id)) {

@@ -6,15 +6,18 @@ function toggleMultiSelect() {
   selectedExpenses.clear();
 
   const btn = document.getElementById('multiSelectBtn');
+  const addBtn = document.getElementById('addExpenseBtn');
   const bulkActions = document.getElementById('bulkActions');
 
   if (isMultiSelectMode) {
     btn.textContent = 'Cancel Selection';
     btn.style.background = 'rgba(232, 110, 138, 0.2)';
+    if (addBtn) addBtn.style.display = 'none';
     bulkActions.style.display = 'flex';
   } else {
     btn.textContent = '☑️ Select Multiple';
     btn.style.background = 'rgba(72, 126, 98, 0.2)';
+    if (addBtn) addBtn.style.display = 'inline-block';
     bulkActions.style.display = 'none';
   }
 
