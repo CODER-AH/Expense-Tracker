@@ -142,6 +142,9 @@ function updateFilterOptions() {
 
 // ─── INIT ─────────────────────────────────────────────────
 window.onload = () => {
+  // Initialize Firebase first
+  dbInit();
+
   showLoading(true);
   loadTripDays();
 
@@ -370,8 +373,8 @@ async function saveExpense() {
   setStatus('syncing', 'Saving…');
 
   try {
-    const exp = { id: 'local_' + Date.now(), day, name, desc, cat, amount, paidBy };
-    const newId = await sheetAdd(exp);
+    const exp = { id: 'local_' + Date.now(), day, name, desc, cat, amount, paidBy, archived: false };
+    const newId = await dbAddExpense(exp);
     if (newId) exp.id = newId;
     exp.ts = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
     exp.edited = "";
@@ -691,8 +694,8 @@ async function saveMultipleExpenses() {
   let savedCount = 0;
   for (let entry of entries) {
     try {
-      const exp = { id: 'local_' + Date.now() + '_' + savedCount, ...entry };
-      const newId = await sheetAdd(exp);
+      const exp = { id: 'local_' + Date.now() + '_' + savedCount, ...entry, archived: false };
+      const newId = await dbAddExpense(exp);
       if (newId) exp.id = newId;
       exp.ts = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
       exp.edited = "";
@@ -944,7 +947,7 @@ async function confirmPermanentDelete() {
   setStatus('syncing', 'Deleting permanently…');
 
   try {
-    await sheetDelete(id);
+    await dbDeleteExpense(null, id);
     setStatus('ok', 'Synced ✓');
     showToast('Expense deleted permanently', 'ok');
   } catch(e) {
