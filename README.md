@@ -7,6 +7,8 @@ A modern, feature-rich expense tracking application designed for group trips wit
 - ✅ **Firebase Backend**: Fast, real-time database with offline support
 - ✅ **Google Sheets Backup**: Automatic async backup to Sheets (non-blocking)
 - ✅ **Three-State System**: Active → Archived → Deleted (soft delete)
+- ✅ **Batch Add**: Add up to 3 expenses at once with custom dropdowns
+- ✅ **Custom Dropdowns**: Beautiful styled dropdowns with smart positioning
 - ✅ Add, edit, and archive expenses (single or bulk entry)
 - ✅ Track expenses by day, category, and payer
 - ✅ Multiple payer support with custom names
@@ -17,6 +19,8 @@ A modern, feature-rich expense tracking application designed for group trips wit
 - ✅ Filter and sort functionality
 - ✅ Edit history tracking with timestamps
 - ✅ Automatic timestamp updates on edit
+- ✅ Lazy loading for performance optimization
+- ✅ Notes/Tasks with multi-select delete
 
 ## Tech Stack
 
@@ -58,11 +62,13 @@ Open `webapp/index.html` in your browser
 
 ### Managing Expenses
 
-**Add:** Fill form → Click "Add Row" → Click "Save All"
+**Add Single:** Click "+ Add" button → Fill form in modal → Click "Save All"
 
-**Edit:** Click ✏️ icon → Modify fields → Click ✅
+**Batch Add:** Click "+ Add" → Fill first entry → Click "Add More" (up to 3 entries) → Click "Save All"
 
-**Archive:** Click 🗑️ icon → Expense moves to archived section
+**Edit:** Click ✏️ icon → Modify fields in modal → Click "Save"
+
+**Archive:** Click 🗑️ icon → Confirm → Expense moves to archived section
 
 **Delete:** In archived section, click 🗑️ icon → Permanently hidden (kept in DB)
 

@@ -1,5 +1,5 @@
 // ============================================================
-//  COORG TRIP EXPENSE TRACKER — Google Apps Script (v3)
+//  COORG TRIP EXPENSE TRACKER — Google Apps Script (v4)
 //  Auto-deployed via GitHub Actions
 //  Changes:
 //  - Proper migration from 9-column to 11-column schema
@@ -8,6 +8,9 @@
 //  - Preserves all existing Archived data in correct position
 //  - Added Settings sheet for budget storage
 //  - Budget syncs across all devices/users via Google Sheets
+//  - Added Notes sheet for notes/tasks storage
+//  - Notes support CRUD operations with completed status
+//  - Enhanced handleRequest to parse JSON POST body
 //
 //  To update your existing deployment:
 //  1. Paste this into Apps Script (replacing old code)
@@ -18,21 +21,42 @@
 
 const SHEET_NAME = "Expenses";
 const SETTINGS_SHEET_NAME = "Settings";
+const NOTES_SHEET_NAME = "Notes";
 
 function doGet(e)  { return handleRequest(e); }
 function doPost(e) { return handleRequest(e); }
 
 function handleRequest(e) {
   try {
-    const action = e.parameter.action;
+    // Parse parameters from GET query string or POST JSON body
+    let params = e.parameter || {};
+
+    // If POST request with JSON body, parse it
+    if (e.postData && e.postData.contents) {
+      try {
+        const postBody = JSON.parse(e.postData.contents);
+        params = { ...params, ...postBody };
+      } catch (parseError) {
+        // If JSON parsing fails, continue with e.parameter
+      }
+    }
+
+    const action = params.action;
     if (action === "getAll") return respond(getAllExpenses());
-    if (action === "add")    return respond(addExpense(e.parameter));
-    if (action === "update") return respond(updateExpense(e.parameter));
-    if (action === "archive") return respond(archiveExpense(e.parameter));
-    if (action === "unarchive") return respond(unarchiveExpense(e.parameter));
-    if (action === "delete") { deleteExpense(e.parameter.id); return respond({ success: true }); }
+    if (action === "add")    return respond(addExpense(params));
+    if (action === "update") return respond(updateExpense(params));
+    if (action === "archive") return respond(archiveExpense(params));
+    if (action === "unarchive") return respond(unarchiveExpense(params));
+    if (action === "delete") { deleteExpense(params.id); return respond({ success: true }); }
     if (action === "getBudget") return respond(getBudget());
-    if (action === "setBudget") return respond(setBudget(e.parameter.budget));
+    if (action === "setBudget") return respond(setBudget(params.budget));
+
+    // Notes actions
+    if (action === "getNotes") return respond(getAllNotes());
+    if (action === "addNote") return respond(addNote(params));
+    if (action === "updateNote") return respond(updateNote(params));
+    if (action === "deleteNote") { deleteNote(params.id); return respond({ success: true }); }
+
     if (action === "ping")   return respond({ success: true, message: "Connected!" });
     return respond({ error: "Unknown action" });
   } catch (err) {
@@ -288,4 +312,102 @@ function setBudget(budgetValue) {
   // If Budget row doesn't exist, create it
   sheet.appendRow(["Budget", Number(budgetValue) || 0]);
   return { success: true, budget: Number(budgetValue) || 0 };
+}
+
+// ─── NOTES SHEET ──────────────────────────────────────────
+function getOrCreateNotesSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(NOTES_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(NOTES_SHEET_NAME);
+    sheet.appendRow(["ID", "Text", "Completed", "Created By", "Created At", "Updated At"]);
+    sheet.getRange(1, 1, 1, 6).setFontWeight("bold");
+    sheet.setFrozenRows(1);
+    sheet.setColumnWidth(1, 150);
+    sheet.setColumnWidth(2, 400);
+    sheet.setColumnWidth(3, 100);
+    sheet.setColumnWidth(4, 120);
+    sheet.setColumnWidth(5, 160);
+    sheet.setColumnWidth(6, 160);
+  }
+  return sheet;
+}
+
+function getAllNotes() {
+  const sheet = getOrCreateNotesSheet();
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return { notes: [] };
+
+  const notes = [];
+  for (let i = 1; i < data.length; i++) {
+    const r = data[i];
+    if (r[0]) {
+      notes.push({
+        id: String(r[0]),
+        text: String(r[1]),
+        completed: r[2] === "Yes",
+        createdBy: String(r[3] || "—"),
+        createdAt: String(r[4] || "—"),
+        updatedAt: String(r[5] || "—")
+      });
+    }
+  }
+  return { notes };
+}
+
+function addNote(p) {
+  const sheet = getOrCreateNotesSheet();
+  const id = "note_" + new Date().getTime();
+  const ts = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
+  sheet.appendRow([
+    id,
+    p.text || "",
+    p.completed === true ? "Yes" : "No",
+    p.createdBy || "—",
+    p.createdAt || ts,
+    ts
+  ]);
+
+  return { success: true, id };
+}
+
+function updateNote(p) {
+  const sheet = getOrCreateNotesSheet();
+  const data = sheet.getDataRange().getValues();
+  const now = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(p.id)) {
+      const row = i + 1;
+
+      // Update text if provided
+      if (p.text !== undefined) {
+        sheet.getRange(row, 2).setValue(p.text);
+      }
+
+      // Update completed if provided
+      if (p.completed !== undefined) {
+        sheet.getRange(row, 3).setValue(p.completed === true ? "Yes" : "No");
+      }
+
+      // Always update the timestamp (column 6 now)
+      sheet.getRange(row, 6).setValue(now);
+
+      return { success: true };
+    }
+  }
+  return { error: "Note not found" };
+}
+
+function deleteNote(id) {
+  const sheet = getOrCreateNotesSheet();
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(id)) {
+      sheet.deleteRow(i + 1);
+      return;
+    }
+  }
 }

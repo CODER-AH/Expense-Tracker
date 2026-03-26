@@ -268,3 +268,68 @@ function firestoreListenToBudget(callback) {
       console.error('Error listening to budget:', error);
     });
 }
+
+// ============================================
+// NOTES/TASKS OPERATIONS
+// ============================================
+
+async function firestoreAddNote(note) {
+  try {
+    const docRef = await db.collection('notes').add({
+      text: note.text || '',
+      completed: note.completed || false,
+      createdBy: note.createdBy || '—',
+      createdAtLocal: note.createdAt || '', // Store the formatted local time
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error adding note:', error);
+    throw error;
+  }
+}
+
+async function firestoreGetAllNotes() {
+  try {
+    const snapshot = await db.collection('notes')
+      .orderBy('createdAt', 'asc')
+      .get();
+
+    const notes = [];
+    snapshot.forEach(doc => {
+      notes.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    return notes;
+  } catch (error) {
+    console.error('Error getting notes:', error);
+    throw error;
+  }
+}
+
+async function firestoreUpdateNote(id, updates) {
+  try {
+    await db.collection('notes').doc(id).update({
+      ...updates,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    return true;
+  } catch (error) {
+    console.error('Error updating note:', error);
+    throw error;
+  }
+}
+
+async function firestoreDeleteNote(id) {
+  try {
+    await db.collection('notes').doc(id).delete();
+    return true;
+  } catch (error) {
+    console.error('Error deleting note:', error);
+    throw error;
+  }
+}
