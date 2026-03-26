@@ -195,6 +195,41 @@
     font-weight: 700;
   }
 
+  /* Profile dropdown menu */
+  .profile-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 180px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+  }
+  .profile-option {
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .profile-option:hover {
+    background: rgba(72, 126, 98, 0.15);
+    color: var(--accent);
+  }
+  .profile-option.logout-option:hover {
+    background: rgba(232, 110, 138, 0.15);
+    color: #e86e8a;
+  }
+
+
   /* SUMMARY CARDS */
   .summary-grid {
     display: flex;
@@ -486,7 +521,11 @@
     background: var(--card);
     margin-bottom: 8px;
   }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
   thead th {
     padding: 12px 14px;
     text-align: left;
@@ -500,6 +539,7 @@
     cursor: pointer;
     user-select: none;
     transition: color 0.15s, background 0.15s;
+    white-space: nowrap;
   }
   thead th:hover {
     color: var(--text);
@@ -882,6 +922,8 @@
     min-width: 180px;
     width: max-content;
     max-width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     z-index: 1000;
     display: none;
@@ -906,6 +948,34 @@
     color: var(--accent);
     font-weight: 500;
   }
+
+  /* Column toggle checkboxes */
+  .column-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .column-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+  .column-toggle label {
+    cursor: pointer;
+    flex: 1;
+    margin: 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: normal;
+  }
+  .column-toggle:hover label {
+    color: var(--accent);
+  }
+
 
   /* BATCH ADD DROPDOWN OPTIONS */
   .batch-option:hover {

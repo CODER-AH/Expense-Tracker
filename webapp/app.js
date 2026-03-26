@@ -15,6 +15,38 @@ const CAT_CONFIG = {
   misc:      { label: '🛍️ Miscellaneous',  color: '#5dba8a', bg: '#0e2418' },
 };
 
+// ─── LOADING MESSAGES ─────────────────────────────────────
+const loadingMessages = [
+  'Loading...',
+  'Fetching data...',
+  'Getting things ready...',
+  'Almost there...',
+  'Syncing expenses...',
+  'Preparing your data...',
+  'Just a moment...',
+  'Loading expenses...',
+  'Retrieving records...',
+  'One sec...'
+];
+
+function getRandomLoadingMessage() {
+  return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+}
+
+// ─── PASSWORD VISIBILITY TOGGLE ───────────────────────────
+function togglePasswordVisibility(inputId, toggleId) {
+  const input = document.getElementById(inputId);
+  const toggle = document.getElementById(toggleId);
+
+  if (input.type === 'password') {
+    input.type = 'text';
+    toggle.textContent = '👁️‍🗨️';
+  } else {
+    input.type = 'password';
+    toggle.textContent = '👁️';
+  }
+}
+
 // ─── STATE ────────────────────────────────────────────────
 let expenses = { 1: [], 2: [] };
 let archivedExpenses = [];
@@ -27,6 +59,8 @@ let sortBy = 'time';
 let sortOrder = 'desc'; // 'asc' or 'desc'
 let filterBy = 'all';
 let dayFilterBy = 'all'; // New day filter
+let archivedDayFilterBy = 'all'; // Archived day filter
+let archivedPersonFilterBy = 'all'; // Archived person filter
 let currentPage = 1; // Single page state
 let tripBudget = 0; // Trip budget
 const ITEMS_PER_PAGE = 10;
@@ -158,6 +192,20 @@ function updateFilterOptions() {
     option.textContent = `Day ${dayObj.day} — ${dayObj.name}, ${dayObj.date}`;
     dayFilterDropdown.appendChild(option);
   });
+
+  // Update archived day filter dropdown
+  const archivedDayFilterDropdown = document.getElementById('archivedDayFilterDropdown');
+  if (archivedDayFilterDropdown) {
+    archivedDayFilterDropdown.innerHTML = '<div class="filter-option selected" onclick="selectArchivedDayFilter(\'all\', \'All Days\')">All Days</div>';
+
+    tripDays.forEach(dayObj => {
+      const option = document.createElement('div');
+      option.className = 'filter-option';
+      option.onclick = () => selectArchivedDayFilter(String(dayObj.day), `Day ${dayObj.day} — ${dayObj.name}, ${dayObj.date}`);
+      option.textContent = `Day ${dayObj.day} — ${dayObj.name}, ${dayObj.date}`;
+      archivedDayFilterDropdown.appendChild(option);
+    });
+  }
 }
 
 // ─── INIT ─────────────────────────────────────────────────
@@ -169,17 +217,19 @@ window.onload = () => {
   loadTripDays();
 
   const saved = localStorage.getItem('coorg_username');
-  if (saved) {
+  const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+
+  if (saved && isAuthenticated) {
+    // User is logged in and authenticated
     currentUser = saved;
-    hideNameOverlay();
-
+    hideLoginOverlay();
     updateFilterOptions();
-
     loadFromSheet();
   } else {
+    // Show login screen
     showLoading(false);
-    document.getElementById('nameOverlay').classList.remove('hidden');
-    setTimeout(() => document.getElementById('nameInput').focus(), 100);
+    sessionStorage.removeItem('authenticated');
+    document.getElementById('loginOverlay').classList.remove('hidden');
   }
 
   // Hide status bar on scroll down, show on scroll up
@@ -200,7 +250,347 @@ window.onload = () => {
   }, false);
 };
 
-// ─── NAME HANDLING ────────────────────────────────────────
+// ─── LOGIN & AUTHENTICATION ───────────────────────────────
+let selectedLoginUser = null;
+let selectedLoginValue = null;
+
+function toggleLoginDropdown() {
+  const dropdown = document.getElementById('loginDropdown');
+  const isActive = dropdown.classList.contains('active');
+
+  // Close dropdown if it's open
+  if (isActive) {
+    dropdown.classList.remove('active');
+    return;
+  }
+
+  // Open dropdown
+  dropdown.classList.add('active');
+
+  // Check viewport and adjust position if needed
+  setTimeout(() => {
+    const dropdownRect = dropdown.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+
+    // Reset positioning first
+    dropdown.style.top = '100%';
+    dropdown.style.bottom = 'auto';
+    dropdown.style.marginTop = '4px';
+    dropdown.style.marginBottom = '0';
+
+    // If dropdown goes below viewport, open it upward
+    if (dropdownRect.bottom > viewportHeight - 20) {
+      dropdown.style.top = 'auto';
+      dropdown.style.bottom = '100%';
+      dropdown.style.marginTop = '0';
+      dropdown.style.marginBottom = '4px';
+    }
+  }, 0);
+}
+
+function selectLoginName(value, label) {
+  selectedLoginValue = value;
+  document.getElementById('loginNameLabel').textContent = label;
+  document.getElementById('loginNameLabel').style.color = 'var(--text)';
+  document.getElementById('loginDropdown').classList.remove('active');
+}
+
+async function proceedToPassword() {
+  const name = selectedLoginValue?.trim();
+  if (!name) {
+    document.getElementById('loginNameLabel').style.color = '#e86e8a';
+    return;
+  }
+
+  selectedLoginUser = name;
+
+  // Check if user has a password set
+  try {
+    const userCreds = await firestoreGetUserCredentials(name);
+
+    if (!userCreds || !userCreds.passwordHash) {
+      // No password set, show set password step
+      document.getElementById('loginTitle').textContent = 'Set Your Password';
+      document.getElementById('loginSubtitle').textContent = `Welcome ${name}! Let's secure your account`;
+      document.getElementById('nameSelectionStep').style.display = 'none';
+      document.getElementById('setPasswordStep').style.display = 'block';
+    } else {
+      // Password exists, show password entry
+      document.getElementById('loginTitle').textContent = 'Enter Password';
+      document.getElementById('loginSubtitle').textContent = `Welcome back, ${name}!`;
+      document.getElementById('nameSelectionStep').style.display = 'none';
+      document.getElementById('passwordStep').style.display = 'block';
+      setTimeout(() => document.getElementById('passwordInput').focus(), 100);
+    }
+  } catch (error) {
+    console.error('Error checking user credentials:', error);
+    showToast('Connection error - check your internet', 'err');
+  }
+}
+
+async function handlePasswordSubmit() {
+  const password = document.getElementById('passwordInput').value;
+  if (!password) {
+    document.getElementById('passwordInput').focus();
+    return;
+  }
+
+  const btn = document.getElementById('passwordBtn');
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+
+  try {
+    const isValid = await firestoreVerifyPassword(selectedLoginUser, password);
+
+    if (isValid) {
+      // Login successful
+      currentUser = selectedLoginUser;
+      localStorage.setItem('coorg_username', currentUser);
+      sessionStorage.setItem('authenticated', 'true');
+      hideLoginOverlay();
+
+      if (!dataLoaded) {
+        loadFromSheet();
+      }
+    } else {
+      // Invalid password
+      showToast('Incorrect password', 'err');
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('passwordInput').focus();
+      btn.disabled = false;
+      btn.textContent = 'Login →';
+    }
+  } catch (error) {
+    console.error('Error verifying password:', error);
+    showToast('Login failed - check your connection', 'err');
+    btn.disabled = false;
+    btn.textContent = 'Login →';
+  }
+}
+
+async function handleSetPassword() {
+  const newPassword = document.getElementById('newPasswordInput').value;
+  const confirmPassword = document.getElementById('confirmPasswordInput').value;
+  const errorDiv = document.getElementById('passwordError');
+
+  errorDiv.style.display = 'none';
+
+  if (!newPassword || !confirmPassword) {
+    errorDiv.textContent = 'Please fill in both fields';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    errorDiv.textContent = 'Password must be at least 6 characters';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    errorDiv.textContent = 'Passwords do not match';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  try {
+    await firestoreSetUserPassword(selectedLoginUser, newPassword);
+
+    // Password set successfully, log in
+    currentUser = selectedLoginUser;
+    localStorage.setItem('coorg_username', currentUser);
+    sessionStorage.setItem('authenticated', 'true');
+    hideLoginOverlay();
+
+    showToast('Password set successfully!', 'ok');
+
+    if (!dataLoaded) {
+      loadFromSheet();
+    }
+  } catch (error) {
+    console.error('Error setting password:', error);
+    errorDiv.textContent = 'Failed to set password - check your connection';
+    errorDiv.style.display = 'block';
+  }
+}
+
+function backToNameSelection() {
+  document.getElementById('nameSelectionStep').style.display = 'block';
+  document.getElementById('passwordStep').style.display = 'none';
+  document.getElementById('setPasswordStep').style.display = 'none';
+  document.getElementById('passwordInput').value = '';
+  document.getElementById('newPasswordInput').value = '';
+  document.getElementById('confirmPasswordInput').value = '';
+  document.getElementById('passwordError').style.display = 'none';
+  document.getElementById('loginTitle').textContent = 'Welcome Back!';
+  document.getElementById('loginSubtitle').textContent = 'Select your name to continue';
+  selectedLoginUser = null;
+  selectedLoginValue = null;
+  document.getElementById('loginNameLabel').textContent = 'Select your name...';
+  document.getElementById('loginNameLabel').style.color = 'var(--muted)';
+
+  // Reset password button state
+  const passwordBtn = document.getElementById('passwordBtn');
+  if (passwordBtn) {
+    passwordBtn.disabled = false;
+    passwordBtn.textContent = 'Login →';
+  }
+}
+
+function hideLoginOverlay() {
+  document.getElementById('loginOverlay').classList.add('hidden');
+
+  // Map names to emojis
+  const emojiMap = {
+    'Afsar': '👨‍💻',
+    'Adham': '👨‍💻',
+    'Aakif': '👨‍💻',
+    'Sahlaan': '👨‍⚕️'
+  };
+
+  const emoji = emojiMap[currentUser] || '👤';
+  document.getElementById('userAvatar').textContent = emoji;
+  document.getElementById('userChipName').textContent = currentUser;
+}
+
+// For backward compatibility - keep old saveName function but redirect to new flow
+function saveName() {
+  proceedToPassword();
+}
+
+function changeName() {
+  // Clear authentication
+  sessionStorage.removeItem('authenticated');
+  currentUser = null;
+  localStorage.removeItem('coorg_username');
+
+  // Reset to name selection
+  backToNameSelection();
+
+  // Show login overlay
+  document.getElementById('loginOverlay').classList.remove('hidden');
+}
+
+// ─── PROFILE MENU ──────────────────────────────────────────
+function toggleProfileMenu() {
+  const dropdown = document.getElementById('profileDropdown');
+  dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+}
+
+function handleLogout() {
+  // Close profile menu
+  document.getElementById('profileDropdown').style.display = 'none';
+
+  // Show logout confirmation
+  document.getElementById('logoutOverlay').classList.remove('hidden');
+}
+
+function cancelLogout() {
+  document.getElementById('logoutOverlay').classList.add('hidden');
+}
+
+function confirmLogout() {
+  // Hide confirmation dialog
+  document.getElementById('logoutOverlay').classList.add('hidden');
+
+  // Clear authentication
+  sessionStorage.removeItem('authenticated');
+  currentUser = null;
+  localStorage.removeItem('coorg_username');
+
+  // Reset to name selection
+  backToNameSelection();
+
+  // Show login overlay
+  document.getElementById('loginOverlay').classList.remove('hidden');
+}
+
+function showChangePasswordDialog() {
+  // Close profile menu
+  document.getElementById('profileDropdown').style.display = 'none';
+
+  // Show change password overlay
+  document.getElementById('changePasswordOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('currentPasswordInput').focus(), 100);
+}
+
+function cancelChangePassword() {
+  document.getElementById('changePasswordOverlay').style.display = 'none';
+  document.getElementById('currentPasswordInput').value = '';
+  document.getElementById('newPasswordChange').value = '';
+  document.getElementById('confirmPasswordChange').value = '';
+  document.getElementById('changePasswordError').style.display = 'none';
+}
+
+async function handleChangePassword() {
+  const currentPassword = document.getElementById('currentPasswordInput').value;
+  const newPassword = document.getElementById('newPasswordChange').value;
+  const confirmPassword = document.getElementById('confirmPasswordChange').value;
+  const errorDiv = document.getElementById('changePasswordError');
+  const btn = document.getElementById('changePasswordBtn');
+
+  errorDiv.style.display = 'none';
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    errorDiv.textContent = 'Please fill in all fields';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    errorDiv.textContent = 'New password must be at least 6 characters';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    errorDiv.textContent = 'New passwords do not match';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  if (currentPassword === newPassword) {
+    errorDiv.textContent = 'New password must be different from current password';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Updating...';
+
+  try {
+    // Verify current password
+    const isValid = await firestoreVerifyPassword(currentUser, currentPassword);
+
+    if (!isValid) {
+      errorDiv.textContent = 'Current password is incorrect';
+      errorDiv.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Update Password →';
+      return;
+    }
+
+    // Update to new password
+    await firestoreSetUserPassword(currentUser, newPassword);
+
+    // Success
+    cancelChangePassword();
+    showToast('Password changed successfully!', 'ok');
+    btn.disabled = false;
+    btn.textContent = 'Update Password →';
+  } catch (error) {
+    console.error('Error changing password:', error);
+    errorDiv.textContent = 'Failed to change password - check your connection';
+    errorDiv.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Update Password →';
+  }
+}
+
+// Close profile dropdown when clicking outside
+
+// OLD function - now replaced
+/*
 function saveName() {
   const name = document.getElementById('nameInput').value.trim();
   if (!name) { document.getElementById('nameInput').focus(); return; }
@@ -239,13 +629,7 @@ function changeName() {
   document.getElementById('nameOverlay').classList.remove('hidden');
   setTimeout(() => document.getElementById('nameInput').focus(), 100);
 }
-
-document.getElementById('nameInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveName();
-});
-document.getElementById('nameInput').addEventListener('change', e => {
-  if (e.target.value) saveName();
-});
+*/
 
 // ─── LOCAL STORAGE FALLBACK ───────────────────────────────
 function saveLocal() {
@@ -631,23 +1015,36 @@ function renderArchived() {
   const tbody = document.getElementById('archived-body');
   tbody.innerHTML = '';
 
-  const count = archivedExpenses.length;
+  // Apply filters
+  let filteredArchived = archivedExpenses;
+
+  // Filter by day
+  if (archivedDayFilterBy !== 'all') {
+    filteredArchived = filteredArchived.filter(e => e.archivedDay === parseInt(archivedDayFilterBy));
+  }
+
+  // Filter by person
+  if (archivedPersonFilterBy !== 'all') {
+    filteredArchived = filteredArchived.filter(e => e.name === archivedPersonFilterBy);
+  }
+
+  const count = filteredArchived.length;
 
   // Update count in button
   const countSpan = document.getElementById('archivedCount');
-  if (countSpan) countSpan.textContent = count;
+  if (countSpan) countSpan.textContent = archivedExpenses.length; // Show total, not filtered
 
   const archiveMultiSelectMode = document.getElementById('archiveMultiSelectBtn')?.dataset.active === 'true';
 
-  if (archivedExpenses.length === 0) {
+  if (filteredArchived.length === 0) {
     const tr = document.createElement('tr');
     tr.className = 'empty-row';
-    tr.innerHTML = `<td colspan="${archiveMultiSelectMode ? 10 : 9}">No archived expenses</td>`;
+    tr.innerHTML = `<td colspan="${archiveMultiSelectMode ? 10 : 9}">No archived expenses${archivedDayFilterBy !== 'all' || archivedPersonFilterBy !== 'all' ? ' (filters active)' : ''}</td>`;
     tbody.appendChild(tr);
     return;
   }
 
-  archivedExpenses.forEach((exp, idx) => {
+  filteredArchived.forEach((exp, idx) => {
     const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
 
     // Checkbox for multi-select
@@ -660,12 +1057,12 @@ function renderArchived() {
     tr.innerHTML = `
       ${archiveMultiSelectMode ? `<td style="text-align:center">${checkboxHtml}</td>` : ''}
       <td class="num-col">${idx + 1}</td>
-      <td style="font-size:13px">${exp.desc}</td>
-      <td style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
-      <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
-      <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
-      <td class="amount-col" style="white-space:nowrap">₹${Number(exp.amount).toLocaleString('en-IN')}</td>
-      <td style="font-size:11px;color:var(--muted)">Day ${exp.archivedDay}</td>
+      <td data-column="desc" style="font-size:13px;${!archivedVisibleColumns.desc ? 'display:none;' : ''}">${exp.desc}</td>
+      <td data-column="cat" style="white-space:nowrap;${!archivedVisibleColumns.cat ? 'display:none;' : ''}"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
+      <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!archivedVisibleColumns.name ? 'display:none;' : ''}">${exp.name || '—'}</td>
+      <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!archivedVisibleColumns.paidBy ? 'display:none;' : ''}">${exp.paidBy || '—'}</td>
+      <td data-column="amount" class="amount-col" style="white-space:nowrap;text-align:right;${!archivedVisibleColumns.amount ? 'display:none;' : ''}">₹${Number(exp.amount).toLocaleString('en-IN')}</td>
+      <td data-column="day" style="font-size:11px;color:var(--muted);${!archivedVisibleColumns.day ? 'display:none;' : ''}">Day ${exp.archivedDay}</td>
       ${!archiveMultiSelectMode ? `<td><button class="del-btn" onclick="showUnarchiveConfirm('${exp.id}')" title="Unarchive" style="background:var(--accent);color:#0e1412">↩️</button></td>` : ''}
       ${!archiveMultiSelectMode ? `<td><button class="del-btn" onclick="showPermanentDeleteConfirm('${exp.id}')" title="Delete Permanently">🗑️</button></td>` : ''}
     `;
@@ -924,19 +1321,19 @@ function render() {
       tr.innerHTML = `
         ${isMultiSelectMode ? `<td style="text-align:center">${checkboxHtml}</td>` : ''}
         <td class="num-col">${startIdx + idx + 1}</td>
-        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">Day ${exp.day}</td>
-        <td>
+        <td data-column="day" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.day ? 'display:none;' : ''}">Day ${exp.day}</td>
+        <td data-column="desc" style="${!visibleColumns.desc ? 'display:none;' : ''}">
           ${editedBadge ? `<div style="margin-bottom:4px">${editedBadge}</div>` : ''}
           <div id="${descId}" class="${showTruncated ? 'desc-truncated' : 'desc-full'}">
             ${exp.desc}
           </div>
           ${showTruncated ? `<span class="show-more-btn" onclick="toggleDesc('${descId}')">Show more...</span>` : ''}
         </td>
-        <td style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
-        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
-        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
-        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
-        <td class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
+        <td data-column="cat" style="white-space:nowrap;${!visibleColumns.cat ? 'display:none;' : ''}"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
+        <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.name ? 'display:none;' : ''}">${exp.name || '—'}</td>
+        <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.paidBy ? 'display:none;' : ''}">${exp.paidBy || '—'}</td>
+        <td data-column="time" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.time ? 'display:none;' : ''}">${timeStr}</td>
+        <td data-column="amount" class="amount-col" style="white-space:nowrap;${!visibleColumns.amount ? 'display:none;' : ''}">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
         ${!isMultiSelectMode ? `<td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${exp.day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>` : ''}
         ${!isMultiSelectMode ? `<td><button class="del-btn" onclick="showDeleteConfirm(${exp.day}, '${exp.id}')" title="Archive">🗃️</button></td>` : ''}
       `;
@@ -1160,11 +1557,32 @@ function toggleFilterDropdown(type) {
   const isActive = dropdown.classList.contains('active');
 
   // Close all dropdowns first
-  document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.filter-dropdown').forEach(d => {
+    d.classList.remove('active');
+    // Reset positioning
+    d.style.top = '';
+    d.style.bottom = '';
+    d.style.marginTop = '';
+    d.style.marginBottom = '';
+  });
 
   // Toggle the clicked dropdown
   if (!isActive) {
     dropdown.classList.add('active');
+
+    // Check viewport and adjust position if needed
+    setTimeout(() => {
+      const dropdownRect = dropdown.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+
+      // If dropdown goes below viewport, open it upward
+      if (dropdownRect.bottom > viewportHeight - 20) {
+        dropdown.style.top = 'auto';
+        dropdown.style.bottom = '100%';
+        dropdown.style.marginTop = '0';
+        dropdown.style.marginBottom = '4px';
+      }
+    }, 0);
   }
 }
 
@@ -1202,6 +1620,39 @@ function selectPersonFilter(value, label) {
   render();
 }
 
+// Archived filters
+function selectArchivedDayFilter(value, label) {
+  archivedDayFilterBy = value;
+  document.getElementById('archivedDayFilterLabel').textContent = label;
+
+  // Update selected state
+  document.querySelectorAll('#archivedDayFilterDropdown .filter-option').forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+
+  // Close dropdown
+  document.getElementById('archivedDayFilterDropdown').classList.remove('active');
+
+  renderArchived();
+}
+
+function selectArchivedPersonFilter(value, label) {
+  archivedPersonFilterBy = value;
+  document.getElementById('archivedPersonFilterLabel').textContent = label;
+
+  // Update selected state
+  document.querySelectorAll('#archivedPersonFilterDropdown .filter-option').forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+
+  // Close dropdown
+  document.getElementById('archivedPersonFilterDropdown').classList.remove('active');
+
+  renderArchived();
+}
+
 // Close dropdowns when clicking outside
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.filter-btn') && !e.target.closest('.filter-dropdown')) {
@@ -1209,6 +1660,10 @@ document.addEventListener('click', function(e) {
   }
   if (!e.target.closest('.custom-select')) {
     document.querySelectorAll('.custom-select-dropdown').forEach(d => d.classList.remove('active'));
+  }
+  if (!e.target.closest('.user-chip') && !e.target.closest('.profile-dropdown')) {
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (profileDropdown) profileDropdown.style.display = 'none';
   }
 });
 
@@ -1300,23 +1755,6 @@ function setStatus(state, text) {
   document.getElementById('statusText').textContent = text;
 }
 // ─── LOADING & TOAST ──────────────────────────────────────
-const loadingMessages = [
-  'Loading...',
-  'Fetching data...',
-  'Getting things ready...',
-  'Almost there...',
-  'Syncing expenses...',
-  'Preparing your data...',
-  'Just a moment...',
-  'Loading expenses...',
-  'Retrieving records...',
-  'One sec...'
-];
-
-function getRandomLoadingMessage() {
-  return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
-}
-
 function showLoading(show) {
   const overlay = document.getElementById('loadingOverlay');
   const loadingText = document.getElementById('loadingText');
@@ -1451,6 +1889,58 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.key === 'Enter') confirmBudgetEdit();
     if (e.key === 'Escape') cancelBudgetEdit();
   });
+
+  // Handle Enter key in password inputs
+  const passwordInput = document.getElementById('passwordInput');
+  if (passwordInput) {
+    passwordInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handlePasswordSubmit();
+      if (e.key === 'Escape') backToNameSelection();
+    });
+  }
+
+  const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+  if (confirmPasswordInput) {
+    confirmPasswordInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleSetPassword();
+      if (e.key === 'Escape') backToNameSelection();
+    });
+  }
+
+  // Handle Enter key in change password inputs
+  const currentPasswordInput = document.getElementById('currentPasswordInput');
+  const newPasswordChange = document.getElementById('newPasswordChange');
+  const confirmPasswordChange = document.getElementById('confirmPasswordChange');
+
+  if (currentPasswordInput) {
+    currentPasswordInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        newPasswordChange.focus();
+      }
+      if (e.key === 'Escape') cancelChangePassword();
+    });
+  }
+
+  if (newPasswordChange) {
+    newPasswordChange.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        confirmPasswordChange.focus();
+      }
+      if (e.key === 'Escape') cancelChangePassword();
+    });
+  }
+
+  if (confirmPasswordChange) {
+    confirmPasswordChange.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleChangePassword();
+      if (e.key === 'Escape') cancelChangePassword();
+    });
+  }
+
+  // Load column visibility preferences
+  loadColumnVisibility();
 
   // Edit dialog keyboard shortcuts
   document.getElementById('editAmount').addEventListener('keydown', e => {
@@ -2148,6 +2638,110 @@ async function saveBatchExpenses() {
     setStatus('err', 'Some failed');
     showToast(`Added ${successCount}, failed ${failCount}`, 'err');
   }
+}
+
+// ─── COLUMN VISIBILITY TOGGLE ──────────────────────────────
+let visibleColumns = {
+  day: true,
+  desc: true,
+  cat: true,
+  name: false,
+  paidBy: false,
+  time: false,
+  amount: true
+};
+
+let archivedVisibleColumns = {
+  desc: true,
+  cat: true,
+  name: false,
+  paidBy: false,
+  amount: true,
+  day: true
+};
+
+function toggleColumn(column) {
+  visibleColumns[column] = !visibleColumns[column];
+
+  // Update checkbox state
+  const checkbox = document.getElementById(`col-${column}`);
+  if (checkbox) checkbox.checked = visibleColumns[column];
+
+  // Update table columns visibility
+  const headers = document.querySelectorAll(`th[data-column="${column}"]`);
+  const cells = document.querySelectorAll(`td[data-column="${column}"]`);
+
+  headers.forEach(th => {
+    th.style.display = visibleColumns[column] ? '' : 'none';
+  });
+  cells.forEach(td => {
+    td.style.display = visibleColumns[column] ? '' : 'none';
+  });
+
+  // Save preference to localStorage
+  localStorage.setItem('columnVisibility', JSON.stringify(visibleColumns));
+
+  // Re-render to apply changes
+  render();
+}
+
+function toggleArchivedColumn(column) {
+  archivedVisibleColumns[column] = !archivedVisibleColumns[column];
+
+  // Update checkbox state
+  const checkbox = document.getElementById(`archived-col-${column}`);
+  if (checkbox) checkbox.checked = archivedVisibleColumns[column];
+
+  // Update header visibility
+  const archivedTable = document.querySelector('#archived-section table');
+  if (archivedTable) {
+    const headers = archivedTable.querySelectorAll(`thead th[data-column="${column}"]`);
+    headers.forEach(th => {
+      th.style.display = archivedVisibleColumns[column] ? '' : 'none';
+    });
+  }
+
+  // Save preference to localStorage
+  localStorage.setItem('archivedColumnVisibility', JSON.stringify(archivedVisibleColumns));
+
+  // Re-render archived table
+  renderArchived();
+}
+
+// Load column visibility preferences on init
+function loadColumnVisibility() {
+  const saved = localStorage.getItem('columnVisibility');
+  if (saved) {
+    visibleColumns = JSON.parse(saved);
+  }
+
+  // Apply visibility to all columns
+  Object.keys(visibleColumns).forEach(column => {
+    const checkbox = document.getElementById(`col-${column}`);
+    if (checkbox) checkbox.checked = visibleColumns[column];
+
+    const headers = document.querySelectorAll(`th[data-column="${column}"]`);
+    const cells = document.querySelectorAll(`td[data-column="${column}"]`);
+
+    headers.forEach(th => {
+      th.style.display = visibleColumns[column] ? '' : 'none';
+    });
+    cells.forEach(td => {
+      td.style.display = visibleColumns[column] ? '' : 'none';
+    });
+  });
+
+  // Load archived column visibility
+  const archivedSaved = localStorage.getItem('archivedColumnVisibility');
+  if (archivedSaved) {
+    archivedVisibleColumns = JSON.parse(archivedSaved);
+  }
+
+  // Apply archived column visibility to checkboxes
+  Object.keys(archivedVisibleColumns).forEach(column => {
+    const checkbox = document.getElementById(`archived-col-${column}`);
+    if (checkbox) checkbox.checked = archivedVisibleColumns[column];
+  });
 }
 
 // Handle Enter key in note text area

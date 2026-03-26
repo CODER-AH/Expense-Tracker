@@ -333,3 +333,80 @@ async function firestoreDeleteNote(id) {
     throw error;
   }
 }
+
+// ============================================
+// USER AUTHENTICATION FUNCTIONS
+// ============================================
+
+/**
+ * Hash a password using SHA-256
+ * @param {string} password - Plain text password
+ * @returns {Promise<string>} Hex string of hashed password
+ */
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Get user credentials from Firebase
+ * @param {string} username - Username to fetch
+ * @returns {Promise<Object|null>} User credentials or null if not found
+ */
+async function firestoreGetUserCredentials(username) {
+  try {
+    const doc = await db.collection('users').doc(username).get();
+    if (doc.exists) {
+      return doc.data();
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting user credentials:', error);
+    throw error;
+  }
+}
+
+/**
+ * Set user password (hashed)
+ * @param {string} username - Username
+ * @param {string} password - Plain text password (will be hashed)
+ * @returns {Promise<boolean>} Success status
+ */
+async function firestoreSetUserPassword(username, password) {
+  try {
+    const hashedPassword = await hashPassword(password);
+    await db.collection('users').doc(username).set({
+      username: username,
+      passwordHash: hashedPassword,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    return true;
+  } catch (error) {
+    console.error('Error setting user password:', error);
+    throw error;
+  }
+}
+
+/**
+ * Verify user password
+ * @param {string} username - Username
+ * @param {string} password - Plain text password to verify
+ * @returns {Promise<boolean>} True if password matches
+ */
+async function firestoreVerifyPassword(username, password) {
+  try {
+    const userCreds = await firestoreGetUserCredentials(username);
+    if (!userCreds || !userCreds.passwordHash) {
+      return false;
+    }
+    const hashedPassword = await hashPassword(password);
+    return hashedPassword === userCreds.passwordHash;
+  } catch (error) {
+    console.error('Error verifying password:', error);
+    throw error;
+  }
+}
