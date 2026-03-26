@@ -2419,18 +2419,8 @@ function toggleNoteSelection(id) {
     checkbox.checked = selectedNotes.has(id);
   }
 
-  // Update bulk action button
-  updateNoteBulkActionButtons();
-}
-
-function updateNoteBulkActionButtons() {
-  const count = selectedNotes.size;
-  const bulkDeleteBtn = document.getElementById('bulkDeleteNotesBtn');
-
-  if (bulkDeleteBtn) {
-    bulkDeleteBtn.disabled = count === 0;
-    bulkDeleteBtn.textContent = count > 0 ? `Delete Selected (${count})` : 'Delete Selected';
-  }
+  // Update bulk action buttons
+  updateNoteBulkActions();
 }
 
 async function bulkCompleteNotes() {
