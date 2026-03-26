@@ -1,6 +1,7 @@
 name: Deploy to Google Apps Script
 
 on:
+  workflow_dispatch:  # Allow manual trigger from GitHub Actions UI
   push:
     branches:
       - main
