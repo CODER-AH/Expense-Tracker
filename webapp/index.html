@@ -54,6 +54,24 @@
   </div>
 </div>
 
+<!-- CHANGE PASSWORD OVERLAY -->
+<div class="name-overlay" id="changePasswordOverlay" style="display:none">
+  <div class="name-box">
+    <div class="emoji">🔑</div>
+    <h2>Change Password</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Enter your current password to continue</p>
+
+    <input type="password" id="currentPasswordInput" placeholder="Current password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:10px;transition:border-color 0.15s">
+    <input type="password" id="newPasswordChange" placeholder="New password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:10px;transition:border-color 0.15s">
+    <input type="password" id="confirmPasswordChange" placeholder="Confirm new password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:14px;transition:border-color 0.15s">
+
+    <div id="changePasswordError" style="color:#e86e8a;font-size:12px;margin-bottom:10px;display:none"></div>
+
+    <button id="changePasswordBtn" onclick="handleChangePassword()">Update Password →</button>
+    <button onclick="cancelChangePassword()" style="margin-top:8px;background:transparent;border:1px solid var(--border);color:var(--muted)">Cancel</button>
+  </div>
+</div>
+
 <!-- HEADER -->
 <div class="header">
   <div class="route">📍 Bangalore → Mysore → Madikeri → Coorg</div>
@@ -65,9 +83,15 @@
 <div class="status-bar" id="statusBar">
   <div class="status-dot" id="statusDot"></div>
   <div class="status-text" id="statusText">Connecting…</div>
-  <div class="user-chip" id="userChip" onclick="changeName()" title="Tap to change name">
-    <div class="avatar" id="userAvatar">?</div>
-    <span id="userChipName">—</span>
+  <div style="position:relative">
+    <div class="user-chip" id="userChip" onclick="toggleProfileMenu()" title="Profile menu">
+      <div class="avatar" id="userAvatar">?</div>
+      <span id="userChipName">—</span>
+    </div>
+    <div class="profile-dropdown" id="profileDropdown" style="display:none">
+      <div class="profile-option" onclick="showChangePasswordDialog()">🔑 Change Password</div>
+      <div class="profile-option logout-option" onclick="handleLogout()">🚪 Logout</div>
+    </div>
   </div>
 </div>
 

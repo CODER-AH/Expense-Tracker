@@ -372,6 +372,112 @@ function changeName() {
   document.getElementById('loginOverlay').classList.remove('hidden');
 }
 
+// ─── PROFILE MENU ──────────────────────────────────────────
+function toggleProfileMenu() {
+  const dropdown = document.getElementById('profileDropdown');
+  dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+}
+
+function handleLogout() {
+  // Close profile menu
+  document.getElementById('profileDropdown').style.display = 'none';
+
+  // Clear authentication
+  sessionStorage.removeItem('authenticated');
+  currentUser = null;
+  localStorage.removeItem('coorg_username');
+
+  // Reset to name selection
+  backToNameSelection();
+
+  // Show login overlay
+  document.getElementById('loginOverlay').classList.remove('hidden');
+}
+
+function showChangePasswordDialog() {
+  // Close profile menu
+  document.getElementById('profileDropdown').style.display = 'none';
+
+  // Show change password overlay
+  document.getElementById('changePasswordOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('currentPasswordInput').focus(), 100);
+}
+
+function cancelChangePassword() {
+  document.getElementById('changePasswordOverlay').style.display = 'none';
+  document.getElementById('currentPasswordInput').value = '';
+  document.getElementById('newPasswordChange').value = '';
+  document.getElementById('confirmPasswordChange').value = '';
+  document.getElementById('changePasswordError').style.display = 'none';
+}
+
+async function handleChangePassword() {
+  const currentPassword = document.getElementById('currentPasswordInput').value;
+  const newPassword = document.getElementById('newPasswordChange').value;
+  const confirmPassword = document.getElementById('confirmPasswordChange').value;
+  const errorDiv = document.getElementById('changePasswordError');
+  const btn = document.getElementById('changePasswordBtn');
+
+  errorDiv.style.display = 'none';
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    errorDiv.textContent = 'Please fill in all fields';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    errorDiv.textContent = 'New password must be at least 6 characters';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    errorDiv.textContent = 'New passwords do not match';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  if (currentPassword === newPassword) {
+    errorDiv.textContent = 'New password must be different from current password';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Updating...';
+
+  try {
+    // Verify current password
+    const isValid = await firestoreVerifyPassword(currentUser, currentPassword);
+
+    if (!isValid) {
+      errorDiv.textContent = 'Current password is incorrect';
+      errorDiv.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Update Password →';
+      return;
+    }
+
+    // Update to new password
+    await firestoreSetUserPassword(currentUser, newPassword);
+
+    // Success
+    cancelChangePassword();
+    showToast('Password changed successfully!', 'ok');
+    btn.disabled = false;
+    btn.textContent = 'Update Password →';
+  } catch (error) {
+    console.error('Error changing password:', error);
+    errorDiv.textContent = 'Failed to change password - check your connection';
+    errorDiv.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Update Password →';
+  }
+}
+
+// Close profile dropdown when clicking outside
+
 // OLD function - now replaced
 /*
 function saveName() {
@@ -1384,6 +1490,10 @@ document.addEventListener('click', function(e) {
   if (!e.target.closest('.custom-select')) {
     document.querySelectorAll('.custom-select-dropdown').forEach(d => d.classList.remove('active'));
   }
+  if (!e.target.closest('.user-chip') && !e.target.closest('.profile-dropdown')) {
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (profileDropdown) profileDropdown.style.display = 'none';
+  }
 });
 
 function filterExpenses() {
@@ -1640,6 +1750,38 @@ document.addEventListener('DOMContentLoaded', function() {
     confirmPasswordInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') handleSetPassword();
       if (e.key === 'Escape') backToNameSelection();
+    });
+  }
+
+  // Handle Enter key in change password inputs
+  const currentPasswordInput = document.getElementById('currentPasswordInput');
+  const newPasswordChange = document.getElementById('newPasswordChange');
+  const confirmPasswordChange = document.getElementById('confirmPasswordChange');
+
+  if (currentPasswordInput) {
+    currentPasswordInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        newPasswordChange.focus();
+      }
+      if (e.key === 'Escape') cancelChangePassword();
+    });
+  }
+
+  if (newPasswordChange) {
+    newPasswordChange.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        confirmPasswordChange.focus();
+      }
+      if (e.key === 'Escape') cancelChangePassword();
+    });
+  }
+
+  if (confirmPasswordChange) {
+    confirmPasswordChange.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleChangePassword();
+      if (e.key === 'Escape') cancelChangePassword();
     });
   }
 

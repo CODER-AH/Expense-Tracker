@@ -195,6 +195,41 @@
     font-weight: 700;
   }
 
+  /* Profile dropdown menu */
+  .profile-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 180px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+  }
+  .profile-option {
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .profile-option:hover {
+    background: rgba(72, 126, 98, 0.15);
+    color: var(--accent);
+  }
+  .profile-option.logout-option:hover {
+    background: rgba(232, 110, 138, 0.15);
+    color: #e86e8a;
+  }
+
+
   /* SUMMARY CARDS */
   .summary-grid {
     display: flex;
