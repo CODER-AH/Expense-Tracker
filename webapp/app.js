@@ -254,6 +254,7 @@ async function loadFromSheet() {
   try {
     // Load expenses from Firebase (primary)
     const data = await dbGetAllExpenses();
+    console.log('Loaded expenses from Firebase:', data);
 
     // Initialize expenses object for all trip days
     expenses = {};
@@ -277,6 +278,7 @@ async function loadFromSheet() {
 
     // Load budget from Firebase
     tripBudget = await dbGetBudget();
+    console.log('Loaded budget from Firebase:', tripBudget);
     if (tripBudget) {
       localStorage.setItem('coorg_budget', tripBudget);
     }
@@ -285,6 +287,7 @@ async function loadFromSheet() {
     render();
     setStatus('ok', 'Synced ✓');
   } catch(e) {
+    console.error('Error loading from Firebase:', e);
     setStatus('err', 'Offline — showing local data');
     loadFromLocal();
     render();
