@@ -4,3 +4,7 @@
 *~
 .vscode/
 .idea/
+
+# Clasp credentials and config (keep these secret!)
+.clasprc.json
+.clasp.json
