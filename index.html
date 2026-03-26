@@ -205,21 +205,12 @@
 
   /* SUMMARY CARDS */
   .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     max-width: 1000px;
     margin: 24px auto 0;
-    justify-items: center;
-  }
-  /* Make big cards take full width when on their own row */
-  @supports (grid-template-columns: subgrid) or (not (grid-template-columns: subgrid)) {
-    .summary-grid {
-      grid-template-columns: repeat(4, 1fr);
-    }
-    .sum-card.big-card {
-      grid-column: span 2;
-    }
+    justify-content: center;
   }
   .sum-card {
     background: var(--card);
@@ -228,8 +219,14 @@
     padding: 16px;
     text-align: center;
     transition: transform 0.15s;
-    width: 100%;
-    min-width: 140px;
+    flex: 1 1 200px;
+    min-width: 180px;
+    max-width: 240px;
+  }
+  .sum-card.big-card {
+    flex: 1 1 420px;
+    min-width: 380px;
+    max-width: 490px;
   }
   .sum-card:hover { transform: translateY(-2px); }
   .sum-card .label {
@@ -908,20 +905,21 @@
 
   /* SETTLEMENT */
   .settlement-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     max-width: 1000px;
     margin: 0 auto;
-    justify-items: center;
+    justify-content: center;
   }
   .settlement-card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 16px 18px;
-    width: 100%;
+    flex: 1 1 280px;
     min-width: 280px;
+    max-width: 400px;
   }
   .settlement-card.balanced {
     border-color: var(--accent);
