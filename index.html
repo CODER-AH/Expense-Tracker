@@ -1085,12 +1085,26 @@
     .user-chip .avatar { width: 16px; height: 16px; font-size: 10px; }
 
     .add-form {
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto auto auto auto;
+      grid-template-columns: 1fr;
+      gap: 12px;
     }
-    .add-form > div:nth-child(3) { grid-column: span 2; }
-    .add-form > div:last-child   { grid-column: span 2; }
+    .add-form > div { grid-column: span 1; }
     .add-btn { width: 100%; justify-content: center; }
+
+    .multi-row-entry {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 12px;
+      background: var(--surface);
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .multi-row-entry > div:nth-child(6) { visibility: visible !important; }
+    .multi-row-entry > div:last-child {
+      display: flex;
+      justify-content: center;
+      margin-top: 8px;
+    }
   }
 </style>
 </head>
