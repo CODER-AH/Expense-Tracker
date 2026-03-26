@@ -924,19 +924,19 @@ function render() {
       tr.innerHTML = `
         ${isMultiSelectMode ? `<td style="text-align:center">${checkboxHtml}</td>` : ''}
         <td class="num-col">${startIdx + idx + 1}</td>
-        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">Day ${exp.day}</td>
-        <td>
+        <td data-column="day" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">Day ${exp.day}</td>
+        <td data-column="desc">
           ${editedBadge ? `<div style="margin-bottom:4px">${editedBadge}</div>` : ''}
           <div id="${descId}" class="${showTruncated ? 'desc-truncated' : 'desc-full'}">
             ${exp.desc}
           </div>
           ${showTruncated ? `<span class="show-more-btn" onclick="toggleDesc('${descId}')">Show more...</span>` : ''}
         </td>
-        <td style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
-        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
-        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
-        <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
-        <td class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
+        <td data-column="cat" style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
+        <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
+        <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
+        <td data-column="time" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
+        <td data-column="amount" class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
         ${!isMultiSelectMode ? `<td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${exp.day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>` : ''}
         ${!isMultiSelectMode ? `<td><button class="del-btn" onclick="showDeleteConfirm(${exp.day}, '${exp.id}')" title="Archive">🗃️</button></td>` : ''}
       `;
@@ -1451,6 +1451,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.key === 'Enter') confirmBudgetEdit();
     if (e.key === 'Escape') cancelBudgetEdit();
   });
+
+  // Load column visibility preferences
+  loadColumnVisibility();
 
   // Edit dialog keyboard shortcuts
   document.getElementById('editAmount').addEventListener('keydown', e => {
@@ -2148,6 +2151,63 @@ async function saveBatchExpenses() {
     setStatus('err', 'Some failed');
     showToast(`Added ${successCount}, failed ${failCount}`, 'err');
   }
+}
+
+// ─── COLUMN VISIBILITY TOGGLE ──────────────────────────────
+let visibleColumns = {
+  day: true,
+  desc: true,
+  cat: true,
+  name: false,
+  paidBy: false,
+  time: false,
+  amount: true
+};
+
+function toggleColumn(column) {
+  visibleColumns[column] = !visibleColumns[column];
+
+  // Update checkbox state
+  const checkbox = document.getElementById(`col-${column}`);
+  if (checkbox) checkbox.checked = visibleColumns[column];
+
+  // Update table columns visibility
+  const headers = document.querySelectorAll(`th[data-column="${column}"]`);
+  const cells = document.querySelectorAll(`td[data-column="${column}"]`);
+
+  headers.forEach(th => {
+    th.style.display = visibleColumns[column] ? '' : 'none';
+  });
+  cells.forEach(td => {
+    td.style.display = visibleColumns[column] ? '' : 'none';
+  });
+
+  // Save preference to localStorage
+  localStorage.setItem('columnVisibility', JSON.stringify(visibleColumns));
+}
+
+// Load column visibility preferences on init
+function loadColumnVisibility() {
+  const saved = localStorage.getItem('columnVisibility');
+  if (saved) {
+    visibleColumns = JSON.parse(saved);
+  }
+
+  // Apply visibility to all columns
+  Object.keys(visibleColumns).forEach(column => {
+    const checkbox = document.getElementById(`col-${column}`);
+    if (checkbox) checkbox.checked = visibleColumns[column];
+
+    const headers = document.querySelectorAll(`th[data-column="${column}"]`);
+    const cells = document.querySelectorAll(`td[data-column="${column}"]`);
+
+    headers.forEach(th => {
+      th.style.display = visibleColumns[column] ? '' : 'none';
+    });
+    cells.forEach(td => {
+      td.style.display = visibleColumns[column] ? '' : 'none';
+    });
+  });
 }
 
 // Handle Enter key in note text area

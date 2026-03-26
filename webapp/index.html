@@ -158,6 +158,42 @@
           <div class="filter-option" onclick="selectPersonFilter('Sahlaan', '👨‍⚕️ Sahlaan')">👨‍⚕️ Sahlaan</div>
         </div>
       </div>
+
+      <div style="position:relative">
+        <div class="filter-btn" id="columnFilterBtn" onclick="toggleFilterDropdown('column')">
+          <span>🔍 Columns</span>
+        </div>
+        <div class="filter-dropdown" id="columnFilterDropdown" style="min-width: 180px">
+          <div class="filter-option column-toggle" onclick="event.stopPropagation();toggleColumn('day')">
+            <input type="checkbox" id="col-day" checked onclick="event.stopPropagation();toggleColumn('day')">
+            <label for="col-day" onclick="event.stopPropagation()">Day</label>
+          </div>
+          <div class="filter-option column-toggle" onclick="event.stopPropagation();toggleColumn('desc')">
+            <input type="checkbox" id="col-desc" checked onclick="event.stopPropagation();toggleColumn('desc')">
+            <label for="col-desc" onclick="event.stopPropagation()">Description</label>
+          </div>
+          <div class="filter-option column-toggle" onclick="event.stopPropagation();toggleColumn('cat')">
+            <input type="checkbox" id="col-cat" checked onclick="event.stopPropagation();toggleColumn('cat')">
+            <label for="col-cat" onclick="event.stopPropagation()">Category</label>
+          </div>
+          <div class="filter-option column-toggle" onclick="event.stopPropagation();toggleColumn('name')">
+            <input type="checkbox" id="col-name" onclick="event.stopPropagation();toggleColumn('name')">
+            <label for="col-name" onclick="event.stopPropagation()">Added By</label>
+          </div>
+          <div class="filter-option column-toggle" onclick="event.stopPropagation();toggleColumn('paidBy')">
+            <input type="checkbox" id="col-paidBy" onclick="event.stopPropagation();toggleColumn('paidBy')">
+            <label for="col-paidBy" onclick="event.stopPropagation()">Paid By</label>
+          </div>
+          <div class="filter-option column-toggle" onclick="event.stopPropagation();toggleColumn('time')">
+            <input type="checkbox" id="col-time" onclick="event.stopPropagation();toggleColumn('time')">
+            <label for="col-time" onclick="event.stopPropagation()">Time</label>
+          </div>
+          <div class="filter-option column-toggle" onclick="event.stopPropagation();toggleColumn('amount')">
+            <input type="checkbox" id="col-amount" checked onclick="event.stopPropagation();toggleColumn('amount')">
+            <label for="col-amount" onclick="event.stopPropagation()">Amount</label>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -173,13 +209,13 @@
     <table>
       <thead><tr>
         <th style="white-space:nowrap">#</th>
-        <th style="white-space:nowrap">Day</th>
-        <th class="sortable" onclick="sortByColumn('desc')" style="white-space:nowrap">Description</th>
-        <th class="sortable" onclick="sortByColumn('cat')" style="white-space:nowrap">Category</th>
-        <th class="sortable" onclick="sortByColumn('name')" style="white-space:nowrap">Added By</th>
-        <th class="sortable" onclick="sortByColumn('paidBy')" style="white-space:nowrap">Paid By</th>
-        <th class="sortable" onclick="sortByColumn('time')" style="white-space:nowrap">Time</th>
-        <th class="sortable" onclick="sortByColumn('amount')" style="text-align:right;white-space:nowrap">Amount</th>
+        <th data-column="day" style="white-space:nowrap">Day</th>
+        <th data-column="desc" class="sortable" onclick="sortByColumn('desc')" style="white-space:nowrap">Description</th>
+        <th data-column="cat" class="sortable" onclick="sortByColumn('cat')" style="white-space:nowrap">Category</th>
+        <th data-column="name" class="sortable" onclick="sortByColumn('name')" style="white-space:nowrap;display:none">Added By</th>
+        <th data-column="paidBy" class="sortable" onclick="sortByColumn('paidBy')" style="white-space:nowrap;display:none">Paid By</th>
+        <th data-column="time" class="sortable" onclick="sortByColumn('time')" style="white-space:nowrap;display:none">Time</th>
+        <th data-column="amount" class="sortable" onclick="sortByColumn('amount')" style="text-align:right;white-space:nowrap">Amount</th>
         <th style="white-space:nowrap"></th><th style="white-space:nowrap"></th>
       </tr></thead>
       <tbody id="expenses-body"></tbody>
