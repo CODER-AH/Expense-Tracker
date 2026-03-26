@@ -1204,19 +1204,19 @@ function render() {
       tr.innerHTML = `
         ${isMultiSelectMode ? `<td style="text-align:center">${checkboxHtml}</td>` : ''}
         <td class="num-col">${startIdx + idx + 1}</td>
-        <td data-column="day" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">Day ${exp.day}</td>
-        <td data-column="desc">
+        <td data-column="day" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.day ? 'display:none;' : ''}">Day ${exp.day}</td>
+        <td data-column="desc" style="${!visibleColumns.desc ? 'display:none;' : ''}">
           ${editedBadge ? `<div style="margin-bottom:4px">${editedBadge}</div>` : ''}
           <div id="${descId}" class="${showTruncated ? 'desc-truncated' : 'desc-full'}">
             ${exp.desc}
           </div>
           ${showTruncated ? `<span class="show-more-btn" onclick="toggleDesc('${descId}')">Show more...</span>` : ''}
         </td>
-        <td data-column="cat" style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
-        <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
-        <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
-        <td data-column="time" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
-        <td data-column="amount" class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
+        <td data-column="cat" style="white-space:nowrap;${!visibleColumns.cat ? 'display:none;' : ''}"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
+        <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.name ? 'display:none;' : ''}">${exp.name || '—'}</td>
+        <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.paidBy ? 'display:none;' : ''}">${exp.paidBy || '—'}</td>
+        <td data-column="time" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.time ? 'display:none;' : ''}">${timeStr}</td>
+        <td data-column="amount" class="amount-col" style="white-space:nowrap;${!visibleColumns.amount ? 'display:none;' : ''}">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
         ${!isMultiSelectMode ? `<td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${exp.day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>` : ''}
         ${!isMultiSelectMode ? `<td><button class="del-btn" onclick="showDeleteConfirm(${exp.day}, '${exp.id}')" title="Archive">🗃️</button></td>` : ''}
       `;
