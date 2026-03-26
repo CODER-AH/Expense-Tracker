@@ -28,16 +28,26 @@ jobs:
       - name: Create clasp credentials
         run: |
           mkdir -p ~/.config/@google
-          # Create .clasprc.json with correct format for newer clasp
-          cat > ~/.clasprc.json << 'CLASPRC'
+          # Create temporary file with the credentials
+          cat > /tmp/creds.json << 'CLASPRC'
           ${{ secrets.CLASP_CREDENTIALS }}
           CLASPRC
+
+          # Transform from nested tokens.default structure to flat structure clasp expects
+          echo "Transforming credentials format..."
+          jq '{
+            token: {
+              access_token: .tokens.default.access_token,
+              refresh_token: .tokens.default.refresh_token,
+              token_type: .tokens.default.token_type,
+              expiry_date: .tokens.default.expiry_date
+            }
+          }' /tmp/creds.json > ~/.clasprc.json
+
           echo "Credentials file created"
-          echo "Checking file structure..."
-          # Validate JSON structure
-          if ! jq empty ~/.clasprc.json 2>/dev/null; then
-            echo "Warning: Invalid JSON format"
-          fi
+          echo "Structure (tokens hidden):"
+          jq 'del(.token.access_token, .token.refresh_token)' ~/.clasprc.json
+          rm /tmp/creds.json
 
       - name: Verify .clasp.json exists
         run: |
