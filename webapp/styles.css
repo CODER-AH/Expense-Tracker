@@ -1094,23 +1094,23 @@
     .user-chip .avatar { width: 16px; height: 16px; font-size: 10px; }
 
     .add-section {
-      overflow: visible;
+      overflow: visible !important;
     }
     .add-form {
       grid-template-columns: 1fr;
       gap: 12px;
-      overflow: visible;
+      overflow: visible !important;
     }
     .add-form > div {
       grid-column: span 1;
-      overflow: visible;
+      overflow: visible !important;
       position: relative;
       z-index: 1;
     }
     .add-btn { width: 100%; justify-content: center; }
 
     .multi-row-container {
-      overflow: visible;
+      overflow: visible !important;
     }
     .multi-row-entry {
       grid-template-columns: 1fr;
@@ -1119,10 +1119,10 @@
       background: var(--surface);
       border-radius: 8px;
       margin-bottom: 12px;
-      overflow: visible;
+      overflow: visible !important;
     }
     .multi-row-entry > div {
-      overflow: visible;
+      overflow: visible !important;
       position: relative;
       z-index: 1;
     }
@@ -1137,13 +1137,17 @@
     .custom-select {
       position: relative;
       z-index: 10;
+      overflow: visible !important;
     }
     .custom-select-dropdown {
-      position: absolute;
-      z-index: 1000;
+      position: absolute !important;
+      z-index: 9999 !important;
+      background: #1a2620 !important;
+      opacity: 1 !important;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important;
     }
     .custom-select-dropdown.active {
-      position: absolute;
-      z-index: 1000;
+      display: block !important;
+      z-index: 9999 !important;
     }
   }
