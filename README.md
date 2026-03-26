@@ -1,47 +1,20 @@
 # Coorg Trip Expense Tracker
 
-A beautiful expense tracking app for managing trip expenses with real-time Google Sheets sync.
+A modern, feature-rich expense tracking application designed for group trips with real-time Google Sheets synchronization, custom styled UI components, and full mobile responsiveness.
 
 ## Features
 
-### Core Functionality
-- ✅ **Multi-row expense entry** - Add up to 3 expenses at once with a single save action
-- ✅ **Inline editing** - Edit expenses directly in the table without opening forms
-- ✅ **Archive system** - Archive expenses instead of deletion, with restore option
-- ✅ **Soft delete** - Deleted expenses flagged but never removed from Google Sheets (full audit trail)
-- ✅ **Smart confirmations** - Custom dialogs showing full expense details before archive/delete
-- ✅ **User tracking** - Track who added each expense with emoji indicators (👨‍💻 for techies, 👨‍⚕️ for doctor)
-- ✅ **Real-time sync** - All changes sync to Google Sheets instantly with visual status indicator
-- ✅ **Offline support** - Works offline with localStorage, syncs when back online
-
-### Organization & Display
-- ✅ **Day-wise tracking** - Organize expenses by trip days (Day 1, Day 2)
-- ✅ **Category-based** - Food, Fuel, Stay, Transport, Entry Fees, Miscellaneous
-- ✅ **Pagination** - View 10 entries per page with page navigation
-- ✅ **Sorting** - Sort by description, category, name, paid by, time, or amount (ascending/descending)
-- ✅ **Custom filters** - Beautiful custom filter dropdowns for day and person filtering
-- ✅ **Description truncation** - Long descriptions auto-truncate with "Show more" option
-- ✅ **Collapsible sections** - All sections (Insights, Settlement, Add Expense, History, Notes, Archived) can be collapsed
-
-### Settlement & Analytics
-- ✅ **Budget tracking** - Set trip budget with visual indicators (green/orange/red based on usage)
-- ✅ **Dynamic color-coding** - Total spent changes color based on budget (green < 85%, orange 85-100%, red > 100%)
-- ✅ **Automatic settlement calculator** - Splits total equally among 4 people
-- ✅ **Minimum transactions** - Calculates who owes whom with fewest transfers needed
-- ✅ **Category totals** - See spending breakdown by category
-- ✅ **Person totals** - Track how much each person paid with emoji indicators
-- ✅ **Edit tracking** - Visual badge shows if an expense was edited
-
-### UI & Design
-- ✅ **Beautiful dark theme** - Elegant dark green design with custom colors
-- ✅ **Floating status bar** - Compact sync indicator at top-right, auto-hides on scroll down
-- ✅ **Glass morphism effects** - Modern backdrop blur and transparency
-- ✅ **Large focal cards** - Budget and Total Spent prominently displayed as 2x size
-- ✅ **Mobile responsive** - Works seamlessly on phones and tablets
-- ✅ **Loading states** - Spinner overlay during data fetch
-- ✅ **Toast notifications** - User feedback for all actions
-- ✅ **Custom UI components** - No browser default dialogs, all custom styled
-- ✅ **Improved readability** - Increased font sizes across the app
+- ✅ Add, edit, and archive expenses (single or bulk entry)
+- ✅ Track expenses by day, category, and payer
+- ✅ Multiple payer support with custom names
+- ✅ Real-time sync with Google Sheets backend
+- ✅ Offline support with localStorage fallback
+- ✅ Beautiful dark theme with custom styled dropdowns
+- ✅ Fully responsive design (mobile-first)
+- ✅ Budget tracking with visual indicators
+- ✅ Settlement calculations and summary cards
+- ✅ Filter and sort functionality
+- ✅ Edit history tracking with timestamps
 
 ## Deployment Instructions
 
@@ -169,39 +142,48 @@ Edit the header section (around line 862-866):
 
 ## Categories
 
-The app supports the following expense categories:
-- ⛽ **Fuel** - Gas station fills
-- 🍽️ **Food** - Restaurants, snacks, meals
-- 🏨 **Stay** - Hotels, accommodations
-- 🎟️ **Entry Fees** - Tickets, admissions
-- 🚙 **Transport** - Jeep rentals, cabs, local transport
-- 🛍️ **Miscellaneous** - Shopping, other expenses
+- ⛽ Fuel
+- 🍽️ Food
+- 🏨 Stay
+- 🎟️ Entry
+- 🚙 Jeep/Transport
+- 🛍️ Misc
 
-## Technology Stack
-
-- **Frontend**: Pure HTML5, CSS3, JavaScript (Vanilla JS)
-- **Backend**: Google Apps Script (serverless)
-- **Storage**: Google Sheets + localStorage
-- **Hosting**: GitHub Pages
-- **Fonts**: Google Fonts (DM Sans, DM Mono, Playfair Display)
-
-## Repository Structure
+## Project Structure
 
 ```
-.
-├── index.html                           # Main application file
-├── GoogleAppsScript_v2_UPDATE_THIS.gs  # Backend script for Google Sheets
-├── README.md                           # Project documentation
-├── CHANGES_SUMMARY.md                  # Detailed change log
-├── .gitignore                          # Git ignore rules
-└── .github/
-    └── CODEOWNERS                      # Code ownership configuration
+/
+├── index.html          # Main HTML structure
+├── styles.css          # All CSS styles (1107 lines)
+├── app.js             # All JavaScript logic (1731 lines)
+└── README.md          # Documentation
 ```
 
-## Live Demo
+## Recent Updates
 
-This tracker is deployed at: `https://CODER-AH.github.io/Expense-Tracker/`
+### UI/UX Improvements
+- **Custom Dropdowns**: Replaced native select elements with styled custom dropdowns matching the filter/sort design
+- **Responsive Layout**: Enhanced mobile responsiveness with single-column layout for screens < 640px
+- **Section Width**: Increased from 860px to 1000px for better laptop viewing
+- **Settlement Cards**: Set to 2x2 grid layout (2 cards per row)
+- **Tile Centering**: Centered tiles in summary/settlement grids when fewer items in last row
+- **Delete Button**: Fixed overflow issue in add multiple items section (reduced width to 40px)
+- **Dropdown Visibility**: Fixed clipping issues by adjusting overflow handling
+- **Font**: Added Playfair Display for numbers in tiles, DM Mono and DM Sans for UI
 
-## Support & Issues
+### Code Organization
+- Separated monolithic 3271-line HTML file into modular structure:
+  - HTML (431 lines) - structure only
+  - CSS (1107 lines) - all styles
+  - JS (1731 lines) - all logic
+- Maintained exact functionality during reorganization
 
-For bugs or feature requests, please open an issue on GitHub.
+### Mobile Optimization
+- Single-column layout for screens < 640px
+- Horizontal scroll for medium screens (641-900px)
+- Proper dropdown positioning across all screen sizes
+
+### User Experience
+- Consistent placeholder text across single and multi-row entry forms
+- Better visual feedback for custom dropdown interactions
+- Improved touch targets for mobile users
