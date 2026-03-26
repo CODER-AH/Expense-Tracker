@@ -15,6 +15,24 @@ const CAT_CONFIG = {
   misc:      { label: '🛍️ Miscellaneous',  color: '#5dba8a', bg: '#0e2418' },
 };
 
+// ─── LOADING MESSAGES ─────────────────────────────────────
+const loadingMessages = [
+  'Loading...',
+  'Fetching data...',
+  'Getting things ready...',
+  'Almost there...',
+  'Syncing expenses...',
+  'Preparing your data...',
+  'Just a moment...',
+  'Loading expenses...',
+  'Retrieving records...',
+  'One sec...'
+];
+
+function getRandomLoadingMessage() {
+  return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+}
+
 // ─── STATE ────────────────────────────────────────────────
 let expenses = { 1: [], 2: [] };
 let archivedExpenses = [];
@@ -221,11 +239,53 @@ window.onload = () => {
 
 // ─── LOGIN & AUTHENTICATION ───────────────────────────────
 let selectedLoginUser = null;
+let selectedLoginValue = null;
+
+function toggleLoginDropdown() {
+  const dropdown = document.getElementById('loginDropdown');
+  const isActive = dropdown.classList.contains('active');
+
+  // Close dropdown if it's open
+  if (isActive) {
+    dropdown.classList.remove('active');
+    return;
+  }
+
+  // Open dropdown
+  dropdown.classList.add('active');
+
+  // Check viewport and adjust position if needed
+  setTimeout(() => {
+    const dropdownRect = dropdown.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+
+    // Reset positioning first
+    dropdown.style.top = '100%';
+    dropdown.style.bottom = 'auto';
+    dropdown.style.marginTop = '4px';
+    dropdown.style.marginBottom = '0';
+
+    // If dropdown goes below viewport, open it upward
+    if (dropdownRect.bottom > viewportHeight - 20) {
+      dropdown.style.top = 'auto';
+      dropdown.style.bottom = '100%';
+      dropdown.style.marginTop = '0';
+      dropdown.style.marginBottom = '4px';
+    }
+  }, 0);
+}
+
+function selectLoginName(value, label) {
+  selectedLoginValue = value;
+  document.getElementById('loginNameLabel').textContent = label;
+  document.getElementById('loginNameLabel').style.color = 'var(--text)';
+  document.getElementById('loginDropdown').classList.remove('active');
+}
 
 async function proceedToPassword() {
-  const name = document.getElementById('nameInput').value.trim();
+  const name = selectedLoginValue?.trim();
   if (!name) {
-    document.getElementById('nameInput').focus();
+    document.getElementById('loginNameLabel').style.color = '#e86e8a';
     return;
   }
 
@@ -352,6 +412,9 @@ function backToNameSelection() {
   document.getElementById('loginTitle').textContent = 'Welcome Back!';
   document.getElementById('loginSubtitle').textContent = 'Select your name to continue';
   selectedLoginUser = null;
+  selectedLoginValue = null;
+  document.getElementById('loginNameLabel').textContent = 'Select your name...';
+  document.getElementById('loginNameLabel').style.color = 'var(--muted)';
 }
 
 function hideLoginOverlay() {
@@ -535,13 +598,6 @@ function changeName() {
   setTimeout(() => document.getElementById('nameInput').focus(), 100);
 }
 */
-
-document.getElementById('nameInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveName();
-});
-document.getElementById('nameInput').addEventListener('change', e => {
-  if (e.target.value) saveName();
-});
 
 // ─── LOCAL STORAGE FALLBACK ───────────────────────────────
 function saveLocal() {
@@ -969,12 +1025,12 @@ function renderArchived() {
     tr.innerHTML = `
       ${archiveMultiSelectMode ? `<td style="text-align:center">${checkboxHtml}</td>` : ''}
       <td class="num-col">${idx + 1}</td>
-      <td style="font-size:13px">${exp.desc}</td>
-      <td style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
-      <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
-      <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
-      <td class="amount-col" style="white-space:nowrap">₹${Number(exp.amount).toLocaleString('en-IN')}</td>
-      <td style="font-size:11px;color:var(--muted)">Day ${exp.archivedDay}</td>
+      <td data-column="desc" style="font-size:13px;${!archivedVisibleColumns.desc ? 'display:none;' : ''}">${exp.desc}</td>
+      <td data-column="cat" style="white-space:nowrap;${!archivedVisibleColumns.cat ? 'display:none;' : ''}"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
+      <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!archivedVisibleColumns.name ? 'display:none;' : ''}">${exp.name || '—'}</td>
+      <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!archivedVisibleColumns.paidBy ? 'display:none;' : ''}">${exp.paidBy || '—'}</td>
+      <td data-column="amount" class="amount-col" style="white-space:nowrap;text-align:right;${!archivedVisibleColumns.amount ? 'display:none;' : ''}">₹${Number(exp.amount).toLocaleString('en-IN')}</td>
+      <td data-column="day" style="font-size:11px;color:var(--muted);${!archivedVisibleColumns.day ? 'display:none;' : ''}">Day ${exp.archivedDay}</td>
       ${!archiveMultiSelectMode ? `<td><button class="del-btn" onclick="showUnarchiveConfirm('${exp.id}')" title="Unarchive" style="background:var(--accent);color:#0e1412">↩️</button></td>` : ''}
       ${!archiveMultiSelectMode ? `<td><button class="del-btn" onclick="showPermanentDeleteConfirm('${exp.id}')" title="Delete Permanently">🗑️</button></td>` : ''}
     `;
@@ -1469,11 +1525,32 @@ function toggleFilterDropdown(type) {
   const isActive = dropdown.classList.contains('active');
 
   // Close all dropdowns first
-  document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.filter-dropdown').forEach(d => {
+    d.classList.remove('active');
+    // Reset positioning
+    d.style.top = '';
+    d.style.bottom = '';
+    d.style.marginTop = '';
+    d.style.marginBottom = '';
+  });
 
   // Toggle the clicked dropdown
   if (!isActive) {
     dropdown.classList.add('active');
+
+    // Check viewport and adjust position if needed
+    setTimeout(() => {
+      const dropdownRect = dropdown.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+
+      // If dropdown goes below viewport, open it upward
+      if (dropdownRect.bottom > viewportHeight - 20) {
+        dropdown.style.top = 'auto';
+        dropdown.style.bottom = '100%';
+        dropdown.style.marginTop = '0';
+        dropdown.style.marginBottom = '4px';
+      }
+    }, 0);
   }
 }
 
@@ -1646,23 +1723,6 @@ function setStatus(state, text) {
   document.getElementById('statusText').textContent = text;
 }
 // ─── LOADING & TOAST ──────────────────────────────────────
-const loadingMessages = [
-  'Loading...',
-  'Fetching data...',
-  'Getting things ready...',
-  'Almost there...',
-  'Syncing expenses...',
-  'Preparing your data...',
-  'Just a moment...',
-  'Loading expenses...',
-  'Retrieving records...',
-  'One sec...'
-];
-
-function getRandomLoadingMessage() {
-  return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
-}
-
 function showLoading(show) {
   const overlay = document.getElementById('loadingOverlay');
   const loadingText = document.getElementById('loadingText');
@@ -2559,6 +2619,15 @@ let visibleColumns = {
   amount: true
 };
 
+let archivedVisibleColumns = {
+  desc: true,
+  cat: true,
+  name: false,
+  paidBy: false,
+  amount: true,
+  day: true
+};
+
 function toggleColumn(column) {
   visibleColumns[column] = !visibleColumns[column];
 
@@ -2579,6 +2648,32 @@ function toggleColumn(column) {
 
   // Save preference to localStorage
   localStorage.setItem('columnVisibility', JSON.stringify(visibleColumns));
+
+  // Re-render to apply changes
+  render();
+}
+
+function toggleArchivedColumn(column) {
+  archivedVisibleColumns[column] = !archivedVisibleColumns[column];
+
+  // Update checkbox state
+  const checkbox = document.getElementById(`archived-col-${column}`);
+  if (checkbox) checkbox.checked = archivedVisibleColumns[column];
+
+  // Update header visibility
+  const archivedTable = document.querySelector('#archived-section table');
+  if (archivedTable) {
+    const headers = archivedTable.querySelectorAll(`thead th[data-column="${column}"]`);
+    headers.forEach(th => {
+      th.style.display = archivedVisibleColumns[column] ? '' : 'none';
+    });
+  }
+
+  // Save preference to localStorage
+  localStorage.setItem('archivedColumnVisibility', JSON.stringify(archivedVisibleColumns));
+
+  // Re-render archived table
+  renderArchived();
 }
 
 // Load column visibility preferences on init
@@ -2602,6 +2697,18 @@ function loadColumnVisibility() {
     cells.forEach(td => {
       td.style.display = visibleColumns[column] ? '' : 'none';
     });
+  });
+
+  // Load archived column visibility
+  const archivedSaved = localStorage.getItem('archivedColumnVisibility');
+  if (archivedSaved) {
+    archivedVisibleColumns = JSON.parse(archivedSaved);
+  }
+
+  // Apply archived column visibility to checkboxes
+  Object.keys(archivedVisibleColumns).forEach(column => {
+    const checkbox = document.getElementById(`archived-col-${column}`);
+    if (checkbox) checkbox.checked = archivedVisibleColumns[column];
   });
 }
 
