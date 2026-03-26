@@ -521,7 +521,12 @@
     background: var(--card);
     margin-bottom: 8px;
   }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    table-layout: auto; /* Allow columns to resize dynamically */
+  }
   thead th {
     padding: 12px 14px;
     text-align: left;
@@ -535,6 +540,19 @@
     cursor: pointer;
     user-select: none;
     transition: color 0.15s, background 0.15s;
+    white-space: nowrap; /* Prevent header text wrapping */
+  }
+  /* Make description column expand to fill available space */
+  thead th[data-column="desc"],
+  tbody td[data-column="desc"] {
+    width: auto;
+    min-width: 200px; /* Minimum width for readability */
+  }
+  /* Keep other columns compact */
+  thead th:not([data-column="desc"]),
+  tbody td:not([data-column="desc"]) {
+    width: 1%; /* Shrink to content */
+    white-space: nowrap;
   }
   thead th:hover {
     color: var(--text);

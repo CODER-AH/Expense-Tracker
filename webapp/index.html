@@ -253,15 +253,15 @@
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th style="white-space:nowrap">#</th>
-        <th data-column="day" style="white-space:nowrap">Day</th>
-        <th data-column="desc" class="sortable" onclick="sortByColumn('desc')" style="white-space:nowrap">Description</th>
-        <th data-column="cat" class="sortable" onclick="sortByColumn('cat')" style="white-space:nowrap">Category</th>
-        <th data-column="name" class="sortable" onclick="sortByColumn('name')" style="white-space:nowrap;display:none">Added By</th>
-        <th data-column="paidBy" class="sortable" onclick="sortByColumn('paidBy')" style="white-space:nowrap;display:none">Paid By</th>
-        <th data-column="time" class="sortable" onclick="sortByColumn('time')" style="white-space:nowrap;display:none">Time</th>
-        <th data-column="amount" class="sortable" onclick="sortByColumn('amount')" style="text-align:right;white-space:nowrap">Amount</th>
-        <th style="white-space:nowrap"></th><th style="white-space:nowrap"></th>
+        <th>#</th>
+        <th data-column="day">Day</th>
+        <th data-column="desc" class="sortable" onclick="sortByColumn('desc')">Description</th>
+        <th data-column="cat" class="sortable" onclick="sortByColumn('cat')">Category</th>
+        <th data-column="name" class="sortable" onclick="sortByColumn('name')" style="display:none">Added By</th>
+        <th data-column="paidBy" class="sortable" onclick="sortByColumn('paidBy')" style="display:none">Paid By</th>
+        <th data-column="time" class="sortable" onclick="sortByColumn('time')" style="display:none">Time</th>
+        <th data-column="amount" class="sortable" onclick="sortByColumn('amount')" style="text-align:right">Amount</th>
+        <th></th><th></th>
       </tr></thead>
       <tbody id="expenses-body"></tbody>
     </table>
