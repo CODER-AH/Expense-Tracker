@@ -309,7 +309,6 @@
     gap: 10px;
     align-items: end;
     min-width: min-content;
-    overflow-x: auto;
   }
   .multi-row-container {
     background: var(--card);
@@ -332,7 +331,6 @@
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border);
     min-width: min-content;
-    overflow-x: auto;
   }
   .multi-row-entry:last-child {
     border-bottom: none;
@@ -1066,6 +1064,15 @@
   }
 
   /* RESPONSIVE */
+  @media (max-width: 900px) and (min-width: 641px) {
+    .add-section {
+      overflow-x: auto;
+    }
+    .multi-row-container {
+      overflow-x: auto;
+    }
+  }
+
   @media (max-width: 640px) {
     .summary-grid {
       grid-template-columns: repeat(2, 1fr);
