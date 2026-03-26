@@ -29,8 +29,21 @@ const loadingMessages = [
   'One sec...'
 ];
 
+const authMessages = [
+  'Authenticating...',
+  'Verifying credentials...',
+  'Checking password...',
+  'Logging you in...',
+  'Securing connection...',
+  'Almost there...'
+];
+
 function getRandomLoadingMessage() {
   return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+}
+
+function getRandomAuthMessage() {
+  return authMessages[Math.floor(Math.random() * authMessages.length)];
 }
 
 // ─── PASSWORD VISIBILITY TOGGLE ───────────────────────────
@@ -339,6 +352,9 @@ async function handlePasswordSubmit() {
   btn.disabled = true;
   btn.textContent = 'Verifying...';
 
+  // Show loading overlay with auth messages
+  showLoading(true, 'auth');
+
   try {
     const isValid = await firestoreVerifyPassword(selectedLoginUser, password);
 
@@ -351,9 +367,12 @@ async function handlePasswordSubmit() {
 
       if (!dataLoaded) {
         loadFromSheet();
+      } else {
+        showLoading(false);
       }
     } else {
       // Invalid password
+      showLoading(false);
       showToast('Incorrect password', 'err');
       document.getElementById('passwordInput').value = '';
       document.getElementById('passwordInput').focus();
@@ -362,6 +381,7 @@ async function handlePasswordSubmit() {
     }
   } catch (error) {
     console.error('Error verifying password:', error);
+    showLoading(false);
     showToast('Login failed - check your connection', 'err');
     btn.disabled = false;
     btn.textContent = 'Login →';
@@ -1057,12 +1077,12 @@ function renderArchived() {
     tr.innerHTML = `
       ${archiveMultiSelectMode ? `<td style="text-align:center">${checkboxHtml}</td>` : ''}
       <td class="num-col">${idx + 1}</td>
-      <td data-column="desc" style="font-size:13px;${!archivedVisibleColumns.desc ? 'display:none;' : ''}">${exp.desc}</td>
-      <td data-column="cat" style="white-space:nowrap;${!archivedVisibleColumns.cat ? 'display:none;' : ''}"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
-      <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!archivedVisibleColumns.name ? 'display:none;' : ''}">${exp.name || '—'}</td>
-      <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!archivedVisibleColumns.paidBy ? 'display:none;' : ''}">${exp.paidBy || '—'}</td>
-      <td data-column="amount" class="amount-col" style="white-space:nowrap;text-align:right;${!archivedVisibleColumns.amount ? 'display:none;' : ''}">₹${Number(exp.amount).toLocaleString('en-IN')}</td>
-      <td data-column="day" style="font-size:11px;color:var(--muted);${!archivedVisibleColumns.day ? 'display:none;' : ''}">Day ${exp.archivedDay}</td>
+      <td data-column="desc" style="font-size:13px">${exp.desc}</td>
+      <td data-column="cat" style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
+      <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
+      <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
+      <td data-column="amount" class="amount-col" style="white-space:nowrap;text-align:right">₹${Number(exp.amount).toLocaleString('en-IN')}</td>
+      <td data-column="day" style="font-size:11px;color:var(--muted)">Day ${exp.archivedDay}</td>
       ${!archiveMultiSelectMode ? `<td><button class="del-btn" onclick="showUnarchiveConfirm('${exp.id}')" title="Unarchive" style="background:var(--accent);color:#0e1412">↩️</button></td>` : ''}
       ${!archiveMultiSelectMode ? `<td><button class="del-btn" onclick="showPermanentDeleteConfirm('${exp.id}')" title="Delete Permanently">🗑️</button></td>` : ''}
     `;
@@ -1321,19 +1341,19 @@ function render() {
       tr.innerHTML = `
         ${isMultiSelectMode ? `<td style="text-align:center">${checkboxHtml}</td>` : ''}
         <td class="num-col">${startIdx + idx + 1}</td>
-        <td data-column="day" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.day ? 'display:none;' : ''}">Day ${exp.day}</td>
-        <td data-column="desc" style="${!visibleColumns.desc ? 'display:none;' : ''}">
+        <td data-column="day" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">Day ${exp.day}</td>
+        <td data-column="desc">
           ${editedBadge ? `<div style="margin-bottom:4px">${editedBadge}</div>` : ''}
           <div id="${descId}" class="${showTruncated ? 'desc-truncated' : 'desc-full'}">
             ${exp.desc}
           </div>
           ${showTruncated ? `<span class="show-more-btn" onclick="toggleDesc('${descId}')">Show more...</span>` : ''}
         </td>
-        <td data-column="cat" style="white-space:nowrap;${!visibleColumns.cat ? 'display:none;' : ''}"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
-        <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.name ? 'display:none;' : ''}">${exp.name || '—'}</td>
-        <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.paidBy ? 'display:none;' : ''}">${exp.paidBy || '—'}</td>
-        <td data-column="time" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;${!visibleColumns.time ? 'display:none;' : ''}">${timeStr}</td>
-        <td data-column="amount" class="amount-col" style="white-space:nowrap;${!visibleColumns.amount ? 'display:none;' : ''}">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
+        <td data-column="cat" style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
+        <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
+        <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
+        <td data-column="time" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
+        <td data-column="amount" class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
         ${!isMultiSelectMode ? `<td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${exp.day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>` : ''}
         ${!isMultiSelectMode ? `<td><button class="del-btn" onclick="showDeleteConfirm(${exp.day}, '${exp.id}')" title="Archive">🗃️</button></td>` : ''}
       `;
@@ -1755,14 +1775,14 @@ function setStatus(state, text) {
   document.getElementById('statusText').textContent = text;
 }
 // ─── LOADING & TOAST ──────────────────────────────────────
-function showLoading(show) {
+function showLoading(show, type = 'default') {
   const overlay = document.getElementById('loadingOverlay');
   const loadingText = document.getElementById('loadingText');
 
   if (show) {
-    // Set a random loading message
+    // Set a random loading message based on type
     if (loadingText) {
-      loadingText.textContent = getRandomLoadingMessage();
+      loadingText.textContent = type === 'auth' ? getRandomAuthMessage() : getRandomLoadingMessage();
     }
     overlay.classList.remove('hidden');
   } else {
