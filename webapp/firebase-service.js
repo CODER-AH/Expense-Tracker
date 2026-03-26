@@ -1,13 +1,20 @@
 // Firebase configuration and initialization
-const firebaseConfig = {
-  apiKey: "AIzaSyD1WLpghE_WWEW_XX8QzN46qHeS2duBdVc",
-  authDomain: "trip-expense-tracker-d04fe.firebaseapp.com",
-  projectId: "trip-expense-tracker-d04fe",
-  storageBucket: "trip-expense-tracker-d04fe.firebasestorage.app",
-  messagingSenderId: "321319814690",
-  appId: "1:321319814690:web:2301031119c354d6bfec7b",
-  measurementId: "G-RMRGTVVTHZ"
+// Config is loaded from config.js (not committed to git)
+const firebaseConfig = window.APP_CONFIG?.firebase || {
+  // Fallback config (will show warning if used)
+  apiKey: "MISSING_CONFIG",
+  authDomain: "MISSING_CONFIG",
+  projectId: "MISSING_CONFIG",
+  storageBucket: "MISSING_CONFIG",
+  messagingSenderId: "MISSING_CONFIG",
+  appId: "MISSING_CONFIG",
+  measurementId: "MISSING_CONFIG"
 };
+
+// Check if config is loaded
+if (firebaseConfig.apiKey === "MISSING_CONFIG") {
+  console.error("⚠️ Firebase config not found! Please create webapp/config.js from config.template.js");
+}
 
 // Initialize Firebase
 let db;
@@ -69,6 +76,7 @@ async function firestoreAddExpense(expense) {
   try {
     const docRef = await db.collection('expenses').add({
       ...expense,
+      deleted: false, // Initialize deleted flag
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -81,6 +89,7 @@ async function firestoreAddExpense(expense) {
 
 async function firestoreGetAllExpenses() {
   try {
+    // Get all non-archived expenses (filter deleted in client-side)
     const snapshot = await db.collection('expenses')
       .where('archived', '==', false)
       .orderBy('day')
@@ -89,10 +98,14 @@ async function firestoreGetAllExpenses() {
 
     const expenses = [];
     snapshot.forEach(doc => {
-      expenses.push({
-        id: doc.id,
-        ...doc.data()
-      });
+      const data = doc.data();
+      // Filter out deleted expenses client-side
+      if (!data.deleted) {
+        expenses.push({
+          id: doc.id,
+          ...data
+        });
+      }
     });
 
     return expenses;
@@ -117,9 +130,10 @@ async function firestoreUpdateExpense(id, updates) {
 
 async function firestoreDeleteExpense(id) {
   try {
-    // Soft delete - mark as archived
+    // Mark as deleted (separate from archived)
+    // Deleted items are kept in DB but never shown in UI
     await db.collection('expenses').doc(id).update({
-      archived: true,
+      deleted: true,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     return true;
@@ -131,6 +145,7 @@ async function firestoreDeleteExpense(id) {
 
 async function firestoreGetArchivedExpenses() {
   try {
+    // Get all archived expenses (filter deleted in client-side)
     const snapshot = await db.collection('expenses')
       .where('archived', '==', true)
       .orderBy('day')
@@ -139,10 +154,14 @@ async function firestoreGetArchivedExpenses() {
 
     const expenses = [];
     snapshot.forEach(doc => {
-      expenses.push({
-        id: doc.id,
-        ...doc.data()
-      });
+      const data = doc.data();
+      // Filter out deleted expenses client-side
+      if (!data.deleted) {
+        expenses.push({
+          id: doc.id,
+          ...data
+        });
+      }
     });
 
     return expenses;
@@ -224,10 +243,14 @@ function firestoreListenToExpenses(callback) {
     .onSnapshot(snapshot => {
       const expenses = [];
       snapshot.forEach(doc => {
-        expenses.push({
-          id: doc.id,
-          ...doc.data()
-        });
+        const data = doc.data();
+        // Filter out deleted expenses client-side
+        if (!data.deleted) {
+          expenses.push({
+            id: doc.id,
+            ...data
+          });
+        }
       });
       callback(expenses);
     }, error => {

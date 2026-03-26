@@ -1,9 +1,9 @@
 // Database abstraction layer
 // This allows switching between Firebase and Google Sheets seamlessly
 
-// Configuration
-const USE_FIREBASE = true; // Set to false to use only Google Sheets
-const ENABLE_SHEETS_BACKUP = true; // If true, writes to both Firebase AND Sheets
+// Configuration - loaded from config.js
+const USE_FIREBASE = window.APP_CONFIG?.database?.useFirebase ?? true;
+const ENABLE_SHEETS_BACKUP = window.APP_CONFIG?.database?.enableSheetsBackup ?? false;
 
 // ============================================
 // UNIFIED DATABASE API
@@ -25,14 +25,12 @@ async function dbAddExpense(expense) {
       trackExpenseAdded(expense.cat, expense.amount);
     }
 
-    // Optionally backup to Sheets
+    // Optionally backup to Sheets (fire and forget - don't await)
     if (ENABLE_SHEETS_BACKUP && USE_FIREBASE) {
-      try {
-        await sheetAdd({ ...expense, id });
-      } catch (e) {
+      sheetAdd({ ...expense, id }).catch(e => {
         console.warn('Sheets backup failed:', e);
         // Don't fail the operation if backup fails
-      }
+      });
     }
 
     // If not using Firebase, use Sheets as primary
@@ -69,13 +67,11 @@ async function dbUpdateExpense(id, updates) {
       trackExpenseUpdated(updates.cat || 'unknown');
     }
 
-    // Optionally update in Sheets
+    // Optionally update in Sheets (fire and forget - don't await)
     if (ENABLE_SHEETS_BACKUP && USE_FIREBASE) {
-      try {
-        await sheetUpdate(id, updates);
-      } catch (e) {
+      sheetUpdate(id, updates).catch(e => {
         console.warn('Sheets backup update failed:', e);
-      }
+      });
     }
 
     // If not using Firebase, use Sheets
@@ -98,13 +94,11 @@ async function dbDeleteExpense(day, id) {
       trackExpenseDeleted('unknown');
     }
 
-    // Optionally delete from Sheets
+    // Optionally delete from Sheets (fire and forget - don't await)
     if (ENABLE_SHEETS_BACKUP && USE_FIREBASE) {
-      try {
-        await sheetDelete(day, id);
-      } catch (e) {
+      sheetDelete(day, id).catch(e => {
         console.warn('Sheets backup delete failed:', e);
-      }
+      });
     }
 
     // If not using Firebase, use Sheets
@@ -194,15 +188,18 @@ async function dbSetBudget(amount) {
       await firestoreSetBudget(amount);
     }
 
-    // Also update in Sheets
+    // Also update in Sheets (fire and forget - don't await)
     if (ENABLE_SHEETS_BACKUP || !USE_FIREBASE) {
-      try {
-        await fetch(SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'setBudget', budget: amount })
-        });
-      } catch (e) {
+      const sheetCall = fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'setBudget', budget: amount })
+      }).catch(e => {
         console.warn('Sheets budget update failed:', e);
+      });
+
+      // Only await if Sheets is primary
+      if (!USE_FIREBASE) {
+        await sheetCall;
       }
     }
 
