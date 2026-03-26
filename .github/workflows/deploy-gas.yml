@@ -26,9 +26,8 @@ jobs:
 
       - name: Create clasp credentials
         run: |
-          echo "$CLASP_CREDENTIALS" > ~/.clasprc.json
-        env:
-          CLASP_CREDENTIALS: ${{ secrets.CLASP_CREDENTIALS }}
+          echo '${{ secrets.CLASP_CREDENTIALS }}' > ~/.clasprc.json
+          cat ~/.clasprc.json
 
       - name: Deploy to Apps Script
         run: clasp push
