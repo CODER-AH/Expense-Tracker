@@ -169,16 +169,19 @@ window.onload = () => {
   loadTripDays();
 
   const saved = localStorage.getItem('coorg_username');
-  if (saved) {
+  const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+
+  if (saved && isAuthenticated) {
+    // User is logged in and authenticated
     currentUser = saved;
-    hideNameOverlay();
-
+    hideLoginOverlay();
     updateFilterOptions();
-
     loadFromSheet();
   } else {
+    // Show login screen
     showLoading(false);
-    document.getElementById('nameOverlay').classList.remove('hidden');
+    sessionStorage.removeItem('authenticated');
+    document.getElementById('loginOverlay').classList.remove('hidden');
     setTimeout(() => document.getElementById('nameInput').focus(), 100);
   }
 
@@ -200,7 +203,177 @@ window.onload = () => {
   }, false);
 };
 
-// ─── NAME HANDLING ────────────────────────────────────────
+// ─── LOGIN & AUTHENTICATION ───────────────────────────────
+let selectedLoginUser = null;
+
+async function proceedToPassword() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) {
+    document.getElementById('nameInput').focus();
+    return;
+  }
+
+  selectedLoginUser = name;
+
+  // Check if user has a password set
+  try {
+    const userCreds = await firestoreGetUserCredentials(name);
+
+    if (!userCreds || !userCreds.passwordHash) {
+      // No password set, show set password step
+      document.getElementById('loginTitle').textContent = 'Set Your Password';
+      document.getElementById('loginSubtitle').textContent = `Welcome ${name}! Let's secure your account`;
+      document.getElementById('nameSelectionStep').style.display = 'none';
+      document.getElementById('setPasswordStep').style.display = 'block';
+    } else {
+      // Password exists, show password entry
+      document.getElementById('loginTitle').textContent = 'Enter Password';
+      document.getElementById('loginSubtitle').textContent = `Welcome back, ${name}!`;
+      document.getElementById('nameSelectionStep').style.display = 'none';
+      document.getElementById('passwordStep').style.display = 'block';
+      setTimeout(() => document.getElementById('passwordInput').focus(), 100);
+    }
+  } catch (error) {
+    console.error('Error checking user credentials:', error);
+    showToast('Connection error - check your internet', 'err');
+  }
+}
+
+async function handlePasswordSubmit() {
+  const password = document.getElementById('passwordInput').value;
+  if (!password) {
+    document.getElementById('passwordInput').focus();
+    return;
+  }
+
+  const btn = document.getElementById('passwordBtn');
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+
+  try {
+    const isValid = await firestoreVerifyPassword(selectedLoginUser, password);
+
+    if (isValid) {
+      // Login successful
+      currentUser = selectedLoginUser;
+      localStorage.setItem('coorg_username', currentUser);
+      sessionStorage.setItem('authenticated', 'true');
+      hideLoginOverlay();
+
+      if (!dataLoaded) {
+        loadFromSheet();
+      }
+    } else {
+      // Invalid password
+      showToast('Incorrect password', 'err');
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('passwordInput').focus();
+      btn.disabled = false;
+      btn.textContent = 'Login →';
+    }
+  } catch (error) {
+    console.error('Error verifying password:', error);
+    showToast('Login failed - check your connection', 'err');
+    btn.disabled = false;
+    btn.textContent = 'Login →';
+  }
+}
+
+async function handleSetPassword() {
+  const newPassword = document.getElementById('newPasswordInput').value;
+  const confirmPassword = document.getElementById('confirmPasswordInput').value;
+  const errorDiv = document.getElementById('passwordError');
+
+  errorDiv.style.display = 'none';
+
+  if (!newPassword || !confirmPassword) {
+    errorDiv.textContent = 'Please fill in both fields';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    errorDiv.textContent = 'Password must be at least 6 characters';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    errorDiv.textContent = 'Passwords do not match';
+    errorDiv.style.display = 'block';
+    return;
+  }
+
+  try {
+    await firestoreSetUserPassword(selectedLoginUser, newPassword);
+
+    // Password set successfully, log in
+    currentUser = selectedLoginUser;
+    localStorage.setItem('coorg_username', currentUser);
+    sessionStorage.setItem('authenticated', 'true');
+    hideLoginOverlay();
+
+    showToast('Password set successfully!', 'ok');
+
+    if (!dataLoaded) {
+      loadFromSheet();
+    }
+  } catch (error) {
+    console.error('Error setting password:', error);
+    errorDiv.textContent = 'Failed to set password - check your connection';
+    errorDiv.style.display = 'block';
+  }
+}
+
+function backToNameSelection() {
+  document.getElementById('nameSelectionStep').style.display = 'block';
+  document.getElementById('passwordStep').style.display = 'none';
+  document.getElementById('setPasswordStep').style.display = 'none';
+  document.getElementById('passwordInput').value = '';
+  document.getElementById('newPasswordInput').value = '';
+  document.getElementById('confirmPasswordInput').value = '';
+  document.getElementById('passwordError').style.display = 'none';
+  document.getElementById('loginTitle').textContent = 'Welcome Back!';
+  document.getElementById('loginSubtitle').textContent = 'Select your name to continue';
+  selectedLoginUser = null;
+}
+
+function hideLoginOverlay() {
+  document.getElementById('loginOverlay').classList.add('hidden');
+
+  // Map names to emojis
+  const emojiMap = {
+    'Afsar': '👨‍💻',
+    'Adham': '👨‍💻',
+    'Aakif': '👨‍💻',
+    'Sahlaan': '👨‍⚕️'
+  };
+
+  const emoji = emojiMap[currentUser] || '👤';
+  document.getElementById('userAvatar').textContent = emoji;
+  document.getElementById('userChipName').textContent = currentUser;
+}
+
+// For backward compatibility - keep old saveName function but redirect to new flow
+function saveName() {
+  proceedToPassword();
+}
+
+function changeName() {
+  // Clear authentication
+  sessionStorage.removeItem('authenticated');
+  currentUser = null;
+  localStorage.removeItem('coorg_username');
+
+  // Reset to name selection
+  backToNameSelection();
+
+  // Show login overlay
+  document.getElementById('loginOverlay').classList.remove('hidden');
+}
+
+// OLD function - now replaced
+/*
 function saveName() {
   const name = document.getElementById('nameInput').value.trim();
   if (!name) { document.getElementById('nameInput').focus(); return; }
@@ -239,6 +412,7 @@ function changeName() {
   document.getElementById('nameOverlay').classList.remove('hidden');
   setTimeout(() => document.getElementById('nameInput').focus(), 100);
 }
+*/
 
 document.getElementById('nameInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') saveName();
@@ -1451,6 +1625,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.key === 'Enter') confirmBudgetEdit();
     if (e.key === 'Escape') cancelBudgetEdit();
   });
+
+  // Handle Enter key in password inputs
+  const passwordInput = document.getElementById('passwordInput');
+  if (passwordInput) {
+    passwordInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handlePasswordSubmit();
+      if (e.key === 'Escape') backToNameSelection();
+    });
+  }
+
+  const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+  if (confirmPasswordInput) {
+    confirmPasswordInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleSetPassword();
+      if (e.key === 'Escape') backToNameSelection();
+    });
+  }
 
   // Load column visibility preferences
   loadColumnVisibility();

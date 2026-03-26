@@ -16,20 +16,41 @@
 </head>
 <body>
 
-<!-- NAME PROMPT OVERLAY -->
-<div class="name-overlay" id="nameOverlay">
+<!-- LOGIN OVERLAY -->
+<div class="name-overlay" id="loginOverlay">
   <div class="name-box">
-    <div class="emoji">👋</div>
-    <h2>Who are you?</h2>
-    <p>Select your name so every. This is saved on your done knows who added each expenseevice — you'll only need to do this once.</p>
-    <select id="nameInput" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:14px;transition:border-color 0.15s;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center;padding-right:35px;">
-      <option value="">Select your name...</option>
-      <option value="Afsar">👨‍💻 Afsar</option>
-      <option value="Adham">👨‍💻 Adham</option>
-      <option value="Aakif">👨‍💻 Aakif</option>
-      <option value="Sahlaan">👨‍⚕️ Sahlaan</option>
-    </select>
-    <button onclick="saveName()">Let's Go →</button>
+    <div class="emoji">🔐</div>
+    <h2 id="loginTitle">Welcome Back!</h2>
+    <p id="loginSubtitle">Select your name to continue</p>
+
+    <!-- Name Selection -->
+    <div id="nameSelectionStep">
+      <select id="nameInput" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:14px;transition:border-color 0.15s;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center;padding-right:35px;">
+        <option value="">Select your name...</option>
+        <option value="Afsar">👨‍💻 Afsar</option>
+        <option value="Adham">👨‍💻 Adham</option>
+        <option value="Aakif">👨‍💻 Aakif</option>
+        <option value="Sahlaan">👨‍⚕️ Sahlaan</option>
+      </select>
+      <button onclick="proceedToPassword()">Continue →</button>
+    </div>
+
+    <!-- Password Entry (hidden initially) -->
+    <div id="passwordStep" style="display:none">
+      <input type="password" id="passwordInput" placeholder="Enter your password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:14px;transition:border-color 0.15s">
+      <button id="passwordBtn" onclick="handlePasswordSubmit()">Login →</button>
+      <button onclick="backToNameSelection()" style="margin-top:8px;background:transparent;border:1px solid var(--border);color:var(--muted)">← Back</button>
+    </div>
+
+    <!-- Set New Password (hidden initially) -->
+    <div id="setPasswordStep" style="display:none">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Set a password for your account</p>
+      <input type="password" id="newPasswordInput" placeholder="Create password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:10px;transition:border-color 0.15s">
+      <input type="password" id="confirmPasswordInput" placeholder="Confirm password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:14px;transition:border-color 0.15s">
+      <div id="passwordError" style="color:#e86e8a;font-size:12px;margin-bottom:10px;display:none"></div>
+      <button onclick="handleSetPassword()">Set Password →</button>
+      <button onclick="backToNameSelection()" style="margin-top:8px;background:transparent;border:1px solid var(--border);color:var(--muted)">← Back</button>
+    </div>
   </div>
 </div>
 
