@@ -204,6 +204,10 @@ function hideNameOverlay() {
   const emoji = emojiMap[currentUser] || currentUser.charAt(0).toUpperCase();
   document.getElementById('userAvatar').textContent = emoji;
   document.getElementById('userChipName').textContent = currentUser;
+
+  // Populate dropdowns after name is set
+  populateMainDayDropdown();
+  updateFilterOptions();
 }
 
 function changeName() {
