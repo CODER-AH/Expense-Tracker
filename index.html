@@ -302,7 +302,11 @@
   }
 
   /* ADD FORM */
-  .add-section { max-width: 1000px; margin: 0 auto 16px; }
+  .add-section {
+    max-width: 1000px;
+    margin: 0 auto 16px;
+    overflow-x: auto;
+  }
   .add-form {
     background: var(--card);
     border: 1px dashed var(--border);
@@ -312,6 +316,7 @@
     grid-template-columns: 140px 100px 1fr 140px 120px 140px auto;
     gap: 10px;
     align-items: end;
+    min-width: min-content;
   }
   .multi-row-container {
     background: var(--card);
@@ -320,6 +325,7 @@
     padding: 18px;
     margin-top: 12px;
     display: none;
+    overflow-x: auto;
   }
   .multi-row-container.active {
     display: block;
@@ -332,6 +338,7 @@
     margin-bottom: 10px;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border);
+    min-width: min-content;
   }
   .multi-row-entry:last-child {
     border-bottom: none;
@@ -1085,12 +1092,26 @@
     .user-chip .avatar { width: 16px; height: 16px; font-size: 10px; }
 
     .add-form {
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto auto auto auto;
+      grid-template-columns: 1fr;
+      gap: 12px;
     }
-    .add-form > div:nth-child(3) { grid-column: span 2; }
-    .add-form > div:last-child   { grid-column: span 2; }
+    .add-form > div { grid-column: span 1; }
     .add-btn { width: 100%; justify-content: center; }
+
+    .multi-row-entry {
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 12px;
+      background: var(--surface);
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .multi-row-entry > div:nth-child(6) { visibility: visible !important; }
+    .multi-row-entry > div:last-child {
+      display: flex;
+      justify-content: center;
+      margin-top: 8px;
+    }
   }
 </style>
 </head>
