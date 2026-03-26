@@ -252,9 +252,8 @@ async function loadFromSheet() {
   showLoading(true);
   setStatus('syncing', 'Loading…');
   try {
-    // Load expenses
-    const res = await fetch(`${SCRIPT_URL}?action=getAll`);
-    const data = await res.json();
+    // Load expenses from Firebase (primary)
+    const data = await dbGetAllExpenses();
 
     // Initialize expenses object for all trip days
     expenses = {};
@@ -263,24 +262,22 @@ async function loadFromSheet() {
     });
 
     archivedExpenses = [];
-    (data.expenses || []).forEach(e => {
+    (data || []).forEach(e => {
       // Ensure the day exists in our expenses object
       if (!expenses[e.day]) {
         expenses[e.day] = [];
       }
 
-      if (e.archived === "Yes") {
+      if (e.archived === true || e.archived === "Yes") {
         archivedExpenses.push({ ...e, archivedDay: e.day });
       } else {
         expenses[e.day].push(e);
       }
     });
 
-    // Load budget from Google Sheets
-    const budgetRes = await fetch(`${SCRIPT_URL}?action=getBudget`);
-    const budgetData = await budgetRes.json();
-    if (budgetData.budget !== undefined) {
-      tripBudget = budgetData.budget;
+    // Load budget from Firebase
+    tripBudget = await dbGetBudget();
+    if (tripBudget) {
       localStorage.setItem('coorg_budget', tripBudget);
     }
 
@@ -1655,12 +1652,12 @@ async function confirmBudgetEdit() {
   tripBudget = budgetAmount;
   localStorage.setItem('coorg_budget', tripBudget);
 
-  // Save budget to Google Sheets
+  // Save budget to Firebase (and optionally to Sheets as backup)
   try {
-    await fetch(`${SCRIPT_URL}?action=setBudget&budget=${budgetAmount}`);
+    await dbSetBudget(budgetAmount);
     setStatus('ok', 'Synced ✓');
   } catch(e) {
-    console.error('Failed to save budget to Google Sheets:', e);
+    console.error('Failed to save budget:', e);
     setStatus('err', 'Saved locally only');
     // Continue anyway - saved locally
   }
