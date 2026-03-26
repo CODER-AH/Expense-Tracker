@@ -27,9 +27,16 @@ jobs:
       - name: Create clasp credentials
         run: |
           mkdir -p ~/.config/@google
-          echo '${{ secrets.CLASP_CREDENTIALS }}' > ~/.clasprc.json
+          # Create .clasprc.json with correct format for newer clasp
+          cat > ~/.clasprc.json << 'CLASPRC'
+          ${{ secrets.CLASP_CREDENTIALS }}
+          CLASPRC
           echo "Credentials file created"
-          echo "File size: $(wc -c < ~/.clasprc.json)"
+          echo "Checking file structure..."
+          # Validate JSON structure
+          if ! jq empty ~/.clasprc.json 2>/dev/null; then
+            echo "Warning: Invalid JSON format"
+          fi
 
       - name: Verify .clasp.json exists
         run: |
