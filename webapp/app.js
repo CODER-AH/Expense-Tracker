@@ -317,9 +317,14 @@ async function proceedToPassword() {
 
   selectedLoginUser = name;
 
+  // Show loading overlay
+  showLoading(true, 'auth');
+
   // Check if user has a password set
   try {
     const userCreds = await firestoreGetUserCredentials(name);
+
+    showLoading(false);
 
     if (!userCreds || !userCreds.passwordHash) {
       // No password set, show set password step
@@ -337,6 +342,7 @@ async function proceedToPassword() {
     }
   } catch (error) {
     console.error('Error checking user credentials:', error);
+    showLoading(false);
     showToast('Connection error - check your internet', 'err');
   }
 }
@@ -2026,15 +2032,16 @@ function renderNotes() {
             onclick="event.stopPropagation()"
             style="margin-top:2px;flex-shrink:0"
           />
-        ` : ''}
-        <input
-          type="checkbox"
-          ${isCompleted ? 'checked' : ''}
-          onchange="event.stopPropagation();toggleNoteComplete('${note.id}')"
-          onclick="event.stopPropagation()"
-          style="margin-top:2px;flex-shrink:0"
-          ${isNoteMultiSelectMode ? 'disabled' : ''}
-        />
+        ` : `
+          <input
+            type="radio"
+            ${isCompleted ? 'checked' : ''}
+            onchange="event.stopPropagation();showMarkCompleteDialog('${note.id}')"
+            onclick="event.stopPropagation()"
+            style="margin-top:2px;flex-shrink:0"
+            ${isCompleted ? 'disabled' : ''}
+          />
+        `}
         <div style="flex:1;${textStyle}">
           <div style="font-size:14px;line-height:1.5;margin-bottom:4px">${note.text}</div>
           <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">
@@ -2113,6 +2120,42 @@ async function addNote() {
 }
 
 // Toggle note completion
+let markCompleteTargetId = null;
+
+function showMarkCompleteDialog(id) {
+  markCompleteTargetId = id;
+  document.getElementById('markCompleteOverlay').classList.remove('hidden');
+}
+
+function cancelMarkComplete() {
+  markCompleteTargetId = null;
+  document.getElementById('markCompleteOverlay').classList.add('hidden');
+}
+
+async function confirmMarkComplete() {
+  if (!markCompleteTargetId) return;
+
+  document.getElementById('markCompleteOverlay').classList.add('hidden');
+  showLoading(true);
+
+  try {
+    const note = notes.find(n => n.id === markCompleteTargetId);
+    if (!note) return;
+
+    note.completed = true;
+    await dbUpdateNote(markCompleteTargetId, { completed: true });
+
+    renderNotes();
+    showToast('Note marked as complete', 'ok');
+  } catch (error) {
+    console.error('Error marking note complete:', error);
+    showToast('Failed to mark note complete', 'err');
+  } finally {
+    showLoading(false);
+    markCompleteTargetId = null;
+  }
+}
+
 async function toggleNoteComplete(id) {
   showLoading(true);
 
@@ -2242,6 +2285,37 @@ function updateNoteBulkActionButtons() {
   if (bulkDeleteBtn) {
     bulkDeleteBtn.disabled = count === 0;
     bulkDeleteBtn.textContent = count > 0 ? `Delete Selected (${count})` : 'Delete Selected';
+  }
+}
+
+async function bulkCompleteNotes() {
+  if (selectedNotes.size === 0) return;
+
+  showLoading(true);
+
+  try {
+    const updatePromises = [];
+    selectedNotes.forEach(id => {
+      const note = notes.find(n => n.id === id);
+      if (note && !note.completed) {
+        note.completed = true;
+        updatePromises.push(dbUpdateNote(id, { completed: true }));
+      }
+    });
+
+    await Promise.all(updatePromises);
+
+    // Clear selection and exit multi-select mode
+    selectedNotes.clear();
+    toggleNoteMultiSelect();
+
+    renderNotes();
+    showToast('Notes marked as complete', 'ok');
+  } catch (error) {
+    console.error('Error marking notes complete:', error);
+    showToast('Failed to complete notes', 'err');
+  } finally {
+    showLoading(false);
   }
 }
 
