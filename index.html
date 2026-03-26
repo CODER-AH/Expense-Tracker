@@ -903,6 +903,68 @@
     font-weight: 500;
   }
 
+  /* CUSTOM DROPDOWN FOR ADD FORMS */
+  .custom-select {
+    position: relative;
+    width: 100%;
+  }
+  .custom-select-btn {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 32px 8px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .custom-select-btn:hover { border-color: var(--accent); }
+  .custom-select-btn::after {
+    content: '▼';
+    position: absolute;
+    right: 10px;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .custom-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background: var(--card);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 6px;
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    display: none;
+  }
+  .custom-select-dropdown.active { display: block; }
+  .custom-select-option {
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .custom-select-option:hover { background: var(--surface); color: var(--accent); }
+  .custom-select-option.selected {
+    background: rgba(93,186,138,0.15);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
   /* SETTLEMENT */
   .settlement-grid {
     display: flex;
@@ -1147,9 +1209,14 @@
   <div class="add-form">
     <div>
       <label>Day</label>
-      <select id="inp-day" onchange="handleDaySelect(this)">
-        <!-- Days will be populated dynamically -->
-      </select>
+      <div class="custom-select">
+        <div class="custom-select-btn" id="inp-day-btn" onclick="toggleCustomSelect('inp-day')">
+          <span id="inp-day-label">Day 1</span>
+        </div>
+        <div class="custom-select-dropdown" id="inp-day-dropdown">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
     </div>
     <div>
       <label>Added by</label>
@@ -1161,14 +1228,19 @@
     </div>
     <div>
       <label>Category</label>
-      <select id="inp-cat">
-        <option value="food">🍽️ Food</option>
-        <option value="fuel">⛽ Fuel</option>
-        <option value="stay">🏨 Stay</option>
-        <option value="transport">🚙 Transport</option>
-        <option value="entry">🎟️ Entry Fees</option>
-        <option value="misc">🛍️ Miscellaneous</option>
-      </select>
+      <div class="custom-select">
+        <div class="custom-select-btn" id="inp-cat-btn" onclick="toggleCustomSelect('inp-cat')">
+          <span id="inp-cat-label">🍽️ Food</span>
+        </div>
+        <div class="custom-select-dropdown" id="inp-cat-dropdown">
+          <div class="custom-select-option selected" onclick="selectCustomOption('inp-cat', 'food', '🍽️ Food')">🍽️ Food</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'fuel', '⛽ Fuel')">⛽ Fuel</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'stay', '🏨 Stay')">🏨 Stay</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'transport', '🚙 Transport')">🚙 Transport</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'entry', '🎟️ Entry Fees')">🎟️ Entry Fees</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-cat', 'misc', '🛍️ Miscellaneous')">🛍️ Miscellaneous</div>
+        </div>
+      </div>
     </div>
     <div>
       <label>Amount (₹) *</label>
@@ -1176,13 +1248,18 @@
     </div>
     <div>
       <label>Paid by *</label>
-      <select id="inp-paidby" required>
-        <option value="">Select...</option>
-        <option value="Afsar">👨‍💻 Afsar</option>
-        <option value="Adham">👨‍💻 Adham</option>
-        <option value="Aakif">👨‍💻 Aakif</option>
-        <option value="Sahlaan">👨‍⚕️ Sahlaan</option>
-      </select>
+      <div class="custom-select">
+        <div class="custom-select-btn" id="inp-paidby-btn" onclick="toggleCustomSelect('inp-paidby')">
+          <span id="inp-paidby-label">Select...</span>
+        </div>
+        <div class="custom-select-dropdown" id="inp-paidby-dropdown">
+          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', '', 'Select...')">Select...</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', 'Afsar', '👨‍💻 Afsar')">👨‍💻 Afsar</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', 'Adham', '👨‍💻 Adham')">👨‍💻 Adham</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', 'Aakif', '👨‍💻 Aakif')">👨‍💻 Aakif</div>
+          <div class="custom-select-option" onclick="selectCustomOption('inp-paidby', 'Sahlaan', '👨‍⚕️ Sahlaan')">👨‍⚕️ Sahlaan</div>
+        </div>
+      </div>
     </div>
     <div>
       <button class="add-btn" id="addBtn" onclick="addExpenseRow()">
@@ -1549,18 +1626,6 @@ function addNewDay() {
   saveTripDays();
   saveLocal();
 
-  // Re-populate all day dropdowns
-  const mainDaySelect = document.getElementById('inp-day');
-  populateDayDropdown(mainDaySelect);
-  mainDaySelect.value = newDayNum;
-
-  // Update multi-row day dropdowns
-  document.querySelectorAll('.multi-row-entry select[id^="mr-day-"]').forEach(select => {
-    const currentValue = select.value;
-    populateDayDropdown(select);
-    select.value = currentValue;
-  });
-
   // Update filter dropdown
   updateFilterOptions();
 
@@ -1596,8 +1661,7 @@ window.onload = () => {
     hideNameOverlay();
 
     // Populate day dropdown and filters before loading data
-    const mainDaySelect = document.getElementById('inp-day');
-    populateDayDropdown(mainDaySelect);
+    populateMainDayDropdown();
     updateFilterOptions();
 
     loadFromSheet();
@@ -1961,39 +2025,79 @@ function addExpenseRow() {
   rowDiv.className = 'multi-row-entry';
   rowDiv.id = `multi-row-${multiRowCount}`;
 
-  // Get current form values
-  const day = document.getElementById('inp-day').value;
-  const cat = document.getElementById('inp-cat').value;
+  // Get current form values from custom selects
+  const day = getCustomSelectValue('inp-day');
+  const cat = getCustomSelectValue('inp-cat');
   const desc = document.getElementById('inp-desc').value.trim();
   const amount = document.getElementById('inp-amount').value;
-  const paidBy = document.getElementById('inp-paidby').value;
+  const paidBy = getCustomSelectValue('inp-paidby');
 
-  // Build day options dynamically
-  let dayOptionsHTML = '';
+  // Build day dropdown HTML
+  let dayDropdownHTML = '';
   tripDays.forEach(dayObj => {
     const selected = String(dayObj.day) === String(day) ? 'selected' : '';
-    dayOptionsHTML += `<option value="${dayObj.day}" ${selected}>Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})</option>`;
+    dayDropdownHTML += `<div class="custom-select-option ${selected}" onclick="selectMultiRowOption('mr-day-${multiRowCount}', '${dayObj.day}', 'Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})')">Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})</div>`;
   });
-  // Add "Add New Day" option
-  dayOptionsHTML += '<option value="add">➕ Add New Day</option>';
+  dayDropdownHTML += `<div class="custom-select-option" onclick="handleMultiRowAddDay('mr-day-${multiRowCount}')">➕ Add New Day</div>`;
+
+  // Build category dropdown HTML
+  const catOptions = [
+    {value: 'food', label: '🍽️ Food'},
+    {value: 'fuel', label: '⛽ Fuel'},
+    {value: 'stay', label: '🏨 Stay'},
+    {value: 'transport', label: '🚙 Transport'},
+    {value: 'entry', label: '🎟️ Entry'},
+    {value: 'misc', label: '🛍️ Misc'}
+  ];
+  let catDropdownHTML = '';
+  catOptions.forEach(opt => {
+    const selected = opt.value === cat ? 'selected' : '';
+    catDropdownHTML += `<div class="custom-select-option ${selected}" onclick="selectMultiRowOption('multi-cat-${multiRowCount}', '${opt.value}', '${opt.label}')">${opt.label}</div>`;
+  });
+
+  // Build paid by dropdown HTML
+  const paidByOptions = [
+    {value: '', label: 'Select...'},
+    {value: 'Afsar', label: '👨‍💻 Afsar'},
+    {value: 'Adham', label: '👨‍💻 Adham'},
+    {value: 'Aakif', label: '👨‍💻 Aakif'},
+    {value: 'Sahlaan', label: '👨‍⚕️ Sahlaan'}
+  ];
+  let paidByDropdownHTML = '';
+  paidByOptions.forEach(opt => {
+    const selected = opt.value === paidBy ? 'selected' : '';
+    paidByDropdownHTML += `<div class="custom-select-option ${selected}" onclick="selectMultiRowOption('multi-paidby-${multiRowCount}', '${opt.value}', '${opt.label}')">${opt.label}</div>`;
+  });
+
+  // Get current labels for the selected values
+  const currentDayLabel = tripDays.find(d => String(d.day) === String(day))
+    ? `Day ${day} (${tripDays.find(d => String(d.day) === String(day)).name}, ${tripDays.find(d => String(d.day) === String(day)).date})`
+    : 'Day 1';
+  const currentCatLabel = catOptions.find(o => o.value === cat)?.label || '🍽️ Food';
+  const currentPaidByLabel = paidByOptions.find(o => o.value === paidBy)?.label || 'Select...';
 
   rowDiv.innerHTML = `
     <div>
       <label>Day</label>
-      <select id="mr-day-${multiRowCount}" onchange="handleDaySelect(this)">
-        ${dayOptionsHTML}
-      </select>
+      <div class="custom-select">
+        <div class="custom-select-btn" onclick="toggleCustomSelect('mr-day-${multiRowCount}')">
+          <span id="mr-day-${multiRowCount}-label">${currentDayLabel}</span>
+        </div>
+        <div class="custom-select-dropdown" id="mr-day-${multiRowCount}-dropdown">
+          ${dayDropdownHTML}
+        </div>
+      </div>
     </div>
     <div>
       <label>Category</label>
-      <select id="multi-cat-${multiRowCount}">
-        <option value="food" ${cat === 'food' ? 'selected' : ''}>🍽️ Food</option>
-        <option value="fuel" ${cat === 'fuel' ? 'selected' : ''}>⛽ Fuel</option>
-        <option value="stay" ${cat === 'stay' ? 'selected' : ''}>🏨 Stay</option>
-        <option value="transport" ${cat === 'transport' ? 'selected' : ''}>🚙 Transport</option>
-        <option value="entry" ${cat === 'entry' ? 'selected' : ''}>🎟️ Entry</option>
-        <option value="misc" ${cat === 'misc' ? 'selected' : ''}>🛍️ Misc</option>
-      </select>
+      <div class="custom-select">
+        <div class="custom-select-btn" onclick="toggleCustomSelect('multi-cat-${multiRowCount}')">
+          <span id="multi-cat-${multiRowCount}-label">${currentCatLabel}</span>
+        </div>
+        <div class="custom-select-dropdown" id="multi-cat-${multiRowCount}-dropdown">
+          ${catDropdownHTML}
+        </div>
+      </div>
     </div>
     <div>
       <label>Description</label>
@@ -2005,13 +2109,14 @@ function addExpenseRow() {
     </div>
     <div>
       <label>Paid by</label>
-      <select id="multi-paidby-${multiRowCount}">
-        <option value="">Select...</option>
-        <option value="Afsar" ${paidBy === 'Afsar' ? 'selected' : ''}>Afsar</option>
-        <option value="Adham" ${paidBy === 'Adham' ? 'selected' : ''}>Adham</option>
-        <option value="Aakif" ${paidBy === 'Aakif' ? 'selected' : ''}>Aakif</option>
-        <option value="Sahlaan" ${paidBy === 'Sahlaan' ? 'selected' : ''}>Sahlaan</option>
-      </select>
+      <div class="custom-select">
+        <div class="custom-select-btn" onclick="toggleCustomSelect('multi-paidby-${multiRowCount}')">
+          <span id="multi-paidby-${multiRowCount}-label">${currentPaidByLabel}</span>
+        </div>
+        <div class="custom-select-dropdown" id="multi-paidby-${multiRowCount}-dropdown">
+          ${paidByDropdownHTML}
+        </div>
+      </div>
     </div>
     <div style="visibility:hidden">
       <label>Added</label>
@@ -2022,12 +2127,23 @@ function addExpenseRow() {
     </div>
   `;
 
+  // Store initial values for multi-row
+  if (!customSelectValues['mr-day-' + multiRowCount]) {
+    customSelectValues['mr-day-' + multiRowCount] = day;
+  }
+  if (!customSelectValues['multi-cat-' + multiRowCount]) {
+    customSelectValues['multi-cat-' + multiRowCount] = cat;
+  }
+  if (!customSelectValues['multi-paidby-' + multiRowCount]) {
+    customSelectValues['multi-paidby-' + multiRowCount] = paidBy;
+  }
+
   entriesDiv.appendChild(rowDiv);
 
   // Clear the main form
   document.getElementById('inp-desc').value = '';
   document.getElementById('inp-amount').value = '';
-  document.getElementById('inp-paidby').value = '';
+  selectCustomOption('inp-paidby', '', 'Select...');
 }
 
 function removeMultiRow(id) {
@@ -2055,11 +2171,11 @@ async function saveMultipleExpenses() {
   // Collect and validate all entries
   for (let row of rows) {
     const id = row.id.split('-')[2];
-    const day = parseInt(document.getElementById(`mr-day-${id}`)?.value);
-    const cat = document.getElementById(`multi-cat-${id}`)?.value;
+    const day = parseInt(customSelectValues[`mr-day-${id}`] || '1');
+    const cat = customSelectValues[`multi-cat-${id}`] || 'food';
     const desc = document.getElementById(`multi-desc-${id}`)?.value.trim();
     const amount = parseFloat(document.getElementById(`multi-amount-${id}`)?.value) || 0;
-    const paidBy = document.getElementById(`multi-paidby-${id}`)?.value;
+    const paidBy = customSelectValues[`multi-paidby-${id}`] || '';
 
     if (!desc || amount <= 0 || !paidBy) {
       showToast('Please fill all fields in each row', 'err');
@@ -2750,7 +2866,142 @@ document.addEventListener('click', function(e) {
   if (!e.target.closest('.filter-btn') && !e.target.closest('.filter-dropdown')) {
     document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('active'));
   }
+  if (!e.target.closest('.custom-select')) {
+    document.querySelectorAll('.custom-select-dropdown').forEach(d => d.classList.remove('active'));
+  }
 });
+
+// ─── CUSTOM SELECT FOR ADD FORMS ──────────────────────────
+// Store selected values for custom selects
+let customSelectValues = {
+  'inp-day': '1',
+  'inp-cat': 'food',
+  'inp-paidby': ''
+};
+
+function toggleCustomSelect(selectId) {
+  const dropdown = document.getElementById(`${selectId}-dropdown`);
+  const isActive = dropdown.classList.contains('active');
+
+  // Close all custom select dropdowns first
+  document.querySelectorAll('.custom-select-dropdown').forEach(d => d.classList.remove('active'));
+
+  // Toggle the clicked dropdown
+  if (!isActive) {
+    dropdown.classList.add('active');
+  }
+}
+
+function selectCustomOption(selectId, value, label) {
+  // Update stored value
+  customSelectValues[selectId] = value;
+
+  // Update button label
+  document.getElementById(`${selectId}-label`).textContent = label;
+
+  // Update selected state in dropdown
+  const dropdown = document.getElementById(`${selectId}-dropdown`);
+  dropdown.querySelectorAll('.custom-select-option').forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+
+  // Close dropdown
+  dropdown.classList.remove('active');
+
+  // Handle special case for day selection (add new day)
+  if (selectId === 'inp-day' && value === 'add') {
+    addNewDay();
+    // After adding new day, update the dropdown and select the new day
+    setTimeout(() => {
+      populateMainDayDropdown();
+      selectCustomOption('inp-day', String(maxDay), `Day ${maxDay}`);
+    }, 100);
+  }
+}
+
+// Get value from custom select
+function getCustomSelectValue(selectId) {
+  return customSelectValues[selectId] || '';
+}
+
+// Populate main form day dropdown
+function populateMainDayDropdown() {
+  const dropdown = document.getElementById('inp-day-dropdown');
+  dropdown.innerHTML = '';
+
+  tripDays.forEach(dayObj => {
+    const option = document.createElement('div');
+    option.className = 'custom-select-option';
+    if (String(dayObj.day) === String(customSelectValues['inp-day'])) {
+      option.classList.add('selected');
+    }
+    const label = `Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})`;
+    option.onclick = () => selectCustomOption('inp-day', String(dayObj.day), label);
+    option.textContent = label;
+    dropdown.appendChild(option);
+  });
+
+  // Add "Add New Day" option
+  const addOption = document.createElement('div');
+  addOption.className = 'custom-select-option';
+  addOption.onclick = () => selectCustomOption('inp-day', 'add', '➕ Add New Day');
+  addOption.textContent = '➕ Add New Day';
+  dropdown.appendChild(addOption);
+}
+
+// Select option in multi-row custom select
+function selectMultiRowOption(selectId, value, label) {
+  // Update stored value
+  customSelectValues[selectId] = value;
+
+  // Update button label
+  document.getElementById(`${selectId}-label`).textContent = label;
+
+  // Update selected state in dropdown
+  const dropdown = document.getElementById(`${selectId}-dropdown`);
+  dropdown.querySelectorAll('.custom-select-option').forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+
+  // Close dropdown
+  dropdown.classList.remove('active');
+}
+
+// Handle add new day in multi-row
+function handleMultiRowAddDay(selectId) {
+  addNewDay();
+  // After adding new day, update all day dropdowns
+  setTimeout(() => {
+    populateMainDayDropdown();
+    // Update all multi-row day dropdowns
+    document.querySelectorAll('[id^="mr-day-"][id$="-dropdown"]').forEach(dropdown => {
+      const dropdownId = dropdown.id.replace('-dropdown', '');
+      const currentValue = customSelectValues[dropdownId];
+
+      dropdown.innerHTML = '';
+      tripDays.forEach(dayObj => {
+        const selected = String(dayObj.day) === String(currentValue) || String(dayObj.day) === String(maxDay);
+        const option = document.createElement('div');
+        option.className = 'custom-select-option' + (selected ? ' selected' : '');
+        const label = `Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})`;
+        option.onclick = () => selectMultiRowOption(dropdownId, String(dayObj.day), label);
+        option.textContent = label;
+        dropdown.appendChild(option);
+      });
+
+      const addOpt = document.createElement('div');
+      addOpt.className = 'custom-select-option';
+      addOpt.onclick = () => handleMultiRowAddDay(dropdownId);
+      addOpt.textContent = '➕ Add New Day';
+      dropdown.appendChild(addOpt);
+    });
+
+    // Select the new day in the dropdown that triggered this
+    selectMultiRowOption(selectId, String(maxDay), `Day ${maxDay}`);
+  }, 100);
+}
 
 function filterExpenses() {
   filterBy = document.getElementById('filterSelect')?.value || filterBy;
