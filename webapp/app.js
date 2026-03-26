@@ -1,5 +1,5 @@
 // ─── CONFIG ───────────────────────────────────────────────
-// Config is loaded from config.js (not committed to git)
+// Config is loaded from config.js
 const SCRIPT_URL = window.APP_CONFIG?.googleSheets?.scriptUrl || 'MISSING_CONFIG';
 
 if (SCRIPT_URL === 'MISSING_CONFIG') {
@@ -30,6 +30,21 @@ let dayFilterBy = 'all'; // New day filter
 let currentPage = 1; // Single page state
 let tripBudget = 0; // Trip budget
 const ITEMS_PER_PAGE = 10;
+
+// Multi-select state
+let selectedExpenses = new Set(); // For active expenses
+let selectedArchived = new Set(); // For archived expenses
+let isMultiSelectMode = false; // Global multi-select mode
+let selectedNotes = new Set(); // For notes
+let isNoteMultiSelectMode = false; // Notes multi-select mode
+
+// Notes/Tasks state
+let notes = [];
+let notesLoaded = false; // Track if notes have been loaded
+
+// Lazy loading state
+let archivedLoaded = false; // Track if archived expenses have been loaded
+let dataLoaded = false; // Track if initial data has been loaded
 
 // Trip days configuration
 let tripDays = [
@@ -158,8 +173,6 @@ window.onload = () => {
     currentUser = saved;
     hideNameOverlay();
 
-    // Populate day dropdown and filters before loading data
-    populateMainDayDropdown();
     updateFilterOptions();
 
     loadFromSheet();
@@ -191,15 +204,20 @@ window.onload = () => {
 function saveName() {
   const name = document.getElementById('nameInput').value.trim();
   if (!name) { document.getElementById('nameInput').focus(); return; }
+
   currentUser = name;
   localStorage.setItem('coorg_username', name);
   hideNameOverlay();
-  loadFromSheet();
+
+  // Only load data if it's the first time or if we don't have data loaded yet
+  // Changing user doesn't require reloading data since it's the same shared data
+  if (!dataLoaded) {
+    loadFromSheet();
+  }
 }
 
 function hideNameOverlay() {
   document.getElementById('nameOverlay').classList.add('hidden');
-  document.getElementById('inp-name').value = currentUser;
 
   // Map names to emojis
   const emojiMap = {
@@ -213,8 +231,6 @@ function hideNameOverlay() {
   document.getElementById('userAvatar').textContent = emoji;
   document.getElementById('userChipName').textContent = currentUser;
 
-  // Populate dropdowns after name is set
-  populateMainDayDropdown();
   updateFilterOptions();
 }
 
@@ -261,10 +277,6 @@ async function loadFromSheet() {
     const data = await dbGetAllExpenses();
     console.log('Loaded active expenses from Firebase:', data);
 
-    // Load archived expenses from Firebase
-    const archivedData = await dbGetArchivedExpenses();
-    console.log('Loaded archived expenses from Firebase:', archivedData);
-
     // Initialize expenses object for all trip days
     expenses = {};
     tripDays.forEach(dayObj => {
@@ -280,12 +292,6 @@ async function loadFromSheet() {
       expenses[e.day].push(e);
     });
 
-    // Process archived expenses
-    archivedExpenses = [];
-    (archivedData || []).forEach(e => {
-      archivedExpenses.push({ ...e, archivedDay: e.day });
-    });
-
     // Load budget from Firebase
     tripBudget = await dbGetBudget();
     console.log('Loaded budget from Firebase:', tripBudget);
@@ -293,6 +299,10 @@ async function loadFromSheet() {
       localStorage.setItem('coorg_budget', tripBudget);
     }
 
+    // Don't load archived expenses or notes on initial load
+    // They will be loaded when user expands those sections
+
+    dataLoaded = true; // Mark that initial data has been loaded
     saveLocal();
     render();
     setStatus('ok', 'Synced ✓');
@@ -300,6 +310,7 @@ async function loadFromSheet() {
     console.error('Error loading from Firebase:', e);
     setStatus('err', 'Offline — showing local data');
     loadFromLocal();
+    dataLoaded = true; // Mark as loaded even on error (using cached data)
     render();
   } finally {
     showLoading(false);
@@ -352,75 +363,8 @@ async function sheetUnarchive(id) {
 }
 
 // ─── ADD/EDIT EXPENSE ─────────────────────────────────────
-async function saveExpense() {
-  if (isBusy) return;
-  const day    = parseInt(document.getElementById('inp-day').value);
-  const desc   = document.getElementById('inp-desc').value.trim();
-  const cat    = document.getElementById('inp-cat').value;
-  const amount = parseFloat(document.getElementById('inp-amount').value) || 0;
-  const paidBy = document.getElementById('inp-paidby').value;
-  const name   = currentUser;
-
-  // Validation
-  if (!desc) {
-    showToast('Please enter a description', 'err');
-    document.getElementById('inp-desc').focus();
-    return;
-  }
-  if (amount <= 0) {
-    showToast('Please enter a valid amount', 'err');
-    document.getElementById('inp-amount').focus();
-    return;
-  }
-  if (!paidBy) {
-    showToast('Please select who paid', 'err');
-    document.getElementById('inp-paidby').focus();
-    return;
-  }
-
-  setBusy(true);
-  showLoading(true);
-  setStatus('syncing', 'Saving…');
-
-  try {
-    // Don't pass a local ID - let Firebase generate it
-    const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-    const exp = { day, name, desc, cat, amount, paidBy, archived: false, ts: timestamp, edited: "" };
-    const newId = await dbAddExpense(exp);
-    exp.id = newId; // Use the Firebase-generated ID
-    expenses[day].push(exp);
-
-    setStatus('ok', 'Synced ✓');
-    showToast('Expense added!', 'ok');
-  } catch(e) {
-    // If offline, create local ID and mark it
-    const localExp = {
-      id: 'local_' + Date.now(),
-      day, name, desc, cat, amount, paidBy, archived: false,
-      ts: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
-      edited: ""
-    };
-    expenses[day].push(localExp);
-    setStatus('err', 'Saved locally only');
-    showToast('No internet — saved locally', 'err');
-  }
-
-  saveLocal();
-  clearForm();
-  setBusy(false);
-  showLoading(false);
-  render();
-}
-
-function clearForm() {
-  document.getElementById('inp-desc').value = '';
-  document.getElementById('inp-amount').value = '';
-  document.getElementById('inp-paidby').value = '';
-  document.getElementById('inp-day').value = '1';
-  document.getElementById('inp-cat').value = 'food';
-  editingId = null;
-  document.getElementById('addBtnText').textContent = '+ Add';
-}
+// Old form-based saveExpense function - no longer used
+// Batch add modal handles new expense entry now
 
 // ─── INLINE EDIT ──────────────────────────────────────────
 // Store current edit context
@@ -516,225 +460,6 @@ async function saveEdit() {
   }
 }
 
-// ─── MULTI-ROW ADD ────────────────────────────────────────
-let multiRowCount = 0;
-
-function addExpenseRow() {
-  // Get current row count from DOM
-  const entriesDiv = document.getElementById('multiRowEntries');
-  const currentRows = entriesDiv.querySelectorAll('.multi-row-entry');
-  const currentRowCount = currentRows.length;
-
-  // Limit to 3 rows max
-  if (currentRowCount >= 3) {
-    showToast('Maximum 3 rows allowed', 'err');
-    return;
-  }
-
-  // Show the multi-row container if hidden
-  const container = document.getElementById('multiRowContainer');
-  container.classList.add('active');
-
-  // Generate unique ID for this row
-  multiRowCount++;
-  const rowDiv = document.createElement('div');
-  rowDiv.className = 'multi-row-entry';
-  rowDiv.id = `multi-row-${multiRowCount}`;
-
-  // Get current form values from inputs/selects
-  const day = document.getElementById('inp-day').value;
-  const cat = document.getElementById('inp-cat').value;
-  const desc = document.getElementById('inp-desc').value.trim();
-  const amount = document.getElementById('inp-amount').value;
-  const paidBy = document.getElementById('inp-paidby').value;
-
-  // Build day dropdown HTML
-  // Build day dropdown options
-  let dayOptionsHTML = '';
-  tripDays.forEach(dayObj => {
-    const selected = String(dayObj.day) === String(day) ? 'selected' : '';
-    dayOptionsHTML += `<option value="${dayObj.day}" ${selected}>Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})</option>`;
-  });
-  dayOptionsHTML += `<option value="add">➕ Add New Day</option>`;
-
-  // Build category dropdown options
-  const catOptions = [
-    {value: 'food', label: '🍽️ Food'},
-    {value: 'fuel', label: '⛽ Fuel'},
-    {value: 'stay', label: '🏨 Stay'},
-    {value: 'transport', label: '🚙 Transport'},
-    {value: 'entry', label: '🎟️ Entry'},
-    {value: 'misc', label: '🛍️ Misc'}
-  ];
-  let catOptionsHTML = '';
-  catOptions.forEach(opt => {
-    const selected = opt.value === cat ? 'selected' : '';
-    catOptionsHTML += `<option value="${opt.value}" ${selected}>${opt.label}</option>`;
-  });
-
-  // Build paid by dropdown options
-  const paidByOptions = [
-    {value: '', label: 'Select...'},
-    {value: 'Afsar', label: '👨‍💻 Afsar'},
-    {value: 'Adham', label: '👨‍💻 Adham'},
-    {value: 'Aakif', label: '👨‍💻 Aakif'},
-    {value: 'Sahlaan', label: '👨‍⚕️ Sahlaan'}
-  ];
-  let paidByOptionsHTML = '';
-  paidByOptions.forEach(opt => {
-    const selected = opt.value === paidBy ? 'selected' : '';
-    paidByOptionsHTML += `<option value="${opt.value}" ${selected}>${opt.label}</option>`;
-  });
-
-  rowDiv.innerHTML = `
-    <div>
-      <label>Day</label>
-      <select id="mr-day-${multiRowCount}" onchange="handleMultiRowDayChange(${multiRowCount}, this.value)">
-        ${dayOptionsHTML}
-      </select>
-    </div>
-    <div>
-      <label>Category</label>
-      <select id="multi-cat-${multiRowCount}">
-        ${catOptionsHTML}
-      </select>
-    </div>
-    <div>
-      <label>Description</label>
-      <input type="text" id="multi-desc-${multiRowCount}" value="${desc}" placeholder="e.g. Masala Dosa at Mylari" />
-    </div>
-    <div>
-      <label>Amount (₹)</label>
-      <input type="number" id="multi-amount-${multiRowCount}" value="${amount}" placeholder="0" min="0" />
-    </div>
-    <div>
-      <label>Paid by</label>
-      <select id="multi-paidby-${multiRowCount}">
-        ${paidByOptionsHTML}
-      </select>
-    </div>
-    <div style="visibility:hidden">
-      <label>Added</label>
-      <input type="text" readonly value="${currentUser}" />
-    </div>
-    <div style="display:flex;align-items:center;justify-content:center">
-      <button class="del-btn" onclick="removeMultiRow(${multiRowCount})" title="Remove" style="padding:4px 6px;font-size:14px">🗑️</button>
-    </div>
-  `;
-
-  entriesDiv.appendChild(rowDiv);
-
-  // Clear the main form
-  document.getElementById('inp-desc').value = '';
-  document.getElementById('inp-amount').value = '';
-  document.getElementById('inp-paidby').value = '';
-}
-
-function removeMultiRow(id) {
-  const row = document.getElementById(`multi-row-${id}`);
-  if (row) row.remove();
-
-  // Hide container if no rows left
-  const entriesDiv = document.getElementById('multiRowEntries');
-  if (entriesDiv.querySelectorAll('.multi-row-entry').length === 0) {
-    clearAllRows();
-  }
-}
-
-// Handle multi-row day change
-function handleMultiRowDayChange(rowId, value) {
-  if (value === 'add') {
-    const dayName = prompt('Enter day name (e.g., Saturday):');
-    const dayDate = prompt('Enter date (e.g., 28 March):');
-    if (dayName && dayDate) {
-      const newDay = tripDays.length + 1;
-      tripDays.push({ day: newDay, name: dayName, date: dayDate });
-
-      // Repopulate all day dropdowns
-      populateMainDayDropdown();
-
-      // Update this specific multi-row dropdown
-      const select = document.getElementById(`mr-day-${rowId}`);
-      select.innerHTML = '';
-      tripDays.forEach(dayObj => {
-        const option = document.createElement('option');
-        option.value = String(dayObj.day);
-        option.textContent = `Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})`;
-        select.appendChild(option);
-      });
-      const addOption = document.createElement('option');
-      addOption.value = 'add';
-      addOption.textContent = '➕ Add New Day';
-      select.appendChild(addOption);
-      select.value = String(newDay);
-    } else {
-      document.getElementById(`mr-day-${rowId}`).value = '1';
-    }
-  }
-}
-
-function clearAllRows() {
-  document.getElementById('multiRowContainer').classList.remove('active');
-  document.getElementById('multiRowEntries').innerHTML = '';
-  multiRowCount = 0;
-}
-
-async function saveMultipleExpenses() {
-  const entries = [];
-  const entriesDiv = document.getElementById('multiRowEntries');
-  const rows = entriesDiv.querySelectorAll('.multi-row-entry');
-
-  // Collect and validate all entries
-  for (let row of rows) {
-    const id = row.id.split('-')[2];
-    const day = parseInt(document.getElementById(`mr-day-${id}`)?.value || '1');
-    const cat = document.getElementById(`multi-cat-${id}`)?.value || 'food';
-    const desc = document.getElementById(`multi-desc-${id}`)?.value.trim();
-    const amount = parseFloat(document.getElementById(`multi-amount-${id}`)?.value) || 0;
-    const paidBy = document.getElementById(`multi-paidby-${id}`)?.value || '';
-
-    if (!desc || amount <= 0 || !paidBy) {
-      showToast('Please fill all fields in each row', 'err');
-      return;
-    }
-
-    entries.push({ day, cat, desc, amount, paidBy, name: currentUser });
-  }
-
-  if (entries.length === 0) {
-    showToast('No entries to save', 'err');
-    return;
-  }
-
-  // Save all entries
-  showLoading(true);
-  document.getElementById('multiSpinner').style.display = 'block';
-
-  let savedCount = 0;
-  for (let entry of entries) {
-    try {
-      // Don't pass local ID - let Firebase generate it
-      const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-      const exp = { ...entry, archived: false, ts: timestamp, edited: "" };
-      const newId = await dbAddExpense(exp);
-      exp.id = newId; // Use the Firebase-generated ID
-      expenses[entry.day].push(exp);
-      savedCount++;
-      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between requests
-    } catch(e) {
-      console.error('Failed to save entry:', e);
-    }
-  }
-
-  saveLocal();
-  showLoading(false);
-  document.getElementById('multiSpinner').style.display = 'none';
-
-  showToast(`${savedCount} expense${savedCount > 1 ? 's' : ''} added!`, 'ok');
-  clearAllRows();
-  render();
-}
-
 // ─── DELETE EXPENSE ───────────────────────────────────────
 function showDeleteConfirm(day, id) {
   const exp = expenses[day].find(e => String(e.id) === String(id));
@@ -804,9 +529,17 @@ function toggleSection(sectionId) {
 
   if (!section || !icon) return;
 
-  const isCollapsed = collapsedSections[sectionId];
+  // Get current state, default to true (collapsed) if not set
+  const isCollapsed = collapsedSections[sectionId] !== false;
 
   if (isCollapsed) {
+    // Lazy load data on first expansion
+    if (sectionId === 'archived' && !archivedLoaded) {
+      loadArchivedExpenses();
+    } else if (sectionId === 'notes' && !notesLoaded) {
+      loadNotes();
+    }
+
     // Determine display type based on section
     if (sectionId === 'addExpense' || sectionId === 'expenseHistory' || sectionId === 'notes' || sectionId === 'archived') {
       section.style.display = 'block';
@@ -837,6 +570,63 @@ function toggleSection(sectionId) {
 }
 
 
+// ─── LAZY LOADING FUNCTIONS ──────────────────────────────
+async function loadArchivedExpenses() {
+  if (archivedLoaded) return; // Already loaded
+
+  const loader = document.getElementById('archivedLoader');
+  const timeline = document.querySelector('#archived-section .timeline');
+
+  try {
+    // Show section loader, hide content
+    if (loader) loader.style.display = 'block';
+    if (timeline) timeline.style.display = 'none';
+
+    const archivedData = await dbGetArchivedExpenses();
+    console.log('Loaded archived expenses from Firebase:', archivedData);
+
+    archivedExpenses = [];
+    (archivedData || []).forEach(e => {
+      archivedExpenses.push({ ...e, archivedDay: e.day });
+    });
+
+    archivedLoaded = true;
+    renderArchived();
+  } catch (error) {
+    console.error('Error loading archived expenses:', error);
+    showToast('Failed to load archived expenses', 'err');
+  } finally {
+    // Hide loader, show content
+    if (loader) loader.style.display = 'none';
+    if (timeline) timeline.style.display = 'block';
+  }
+}
+
+async function loadNotes() {
+  if (notesLoaded) return; // Already loaded
+
+  const loader = document.getElementById('notesLoader');
+  const notesList = document.getElementById('notesList');
+
+  try {
+    // Show section loader, hide content
+    if (loader) loader.style.display = 'block';
+    if (notesList) notesList.style.display = 'none';
+
+    notes = await dbGetAllNotes();
+    notesLoaded = true;
+    renderNotes();
+  } catch (error) {
+    console.error('Error loading notes:', error);
+    showToast('Failed to load notes', 'err');
+  } finally {
+    // Hide loader, show content
+    if (loader) loader.style.display = 'none';
+    if (notesList) notesList.style.display = 'block';
+  }
+}
+
+
 function renderArchived() {
   const tbody = document.getElementById('archived-body');
   tbody.innerHTML = '';
@@ -847,10 +637,12 @@ function renderArchived() {
   const countSpan = document.getElementById('archivedCount');
   if (countSpan) countSpan.textContent = count;
 
+  const archiveMultiSelectMode = document.getElementById('archiveMultiSelectBtn')?.dataset.active === 'true';
+
   if (archivedExpenses.length === 0) {
     const tr = document.createElement('tr');
     tr.className = 'empty-row';
-    tr.innerHTML = `<td colspan="9">No archived expenses</td>`;
+    tr.innerHTML = `<td colspan="${archiveMultiSelectMode ? 10 : 9}">No archived expenses</td>`;
     tbody.appendChild(tr);
     return;
   }
@@ -858,9 +650,15 @@ function renderArchived() {
   archivedExpenses.forEach((exp, idx) => {
     const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
 
+    // Checkbox for multi-select
+    const checkboxHtml = archiveMultiSelectMode
+      ? `<input type="checkbox" id="check-archived-${exp.id}" ${selectedArchived.has(exp.id) ? 'checked' : ''} onchange="toggleArchivedSelection('${exp.id}')">`
+      : '';
+
     const tr = document.createElement('tr');
     tr.style.opacity = '0.7';
     tr.innerHTML = `
+      ${archiveMultiSelectMode ? `<td style="text-align:center">${checkboxHtml}</td>` : ''}
       <td class="num-col">${idx + 1}</td>
       <td style="font-size:13px">${exp.desc}</td>
       <td style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
@@ -868,8 +666,8 @@ function renderArchived() {
       <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
       <td class="amount-col" style="white-space:nowrap">₹${Number(exp.amount).toLocaleString('en-IN')}</td>
       <td style="font-size:11px;color:var(--muted)">Day ${exp.archivedDay}</td>
-      <td><button class="del-btn" onclick="showUnarchiveConfirm('${exp.id}')" title="Unarchive" style="background:var(--accent);color:#0e1412">↩️</button></td>
-      <td><button class="del-btn" onclick="showPermanentDeleteConfirm('${exp.id}')" title="Delete Permanently">🗑️</button></td>
+      ${!archiveMultiSelectMode ? `<td><button class="del-btn" onclick="showUnarchiveConfirm('${exp.id}')" title="Unarchive" style="background:var(--accent);color:#0e1412">↩️</button></td>` : ''}
+      ${!archiveMultiSelectMode ? `<td><button class="del-btn" onclick="showPermanentDeleteConfirm('${exp.id}')" title="Delete Permanently">🗑️</button></td>` : ''}
     `;
     tbody.appendChild(tr);
   });
@@ -998,6 +796,10 @@ function render() {
     }
   });
 
+  // Update expense count in section header
+  const expensesCountSpan = document.getElementById('expensesCount');
+  if (expensesCountSpan) expensesCountSpan.textContent = allExpenses.length;
+
   // Filter by day
   if (dayFilterBy !== 'all') {
     allExpenses = allExpenses.filter(e => e.day === parseInt(dayFilterBy));
@@ -1114,7 +916,13 @@ function render() {
       const descId = `desc-${exp.id}`;
       const showTruncated = exp.desc.length > 100;
 
+      // Checkbox for multi-select
+      const checkboxHtml = isMultiSelectMode
+        ? `<input type="checkbox" id="check-${exp.id}" ${selectedExpenses.has(`${exp.day}:${exp.id}`) ? 'checked' : ''} onchange="toggleExpenseSelection(${exp.day}, '${exp.id}')">`
+        : '';
+
       tr.innerHTML = `
+        ${isMultiSelectMode ? `<td style="text-align:center">${checkboxHtml}</td>` : ''}
         <td class="num-col">${startIdx + idx + 1}</td>
         <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">Day ${exp.day}</td>
         <td>
@@ -1129,8 +937,8 @@ function render() {
         <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
         <td style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${timeStr}</td>
         <td class="amount-col" style="white-space:nowrap">${exp.amount > 0 ? '₹' + Number(exp.amount).toLocaleString('en-IN') : '<span style="color:#3a5545">—</span>'}</td>
-        <td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${exp.day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>
-        <td><button class="del-btn" onclick="showDeleteConfirm(${exp.day}, '${exp.id}')" title="Archive">🗃️</button></td>
+        ${!isMultiSelectMode ? `<td>${canEdit ? `<button class="del-btn edit-btn" onclick="startInlineEdit(${exp.day}, '${exp.id}')" title="Edit">${editIcon}</button>` : ''}</td>` : ''}
+        ${!isMultiSelectMode ? `<td><button class="del-btn" onclick="showDeleteConfirm(${exp.day}, '${exp.id}')" title="Archive">🗃️</button></td>` : ''}
       `;
       tbody.appendChild(tr);
     });
@@ -1142,10 +950,12 @@ function render() {
     totalRow.style.fontWeight = 'bold';
     totalRow.style.backgroundColor = 'rgba(72, 126, 98, 0.15)';
     totalRow.style.borderTop = '2px solid var(--accent)';
+    const colspanOffset = isMultiSelectMode ? 1 : 0;
     totalRow.innerHTML = `
-      <td colspan="7" style="text-align:right;padding-right:12px">Total ${dayFilterBy !== 'all' ? `(Day ${dayFilterBy})` : ''}:</td>
+      ${isMultiSelectMode ? '<td></td>' : ''}
+      <td colspan="${7 + colspanOffset}" style="text-align:right;padding-right:12px">Total ${dayFilterBy !== 'all' ? `(Day ${dayFilterBy})` : ''}:</td>
       <td class="amount-col" style="white-space:nowrap;color:var(--accent)">₹${filteredTotal.toLocaleString('en-IN')}</td>
-      <td colspan="2"></td>
+      ${!isMultiSelectMode ? '<td colspan="2"></td>' : ''}
     `;
     tbody.appendChild(totalRow);
 
@@ -1402,148 +1212,6 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// ─── CUSTOM SELECT FOR ADD FORMS ──────────────────────────
-// Store selected values for custom selects
-let customSelectValues = {
-  'inp-day': '1',
-  'inp-cat': 'food',
-  'inp-paidby': ''
-};
-
-function toggleCustomSelect(selectId) {
-  const dropdown = document.getElementById(`${selectId}-dropdown`);
-  const isActive = dropdown.classList.contains('active');
-
-  // Close all custom select dropdowns first
-  document.querySelectorAll('.custom-select-dropdown').forEach(d => d.classList.remove('active'));
-
-  // Toggle the clicked dropdown
-  if (!isActive) {
-    dropdown.classList.add('active');
-  }
-}
-
-function selectCustomOption(selectId, value, label) {
-  // Update stored value
-  customSelectValues[selectId] = value;
-
-  // Update button label
-  document.getElementById(`${selectId}-label`).textContent = label;
-
-  // Update selected state in dropdown
-  const dropdown = document.getElementById(`${selectId}-dropdown`);
-  dropdown.querySelectorAll('.custom-select-option').forEach(opt => {
-    opt.classList.remove('selected');
-  });
-  event.target.classList.add('selected');
-
-  // Close dropdown
-  dropdown.classList.remove('active');
-
-  // Handle special case for day selection (add new day)
-  if (selectId === 'inp-day' && value === 'add') {
-    addNewDay();
-    // After adding new day, update the dropdown and select the new day
-    setTimeout(() => {
-      populateMainDayDropdown();
-      selectCustomOption('inp-day', String(maxDay), `Day ${maxDay}`);
-    }, 100);
-  }
-}
-
-// Get value from custom select
-function getCustomSelectValue(selectId) {
-  return customSelectValues[selectId] || '';
-}
-
-// Populate main form day dropdown
-function populateMainDayDropdown() {
-  const dropdown = document.getElementById('inp-day');
-  dropdown.innerHTML = '';
-
-  tripDays.forEach(dayObj => {
-    const option = document.createElement('option');
-    option.value = String(dayObj.day);
-    option.textContent = `Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})`;
-    dropdown.appendChild(option);
-  });
-
-  // Add "Add New Day" option
-  const addOption = document.createElement('option');
-  addOption.value = 'add';
-  addOption.textContent = '➕ Add New Day';
-  dropdown.appendChild(addOption);
-
-  // Handle "Add New Day" selection
-  dropdown.addEventListener('change', function() {
-    if (this.value === 'add') {
-      const dayName = prompt('Enter day name (e.g., Saturday):');
-      const dayDate = prompt('Enter date (e.g., 28 March):');
-      if (dayName && dayDate) {
-        const newDay = tripDays.length + 1;
-        tripDays.push({ day: newDay, name: dayName, date: dayDate });
-        populateMainDayDropdown();
-        this.value = String(newDay);
-      } else {
-        this.value = '1';
-      }
-    }
-  });
-}
-
-// Select option in multi-row custom select
-function selectMultiRowOption(selectId, value, label) {
-  // Update stored value
-  customSelectValues[selectId] = value;
-
-  // Update button label
-  document.getElementById(`${selectId}-label`).textContent = label;
-
-  // Update selected state in dropdown
-  const dropdown = document.getElementById(`${selectId}-dropdown`);
-  dropdown.querySelectorAll('.custom-select-option').forEach(opt => {
-    opt.classList.remove('selected');
-  });
-  event.target.classList.add('selected');
-
-  // Close dropdown
-  dropdown.classList.remove('active');
-}
-
-// Handle add new day in multi-row
-function handleMultiRowAddDay(selectId) {
-  addNewDay();
-  // After adding new day, update all day dropdowns
-  setTimeout(() => {
-    populateMainDayDropdown();
-    // Update all multi-row day dropdowns
-    document.querySelectorAll('[id^="mr-day-"][id$="-dropdown"]').forEach(dropdown => {
-      const dropdownId = dropdown.id.replace('-dropdown', '');
-      const currentValue = customSelectValues[dropdownId];
-
-      dropdown.innerHTML = '';
-      tripDays.forEach(dayObj => {
-        const selected = String(dayObj.day) === String(currentValue) || String(dayObj.day) === String(maxDay);
-        const option = document.createElement('div');
-        option.className = 'custom-select-option' + (selected ? ' selected' : '');
-        const label = `Day ${dayObj.day} (${dayObj.name}, ${dayObj.date})`;
-        option.onclick = () => selectMultiRowOption(dropdownId, String(dayObj.day), label);
-        option.textContent = label;
-        dropdown.appendChild(option);
-      });
-
-      const addOpt = document.createElement('div');
-      addOpt.className = 'custom-select-option';
-      addOpt.onclick = () => handleMultiRowAddDay(dropdownId);
-      addOpt.textContent = '➕ Add New Day';
-      dropdown.appendChild(addOpt);
-    });
-
-    // Select the new day in the dropdown that triggered this
-    selectMultiRowOption(selectId, String(maxDay), `Day ${maxDay}`);
-  }, 100);
-}
-
 function filterExpenses() {
   filterBy = document.getElementById('filterSelect')?.value || filterBy;
   currentPage = 1; // Reset to first page
@@ -1631,14 +1299,39 @@ function setStatus(state, text) {
   dot.className = 'status-dot' + (state ? ' ' + state : '');
   document.getElementById('statusText').textContent = text;
 }
+// ─── LOADING & TOAST ──────────────────────────────────────
+const loadingMessages = [
+  'Loading...',
+  'Fetching data...',
+  'Getting things ready...',
+  'Almost there...',
+  'Syncing expenses...',
+  'Preparing your data...',
+  'Just a moment...',
+  'Loading expenses...',
+  'Retrieving records...',
+  'One sec...'
+];
+
+function getRandomLoadingMessage() {
+  return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+}
+
 function showLoading(show) {
   const overlay = document.getElementById('loadingOverlay');
+  const loadingText = document.getElementById('loadingText');
+
   if (show) {
+    // Set a random loading message
+    if (loadingText) {
+      loadingText.textContent = getRandomLoadingMessage();
+    }
     overlay.classList.remove('hidden');
   } else {
     overlay.classList.add('hidden');
   }
 }
+
 let toastTimer;
 function showToast(msg, type) {
   const t = document.getElementById('toast');
@@ -1774,9 +1467,699 @@ window.addEventListener('load', function() {
   }
 });
 
-document.getElementById('inp-amount').addEventListener('keydown', e => {
-  if (e.key === 'Enter') addExpenseRow();
+// ============================================
+// NOTES/TASKS MANAGEMENT
+// ============================================
+
+// Render notes list
+function renderNotes() {
+  const notesList = document.getElementById('notesList');
+  if (!notesList) return;
+
+  if (notes.length === 0) {
+    notesList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">No notes yet. Click "Add Note" to create one.</div>';
+    return;
+  }
+
+  notesList.innerHTML = notes.map(note => {
+    const isCompleted = note.completed || false;
+    const textStyle = isCompleted ? 'text-decoration:line-through;opacity:0.6' : '';
+    const createdBy = note.createdBy || '—';
+
+    // Handle timestamp - prefer createdAtLocal (formatted string), fallback to Firebase timestamp
+    let createdAt = '—';
+    if (note.createdAtLocal && typeof note.createdAtLocal === 'string') {
+      createdAt = note.createdAtLocal;
+    } else if (note.createdAt) {
+      if (typeof note.createdAt === 'string') {
+        createdAt = note.createdAt;
+      } else if (note.createdAt.toDate) {
+        // Firebase Timestamp object
+        createdAt = note.createdAt.toDate().toLocaleString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+      }
+    }
+
+    return `
+      <div class="note-item" style="display:flex;gap:12px;padding:12px;background:rgba(72, 126, 98, 0.1);border-radius:8px;margin-bottom:8px;align-items:start">
+        ${isNoteMultiSelectMode ? `
+          <input
+            type="checkbox"
+            id="check-note-${note.id}"
+            ${selectedNotes.has(note.id) ? 'checked' : ''}
+            onchange="event.stopPropagation();toggleNoteSelection('${note.id}')"
+            onclick="event.stopPropagation()"
+            style="margin-top:2px;flex-shrink:0"
+          />
+        ` : ''}
+        <input
+          type="checkbox"
+          ${isCompleted ? 'checked' : ''}
+          onchange="event.stopPropagation();toggleNoteComplete('${note.id}')"
+          onclick="event.stopPropagation()"
+          style="margin-top:2px;flex-shrink:0"
+          ${isNoteMultiSelectMode ? 'disabled' : ''}
+        />
+        <div style="flex:1;${textStyle}">
+          <div style="font-size:14px;line-height:1.5;margin-bottom:4px">${note.text}</div>
+          <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">
+            👤 ${createdBy} • 🕐 ${createdAt}
+          </div>
+        </div>
+        ${!isNoteMultiSelectMode ? `
+          <button
+            onclick="event.stopPropagation();showDeleteNoteDialog('${note.id}')"
+            style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px"
+            title="Delete note"
+          >🗑️</button>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// Show add note dialog
+function showAddNoteDialog() {
+  document.getElementById('addNoteOverlay').classList.remove('hidden');
+  document.getElementById('noteText').value = '';
+  document.getElementById('noteText').focus();
+}
+
+// Cancel add note
+function cancelAddNote() {
+  document.getElementById('addNoteOverlay').classList.add('hidden');
+}
+
+// Add new note
+async function addNote() {
+  const text = document.getElementById('noteText').value.trim();
+
+  if (!text) {
+    showToast('Please enter note text', 'err');
+    return;
+  }
+
+  // Close popup and show loading immediately
+  cancelAddNote();
+  showLoading(true);
+  setStatus('syncing', 'Adding note...');
+
+  try {
+    const ts = new Date().toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    const note = {
+      text: text,
+      completed: false,
+      createdBy: currentUser,
+      createdAt: ts,
+      createdAtLocal: ts
+    };
+
+    const id = await dbAddNote(note);
+    notes.push({ id, ...note });
+
+    renderNotes();
+    setStatus('ok', 'Synced ✓');
+    showToast('Note added!', 'ok');
+  } catch (error) {
+    console.error('Error adding note:', error);
+    setStatus('err', 'Failed');
+    showToast('Failed to add note', 'err');
+  } finally {
+    showLoading(false);
+  }
+}
+
+// Toggle note completion
+async function toggleNoteComplete(id) {
+  showLoading(true);
+
+  try {
+    const note = notes.find(n => n.id === id);
+    if (!note) return;
+
+    note.completed = !note.completed;
+    await dbUpdateNote(id, { completed: note.completed });
+
+    renderNotes();
+    showLoading(false);
+  } catch (error) {
+    console.error('Error toggling note:', error);
+    // Revert on error
+    const note = notes.find(n => n.id === id);
+    if (note) note.completed = !note.completed;
+    renderNotes();
+    showLoading(false);
+    showToast('Failed to update note', 'err');
+  }
+}
+
+// Delete note
+let deleteNoteTarget = null;
+
+function showDeleteNoteDialog(id) {
+  deleteNoteTarget = id;
+  const note = notes.find(n => n.id === id);
+  if (!note) return;
+
+  document.getElementById('deleteNoteText').textContent = note.text;
+
+  // Show creator and time info
+  const createdBy = note.createdBy || '—';
+  let createdAt = '—';
+  if (note.createdAtLocal && typeof note.createdAtLocal === 'string') {
+    createdAt = note.createdAtLocal;
+  } else if (note.createdAt && note.createdAt.toDate) {
+    createdAt = note.createdAt.toDate().toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+  document.getElementById('deleteNoteInfo').textContent = `👤 ${createdBy} • 🕐 ${createdAt}`;
+
+  document.getElementById('deleteNoteOverlay').classList.remove('hidden');
+}
+
+function cancelDeleteNote() {
+  deleteNoteTarget = null;
+  document.getElementById('deleteNoteOverlay').classList.add('hidden');
+}
+
+async function confirmDeleteNote() {
+  if (!deleteNoteTarget) return;
+
+  document.getElementById('deleteNoteOverlay').classList.add('hidden');
+  showLoading(true);
+  setStatus('syncing', 'Deleting note...');
+
+  try {
+    await dbDeleteNote(deleteNoteTarget);
+    notes = notes.filter(n => n.id !== deleteNoteTarget);
+
+    renderNotes();
+    setStatus('ok', 'Synced ✓');
+    showToast('Note deleted', 'ok');
+  } catch (error) {
+    console.error('Error deleting note:', error);
+    setStatus('err', 'Failed');
+    showToast('Failed to delete note', 'err');
+  } finally {
+    showLoading(false);
+    deleteNoteTarget = null;
+  }
+}
+
+// ============================================
+// NOTES MULTI-SELECT FUNCTIONS
+// ============================================
+
+function toggleNoteMultiSelect() {
+  isNoteMultiSelectMode = !isNoteMultiSelectMode;
+  selectedNotes.clear();
+
+  const btn = document.getElementById('noteMultiSelectBtn');
+  const bulkActions = document.getElementById('noteBulkActions');
+
+  if (isNoteMultiSelectMode) {
+    btn.textContent = 'Cancel Selection';
+    btn.style.background = 'rgba(232, 110, 138, 0.2)';
+    bulkActions.style.display = 'block';
+  } else {
+    btn.textContent = '☑️ Select Multiple';
+    btn.style.background = 'rgba(72, 126, 98, 0.2)';
+    bulkActions.style.display = 'none';
+  }
+
+  renderNotes();
+}
+
+function toggleNoteSelection(id) {
+  if (selectedNotes.has(id)) {
+    selectedNotes.delete(id);
+  } else {
+    selectedNotes.add(id);
+  }
+
+  // Update checkbox visual state
+  const checkbox = document.getElementById(`check-note-${id}`);
+  if (checkbox) {
+    checkbox.checked = selectedNotes.has(id);
+  }
+
+  // Update bulk action button
+  updateNoteBulkActionButtons();
+}
+
+function updateNoteBulkActionButtons() {
+  const count = selectedNotes.size;
+  const bulkDeleteBtn = document.getElementById('bulkDeleteNotesBtn');
+
+  if (bulkDeleteBtn) {
+    bulkDeleteBtn.disabled = count === 0;
+    bulkDeleteBtn.textContent = count > 0 ? `Delete Selected (${count})` : 'Delete Selected';
+  }
+}
+
+function bulkDeleteNotes() {
+  if (selectedNotes.size === 0) return;
+
+  // Get note details for confirmation
+  const notesToDelete = [];
+  selectedNotes.forEach(id => {
+    const note = notes.find(n => n.id === id);
+    if (note) {
+      notesToDelete.push(note);
+    }
+  });
+
+  // Show confirmation dialog
+  showBulkDeleteNotesConfirm(notesToDelete);
+}
+
+function showBulkDeleteNotesConfirm(notesArray) {
+  const overlay = document.getElementById('bulkDeleteNotesOverlay');
+  const detailsEl = document.getElementById('bulkDeleteNotesDetails');
+
+  let html = `<div style="max-height:300px;overflow-y:auto;margin:16px 0;padding:4px">`;
+  notesArray.forEach((note, idx) => {
+    const createdBy = note.createdBy || '—';
+    let createdAt = '—';
+    if (note.createdAtLocal && typeof note.createdAtLocal === 'string') {
+      createdAt = note.createdAtLocal;
+    } else if (note.createdAt && note.createdAt.toDate) {
+      createdAt = note.createdAt.toDate().toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+
+    html += `<div style="padding:12px 14px;background:rgba(232, 110, 138, 0.15);margin-bottom:8px;border-radius:8px;border-left:3px solid #e86e8a">
+      <div style="font-weight:500;margin-bottom:6px;color:var(--text);font-size:14px">${idx + 1}. ${note.text}</div>
+      <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">
+        👤 ${createdBy} • 🕐 ${createdAt}
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  detailsEl.innerHTML = html;
+  overlay.classList.remove('hidden');
+}
+
+function cancelBulkDeleteNotes() {
+  document.getElementById('bulkDeleteNotesOverlay').classList.add('hidden');
+}
+
+async function confirmBulkDeleteNotes() {
+  document.getElementById('bulkDeleteNotesOverlay').classList.add('hidden');
+  showLoading(true);
+  setStatus('syncing', 'Deleting notes...');
+
+  let successCount = 0;
+  let failCount = 0;
+
+  // Process in parallel for better performance
+  const promises = Array.from(selectedNotes).map(async (id) => {
+    try {
+      await dbDeleteNote(id);
+      return { success: true, id };
+    } catch (e) {
+      console.error('Failed to delete note:', id, e);
+      return { success: false, id };
+    }
+  });
+
+  // Wait for all operations to complete
+  const results = await Promise.all(promises);
+
+  // Count successes and failures
+  results.forEach(result => {
+    if (result.success) {
+      successCount++;
+      notes = notes.filter(n => n.id !== result.id);
+    } else {
+      failCount++;
+    }
+  });
+
+  showLoading(false);
+  selectedNotes.clear();
+  isNoteMultiSelectMode = false;
+  document.getElementById('noteMultiSelectBtn').textContent = '☑️ Select Multiple';
+  document.getElementById('noteMultiSelectBtn').style.background = 'rgba(72, 126, 98, 0.2)';
+  document.getElementById('noteBulkActions').style.display = 'none';
+
+  if (failCount === 0) {
+    setStatus('ok', 'Synced ✓');
+    showToast(`${successCount} note${successCount > 1 ? 's' : ''} deleted!`, 'ok');
+  } else {
+    setStatus('err', 'Some failed');
+    showToast(`Deleted ${successCount}, failed ${failCount}`, 'err');
+  }
+
+  renderNotes();
+}
+
+// ============================================
+// BATCH ADD EXPENSES
+// ============================================
+
+let batchExpenseRows = [];
+
+function showBatchAddDialog() {
+  batchExpenseRows = [{}]; // Start with one empty row
+  renderBatchAddRows();
+  document.getElementById('batchAddOverlay').classList.remove('hidden');
+}
+
+function renderBatchAddRows() {
+  const container = document.getElementById('batchAddEntries');
+
+  container.innerHTML = batchExpenseRows.map((row, index) => {
+    // Get selected values or defaults
+    const selectedDay = row.day || tripDays[0].day;
+    const selectedCat = row.cat || 'food';
+    const selectedPaidBy = row.paidBy || '';
+
+    // Get display labels
+    const dayLabel = tripDays.find(d => d.day == selectedDay)?.name || `Day ${selectedDay}`;
+    const catLabels = {
+      food: '🍽️ Food',
+      fuel: '⛽ Fuel',
+      stay: '🏨 Stay',
+      transport: '🚙 Transport',
+      entry: '🎟️ Entry Fees',
+      misc: '🛍️ Miscellaneous'
+    };
+    const catLabel = catLabels[selectedCat] || '🍽️ Food';
+    const paidByLabel = selectedPaidBy ? `${selectedPaidBy === 'Afsar' ? '👨‍💻' : selectedPaidBy === 'Sahlaan' ? '👨‍⚕️' : '👨‍💻'} ${selectedPaidBy}` : 'Select...';
+
+    return `
+    <div style="padding:16px;background:rgba(72, 126, 98, 0.05);border-radius:8px;margin-bottom:12px;border:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-weight:500;color:var(--accent);font-family:'DM Mono',monospace">Entry ${index + 1}</div>
+        ${batchExpenseRows.length > 1 ? `
+          <button onclick="removeBatchRow(${index})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px">×</button>
+        ` : ''}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+        <div style="position:relative">
+          <label style="display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Day</label>
+          <div class="batch-select-btn" id="batch-day-btn-${index}" onclick="toggleBatchDropdown('day', ${index})" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;padding-right:35px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;position:relative;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center;">
+            <span id="batch-day-label-${index}">Day ${selectedDay} (${dayLabel})</span>
+          </div>
+          <div class="batch-dropdown" id="batch-day-dropdown-${index}" style="position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--accent);border-radius:8px;padding:6px;min-width:100%;width:max-content;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000;display:none">
+            ${tripDays.map(d => `<div class="batch-option ${d.day == selectedDay ? 'selected' : ''}" onclick="selectBatchDay(${index}, ${d.day}, 'Day ${d.day} (${d.name})')" style="padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap">Day ${d.day} (${d.name})</div>`).join('')}
+            <div class="batch-option" onclick="handleBatchAddNewDay(${index})" style="padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap">➕ Add New Day</div>
+          </div>
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Description</label>
+          <input type="text" id="batch-desc-${index}" value="${row.desc || ''}" onchange="updateBatchRow(${index}, 'desc', this.value)" placeholder="e.g. Lunch at restaurant" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;">
+        </div>
+        <div style="position:relative">
+          <label style="display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Category</label>
+          <div class="batch-select-btn" id="batch-cat-btn-${index}" onclick="toggleBatchDropdown('cat', ${index})" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;padding-right:35px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;position:relative;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center;">
+            <span id="batch-cat-label-${index}">${catLabel}</span>
+          </div>
+          <div class="batch-dropdown" id="batch-cat-dropdown-${index}" style="position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--accent);border-radius:8px;padding:6px;min-width:100%;width:max-content;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000;display:none">
+            <div class="batch-option ${selectedCat === 'food' ? 'selected' : ''}" onclick="selectBatchCat(${index}, 'food', '🍽️ Food')" style="padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap">🍽️ Food</div>
+            <div class="batch-option ${selectedCat === 'fuel' ? 'selected' : ''}" onclick="selectBatchCat(${index}, 'fuel', '⛽ Fuel')" style="padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap">⛽ Fuel</div>
+            <div class="batch-option ${selectedCat === 'stay' ? 'selected' : ''}" onclick="selectBatchCat(${index}, 'stay', '🏨 Stay')" style="padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap">🏨 Stay</div>
+            <div class="batch-option ${selectedCat === 'transport' ? 'selected' : ''}" onclick="selectBatchCat(${index}, 'transport', '🚙 Transport')" style="padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap">🚙 Transport</div>
+            <div class="batch-option ${selectedCat === 'entry' ? 'selected' : ''}" onclick="selectBatchCat(${index}, 'entry', '🎟️ Entry Fees')" style="padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap">🎟️ Entry Fees</div>
+            <div class="batch-option ${selectedCat === 'misc' ? 'selected' : ''}" onclick="selectBatchCat(${index}, 'misc', '🛍️ Miscellaneous')" style="padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap">🛍️ Miscellaneous</div>
+          </div>
+        </div>
+        <div>
+          <label style="display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Amount (₹)</label>
+          <input type="number" id="batch-amount-${index}" value="${row.amount || ''}" onchange="updateBatchRow(${index}, 'amount', this.value)" placeholder="0" min="0" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'DM Mono',monospace;font-size:14px;outline:none;">
+        </div>
+        <div style="position:relative">
+          <label style="display:block;margin-bottom:4px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Paid By</label>
+          <div class="batch-select-btn" id="batch-paidby-btn-${index}" onclick="toggleBatchDropdown('paidby', ${index})" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;padding-right:35px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;position:relative;background-image:url(&quot;data:image/svg+xml,%3Csvg fill='%236b8a78' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center;">
+            <span id="batch-paidby-label-${index}">${paidByLabel}</span>
+          </div>
+          <div class="batch-dropdown" id="batch-paidby-dropdown-${index}" style="position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--accent);border-radius:8px;padding:6px;min-width:100%;width:max-content;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000;display:none">
+            <div class="batch-option ${selectedPaidBy === '' ? 'selected' : ''}" onclick="selectBatchPaidBy(${index}, '', 'Select...')" style="padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap">Select...</div>
+            <div class="batch-option ${selectedPaidBy === 'Afsar' ? 'selected' : ''}" onclick="selectBatchPaidBy(${index}, 'Afsar', '👨‍💻 Afsar')" style="padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap">👨‍💻 Afsar</div>
+            <div class="batch-option ${selectedPaidBy === 'Adham' ? 'selected' : ''}" onclick="selectBatchPaidBy(${index}, 'Adham', '👨‍💻 Adham')" style="padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap">👨‍💻 Adham</div>
+            <div class="batch-option ${selectedPaidBy === 'Aakif' ? 'selected' : ''}" onclick="selectBatchPaidBy(${index}, 'Aakif', '👨‍💻 Aakif')" style="padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap">👨‍💻 Aakif</div>
+            <div class="batch-option ${selectedPaidBy === 'Sahlaan' ? 'selected' : ''}" onclick="selectBatchPaidBy(${index}, 'Sahlaan', '👨‍⚕️ Sahlaan')" style="padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap">👨‍⚕️ Sahlaan</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  }).join('');
+}
+
+// Toggle batch dropdown
+function toggleBatchDropdown(type, index) {
+  const dropdown = document.getElementById(`batch-${type}-dropdown-${index}`);
+  const isActive = dropdown.style.display === 'block';
+
+  // Close all batch dropdowns
+  document.querySelectorAll('.batch-dropdown').forEach(d => {
+    d.style.display = 'none';
+    // Reset positioning
+    d.style.top = '100%';
+    d.style.bottom = 'auto';
+    d.style.marginTop = '4px';
+    d.style.marginBottom = '0';
+  });
+
+  // Toggle clicked dropdown
+  if (!isActive) {
+    // First set display to block but invisible to measure
+    dropdown.style.display = 'block';
+    dropdown.style.visibility = 'hidden';
+
+    // Force a reflow to ensure dropdown is rendered
+    dropdown.offsetHeight;
+
+    // Check if dropdown will overflow the modal
+    const modalOverlay = document.getElementById('batchAddOverlay');
+    const modalBox = modalOverlay.querySelector('.confirm-box');
+    const dropdownRect = dropdown.getBoundingClientRect();
+    const modalRect = modalBox.getBoundingClientRect();
+
+    // If dropdown goes below modal bottom, open it upward
+    if (dropdownRect.bottom > modalRect.bottom - 20) {
+      dropdown.style.top = 'auto';
+      dropdown.style.bottom = '100%';
+      dropdown.style.marginTop = '0';
+      dropdown.style.marginBottom = '4px';
+    }
+
+    // Make it visible
+    dropdown.style.visibility = 'visible';
+  }
+}
+
+// Select batch day
+function selectBatchDay(index, value, label) {
+  updateBatchRow(index, 'day', value);
+  document.getElementById(`batch-day-label-${index}`).textContent = label;
+  document.getElementById(`batch-day-dropdown-${index}`).style.display = 'none';
+
+  // Update selected state
+  document.querySelectorAll(`#batch-day-dropdown-${index} .batch-option`).forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+}
+
+// Select batch category
+function selectBatchCat(index, value, label) {
+  updateBatchRow(index, 'cat', value);
+  document.getElementById(`batch-cat-label-${index}`).textContent = label;
+  document.getElementById(`batch-cat-dropdown-${index}`).style.display = 'none';
+
+  // Update selected state
+  document.querySelectorAll(`#batch-cat-dropdown-${index} .batch-option`).forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+}
+
+// Select batch paid by
+function selectBatchPaidBy(index, value, label) {
+  updateBatchRow(index, 'paidBy', value);
+  document.getElementById(`batch-paidby-label-${index}`).textContent = label;
+  document.getElementById(`batch-paidby-dropdown-${index}`).style.display = 'none';
+
+  // Update selected state
+  document.querySelectorAll(`#batch-paidby-dropdown-${index} .batch-option`).forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+}
+
+// Handle add new day from batch dropdown
+function handleBatchAddNewDay(index) {
+  document.getElementById(`batch-day-dropdown-${index}`).style.display = 'none';
+
+  const dayName = prompt('Enter day name (e.g., Monday):');
+  const dayDate = prompt('Enter date (e.g., 30 March):');
+
+  if (dayName && dayDate) {
+    const newDayNumber = tripDays.length + 1;
+    tripDays.push({ day: newDayNumber, name: dayName, date: dayDate });
+
+    // Update this row to the new day
+    batchExpenseRows[index].day = newDayNumber;
+
+    // Re-render to show updated dropdowns
+    renderBatchAddRows();
+    updateFilterOptions();
+  }
+}
+
+// Close batch dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.batch-select-btn') && !e.target.closest('.batch-dropdown')) {
+    document.querySelectorAll('.batch-dropdown').forEach(d => d.style.display = 'none');
+  }
 });
-document.getElementById('inp-paidby').addEventListener('keydown', e => {
-  if (e.key === 'Enter') addExpenseRow();
+
+function handleBatchDayChange(index, value) {
+  if (value === 'add') {
+    const dayName = prompt('Enter day name (e.g., Monday):');
+    const dayDate = prompt('Enter date (e.g., 30 March):');
+
+    if (dayName && dayDate) {
+      const newDayNumber = tripDays.length + 1;
+      tripDays.push({ day: newDayNumber, name: dayName, date: dayDate });
+
+      // Update this row to the new day
+      batchExpenseRows[index].day = newDayNumber;
+
+      // Re-render to show updated dropdowns
+      renderBatchAddRows();
+      updateFilterOptions();
+    } else {
+      // User cancelled, reset to first day
+      batchExpenseRows[index].day = tripDays[0].day;
+      document.getElementById(`batch-day-${index}`).value = tripDays[0].day;
+    }
+  } else {
+    updateBatchRow(index, 'day', value);
+  }
+}
+
+function updateBatchRow(index, field, value) {
+  batchExpenseRows[index][field] = value;
+}
+
+function addAnotherBatchRow() {
+  if (batchExpenseRows.length >= 3) {
+    showToast('Maximum 3 entries allowed', 'err');
+    return;
+  }
+  batchExpenseRows.push({});
+  renderBatchAddRows();
+}
+
+function removeBatchRow(index) {
+  batchExpenseRows.splice(index, 1);
+  renderBatchAddRows();
+}
+
+function cancelBatchAdd() {
+  batchExpenseRows = [];
+  document.getElementById('batchAddOverlay').classList.add('hidden');
+}
+
+async function saveBatchExpenses() {
+  // Validate all rows
+  const validRows = [];
+  for (let i = 0; i < batchExpenseRows.length; i++) {
+    const row = batchExpenseRows[i];
+    if (!row.amount || !row.paidBy) {
+      showToast(`Entry ${i + 1}: Amount and Paid By are required`, 'err');
+      return;
+    }
+    validRows.push({
+      day: parseInt(row.day) || tripDays[0].day,
+      name: currentUser,
+      desc: row.desc || '—',
+      cat: row.cat || 'misc',
+      amount: parseFloat(row.amount),
+      paidBy: row.paidBy,
+      ts: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+      archived: false
+    });
+  }
+
+  // Close dialog and show loading
+  cancelBatchAdd();
+  showLoading(true);
+  setStatus('syncing', 'Saving expenses...');
+
+  let successCount = 0;
+  let failCount = 0;
+
+  // Save all expenses in parallel
+  const promises = validRows.map(async (expense) => {
+    try {
+      const id = await dbAddExpense(expense);
+      expenses[expense.day].push({ ...expense, id });
+      return { success: true };
+    } catch (e) {
+      console.error('Failed to add expense:', e);
+      return { success: false };
+    }
+  });
+
+  const results = await Promise.all(promises);
+
+  results.forEach(result => {
+    if (result.success) successCount++;
+    else failCount++;
+  });
+
+  saveLocal();
+  render();
+  showLoading(false);
+
+  if (failCount === 0) {
+    setStatus('ok', 'Synced ✓');
+    showToast(`${successCount} expense${successCount > 1 ? 's' : ''} added!`, 'ok');
+  } else {
+    setStatus('err', 'Some failed');
+    showToast(`Added ${successCount}, failed ${failCount}`, 'err');
+  }
+}
+
+// Handle Enter key in note text area
+document.addEventListener('DOMContentLoaded', function() {
+  const noteTextArea = document.getElementById('noteText');
+  if (noteTextArea) {
+    noteTextArea.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        addNote();
+      }
+      if (e.key === 'Escape') cancelAddNote();
+    });
+  }
 });

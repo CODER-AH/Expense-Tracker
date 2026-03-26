@@ -258,3 +258,128 @@ async function sheetDelete(day, id) {
     body: JSON.stringify({ action: 'delete', day, id })
   });
 }
+
+// ============================================
+// NOTES/TASKS OPERATIONS
+// ============================================
+
+async function dbAddNote(note) {
+  try {
+    let id;
+
+    // Add to Firebase (primary)
+    if (USE_FIREBASE) {
+      id = await firestoreAddNote(note);
+    }
+
+    // Optionally backup to Sheets (fire and forget - don't await)
+    if (ENABLE_SHEETS_BACKUP && USE_FIREBASE) {
+      sheetAddNote({ ...note, id }).catch(e => {
+        console.warn('Sheets note backup failed:', e);
+      });
+    }
+
+    // If not using Firebase, use Sheets as primary
+    if (!USE_FIREBASE) {
+      id = await sheetAddNote(note);
+    }
+
+    return id;
+  } catch (error) {
+    console.error('Error adding note:', error);
+    throw error;
+  }
+}
+
+async function dbGetAllNotes() {
+  try {
+    if (USE_FIREBASE) {
+      return await firestoreGetAllNotes();
+    } else {
+      const data = await fetch(SCRIPT_URL + '?action=getNotes').then(r => r.json());
+      return data.notes || [];
+    }
+  } catch (error) {
+    console.error('Error getting notes:', error);
+    throw error;
+  }
+}
+
+async function dbUpdateNote(id, updates) {
+  try {
+    // Update in Firebase
+    if (USE_FIREBASE) {
+      await firestoreUpdateNote(id, updates);
+    }
+
+    // Optionally update in Sheets (fire and forget - don't await)
+    if (ENABLE_SHEETS_BACKUP && USE_FIREBASE) {
+      sheetUpdateNote(id, updates).catch(e => {
+        console.warn('Sheets note backup update failed:', e);
+      });
+    }
+
+    // If not using Firebase, use Sheets
+    if (!USE_FIREBASE) {
+      await sheetUpdateNote(id, updates);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error updating note:', error);
+    throw error;
+  }
+}
+
+async function dbDeleteNote(id) {
+  try {
+    // Delete from Firebase
+    if (USE_FIREBASE) {
+      await firestoreDeleteNote(id);
+    }
+
+    // Optionally delete from Sheets (fire and forget - don't await)
+    if (ENABLE_SHEETS_BACKUP && USE_FIREBASE) {
+      sheetDeleteNote(id).catch(e => {
+        console.warn('Sheets note backup delete failed:', e);
+      });
+    }
+
+    // If not using Firebase, use Sheets
+    if (!USE_FIREBASE) {
+      await sheetDeleteNote(id);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting note:', error);
+    throw error;
+  }
+}
+
+// ============================================
+// GOOGLE SHEETS - NOTES FUNCTIONS
+// ============================================
+
+async function sheetAddNote(note) {
+  const res = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'addNote', ...note })
+  });
+  const data = await res.json();
+  return data.id;
+}
+
+async function sheetUpdateNote(id, updates) {
+  await fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'updateNote', id, ...updates })
+  });
+}
+
+async function sheetDeleteNote(id) {
+  await fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'deleteNote', id })
+  });
+}

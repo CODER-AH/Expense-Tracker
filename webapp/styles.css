@@ -849,14 +849,15 @@
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text);
-    border-radius: 6px;
-    padding: 4px 10px 4px 8px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
     transition: all 0.15s;
     position: relative;
   }
@@ -865,6 +866,7 @@
     content: '▼';
     font-size: 8px;
     color: var(--accent);
+    margin-left: auto;
   }
 
   /* FILTER DROPDOWN */
@@ -877,7 +879,7 @@
     border: 1px solid var(--accent);
     border-radius: 8px;
     padding: 6px;
-    min-width: 160px;
+    min-width: 180px;
     width: max-content;
     max-width: 300px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -886,10 +888,10 @@
   }
   .filter-dropdown.active { display: block; }
   .filter-option {
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
     color: var(--text);
     cursor: pointer;
     transition: all 0.15s;
@@ -900,6 +902,17 @@
   }
   .filter-option:hover { background: var(--surface); color: var(--accent); }
   .filter-option.selected {
+    background: rgba(93,186,138,0.15);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* BATCH ADD DROPDOWN OPTIONS */
+  .batch-option:hover {
+    background: var(--surface);
+    color: var(--accent);
+  }
+  .batch-option.selected {
     background: rgba(93,186,138,0.15);
     color: var(--accent);
     font-weight: 500;
@@ -1165,4 +1178,44 @@
       display: block !important;
       z-index: 10000 !important;
     }
+  }
+
+  /* CUSTOM CHECKBOXES FOR MULTI-SELECT */
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    background: var(--surface);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+
+  input[type="checkbox"]:hover {
+    border-color: var(--accent);
+    background: rgba(93, 186, 138, 0.1);
+  }
+
+  input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  input[type="checkbox"]:checked::after {
+    content: "✓";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #0e1412;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  input[type="checkbox"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
