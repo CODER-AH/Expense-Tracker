@@ -7,11 +7,13 @@ const firebaseConfig = {
   projectId: "YOUR_PROJECT_ID",
   storageBucket: "YOUR_PROJECT_ID.appspot.com",
   messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  appId: "YOUR_APP_ID",
+  measurementId: "YOUR_MEASUREMENT_ID"  // For Google Analytics
 };
 
 // Initialize Firebase
 let db;
+let analytics;
 let initialized = false;
 
 function initializeFirebase() {
@@ -20,9 +22,45 @@ function initializeFirebase() {
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
-  initialized = true;
 
+  // Initialize Analytics if measurementId is provided
+  if (firebaseConfig.measurementId) {
+    analytics = firebase.analytics();
+    console.log('Firebase Analytics initialized');
+  }
+
+  initialized = true;
   console.log('Firebase initialized');
+}
+
+// ============================================
+// ANALYTICS HELPER FUNCTIONS
+// ============================================
+
+function logAnalyticsEvent(eventName, params = {}) {
+  if (analytics) {
+    analytics.logEvent(eventName, params);
+  }
+}
+
+// Track expense actions
+function trackExpenseAdded(category, amount) {
+  logAnalyticsEvent('expense_added', {
+    category: category,
+    amount: amount
+  });
+}
+
+function trackExpenseUpdated(category) {
+  logAnalyticsEvent('expense_updated', {
+    category: category
+  });
+}
+
+function trackExpenseDeleted(category) {
+  logAnalyticsEvent('expense_deleted', {
+    category: category
+  });
 }
 
 // ============================================
