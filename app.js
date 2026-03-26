@@ -591,7 +591,7 @@ function addExpenseRow() {
     </div>
     <div>
       <label>Description</label>
-      <input type="text" id="multi-desc-${multiRowCount}" value="${desc}" placeholder="Description" />
+      <input type="text" id="multi-desc-${multiRowCount}" value="${desc}" placeholder="e.g. Masala Dosa at Mylari" />
     </div>
     <div>
       <label>Amount (₹)</label>
@@ -783,6 +783,8 @@ function toggleSection(sectionId) {
     // Determine display type based on section
     if (sectionId === 'addExpense' || sectionId === 'expenseHistory' || sectionId === 'notes' || sectionId === 'archived') {
       section.style.display = 'block';
+    } else if (sectionId === 'insights' || sectionId === 'whoPaid' || sectionId === 'settlement') {
+      section.style.display = 'flex';
     } else {
       section.style.display = 'grid';
     }

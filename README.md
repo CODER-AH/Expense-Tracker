@@ -1,16 +1,20 @@
 # Coorg Trip Expense Tracker
 
-A beautiful expense tracking app for managing trip expenses with real-time Google Sheets sync.
+A modern, feature-rich expense tracking application designed for group trips with real-time Google Sheets synchronization, custom styled UI components, and full mobile responsiveness.
 
 ## Features
 
-- ✅ Add, edit, and delete expenses
-- ✅ Track expenses by day and category
-- ✅ Multiple payer support (Adham, Aakif, Afsar)
-- ✅ Real-time sync with Google Sheets
-- ✅ Offline support with localStorage
-- ✅ Beautiful dark theme UI
-- ✅ Mobile responsive
+- ✅ Add, edit, and archive expenses (single or bulk entry)
+- ✅ Track expenses by day, category, and payer
+- ✅ Multiple payer support with custom names
+- ✅ Real-time sync with Google Sheets backend
+- ✅ Offline support with localStorage fallback
+- ✅ Beautiful dark theme with custom styled dropdowns
+- ✅ Fully responsive design (mobile-first)
+- ✅ Budget tracking with visual indicators
+- ✅ Settlement calculations and summary cards
+- ✅ Filter and sort functionality
+- ✅ Edit history tracking with timestamps
 
 ## Deployment Instructions
 
@@ -82,3 +86,42 @@ Edit the names in the "Paid by" dropdown (line ~556 in index.html):
 - 🎟️ Entry
 - 🚙 Jeep/Transport
 - 🛍️ Misc
+
+## Project Structure
+
+```
+/
+├── index.html          # Main HTML structure
+├── styles.css          # All CSS styles (1107 lines)
+├── app.js             # All JavaScript logic (1731 lines)
+└── README.md          # Documentation
+```
+
+## Recent Updates
+
+### UI/UX Improvements
+- **Custom Dropdowns**: Replaced native select elements with styled custom dropdowns matching the filter/sort design
+- **Responsive Layout**: Enhanced mobile responsiveness with single-column layout for screens < 640px
+- **Section Width**: Increased from 860px to 1000px for better laptop viewing
+- **Settlement Cards**: Set to 2x2 grid layout (2 cards per row)
+- **Tile Centering**: Centered tiles in summary/settlement grids when fewer items in last row
+- **Delete Button**: Fixed overflow issue in add multiple items section (reduced width to 40px)
+- **Dropdown Visibility**: Fixed clipping issues by adjusting overflow handling
+- **Font**: Added Playfair Display for numbers in tiles, DM Mono and DM Sans for UI
+
+### Code Organization
+- Separated monolithic 3271-line HTML file into modular structure:
+  - HTML (431 lines) - structure only
+  - CSS (1107 lines) - all styles
+  - JS (1731 lines) - all logic
+- Maintained exact functionality during reorganization
+
+### Mobile Optimization
+- Single-column layout for screens < 640px
+- Horizontal scroll for medium screens (641-900px)
+- Proper dropdown positioning across all screen sizes
+
+### User Experience
+- Consistent placeholder text across single and multi-row entry forms
+- Better visual feedback for custom dropdown interactions
+- Improved touch targets for mobile users
