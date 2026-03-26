@@ -1074,6 +1074,11 @@
   }
 
   @media (max-width: 640px) {
+    body {
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -1095,36 +1100,42 @@
 
     .add-section {
       overflow: visible !important;
+      position: relative;
+      z-index: 1;
     }
     .add-form {
       grid-template-columns: 1fr;
-      gap: 12px;
+      gap: 24px;
       overflow: visible !important;
+      position: relative;
     }
     .add-form > div {
       grid-column: span 1;
       overflow: visible !important;
       position: relative;
-      z-index: 1;
+      z-index: auto;
     }
     .add-btn { width: 100%; justify-content: center; }
 
     .multi-row-container {
       overflow: visible !important;
+      position: relative;
+      z-index: 1;
     }
     .multi-row-entry {
       grid-template-columns: 1fr;
-      gap: 12px;
+      gap: 24px;
       padding: 12px;
       background: var(--surface);
       border-radius: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 24px;
       overflow: visible !important;
+      position: relative;
     }
     .multi-row-entry > div {
       overflow: visible !important;
       position: relative;
-      z-index: 1;
+      z-index: auto;
     }
     .multi-row-entry > div:nth-child(6) { visibility: visible !important; }
     .multi-row-entry > div:last-child {
@@ -1136,18 +1147,22 @@
     /* Ensure custom dropdowns are visible on mobile */
     .custom-select {
       position: relative;
-      z-index: 10;
+      z-index: 100;
       overflow: visible !important;
+      margin-bottom: 8px;
     }
     .custom-select-dropdown {
       position: absolute !important;
-      z-index: 9999 !important;
+      top: 100% !important;
+      left: 0 !important;
+      margin-top: 4px !important;
+      z-index: 10000 !important;
       background: #1a2620 !important;
-      opacity: 1 !important;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8) !important;
+      border: 2px solid var(--accent) !important;
     }
     .custom-select-dropdown.active {
       display: block !important;
-      z-index: 9999 !important;
+      z-index: 10000 !important;
     }
   }
