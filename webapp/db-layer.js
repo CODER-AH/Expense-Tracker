@@ -237,7 +237,7 @@ function dbListenToBudget(callback) {
 // GOOGLE SHEETS FUNCTIONS (Original)
 // ============================================
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxscbDaRJezz07nggUqUvzxk4UGtYoIIvYqnEfhTRNzB8YscjXgsnU008YsN3jcvE8ZQA/exec';
+// Use the SCRIPT_URL from app.js (already defined there)
 
 async function sheetAdd(expense) {
   const res = await fetch(SCRIPT_URL, {
