@@ -41,7 +41,10 @@
 
     <!-- Password Entry (hidden initially) -->
     <div id="passwordStep" style="display:none">
-      <input type="password" id="passwordInput" placeholder="Enter your password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:14px;transition:border-color 0.15s">
+      <div style="position:relative;margin-bottom:14px">
+        <input type="password" id="passwordInput" placeholder="Enter your password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 40px 11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color 0.15s">
+        <span onclick="togglePasswordVisibility('passwordInput', 'passwordToggle')" id="passwordToggle" style="position:absolute;right:12px;top:12px;cursor:pointer;font-size:18px;user-select:none;opacity:0.6;transition:opacity 0.15s">👁️</span>
+      </div>
       <button id="passwordBtn" onclick="handlePasswordSubmit()">Login →</button>
       <button onclick="backToNameSelection()" style="margin-top:8px;background:transparent;border:1px solid var(--border);color:var(--muted)">← Back</button>
     </div>
@@ -49,8 +52,14 @@
     <!-- Set New Password (hidden initially) -->
     <div id="setPasswordStep" style="display:none">
       <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Set a password for your account</p>
-      <input type="password" id="newPasswordInput" placeholder="Create password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:10px;transition:border-color 0.15s">
-      <input type="password" id="confirmPasswordInput" placeholder="Confirm password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:14px;transition:border-color 0.15s">
+      <div style="position:relative;margin-bottom:10px">
+        <input type="password" id="newPasswordInput" placeholder="Create password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 40px 11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color 0.15s">
+        <span onclick="togglePasswordVisibility('newPasswordInput', 'newPasswordToggle')" id="newPasswordToggle" style="position:absolute;right:12px;top:12px;cursor:pointer;font-size:18px;user-select:none;opacity:0.6;transition:opacity 0.15s">👁️</span>
+      </div>
+      <div style="position:relative;margin-bottom:14px">
+        <input type="password" id="confirmPasswordInput" placeholder="Confirm password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 40px 11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color 0.15s">
+        <span onclick="togglePasswordVisibility('confirmPasswordInput', 'confirmPasswordToggle')" id="confirmPasswordToggle" style="position:absolute;right:12px;top:12px;cursor:pointer;font-size:18px;user-select:none;opacity:0.6;transition:opacity 0.15s">👁️</span>
+      </div>
       <div id="passwordError" style="color:#e86e8a;font-size:12px;margin-bottom:10px;display:none"></div>
       <button onclick="handleSetPassword()">Set Password →</button>
       <button onclick="backToNameSelection()" style="margin-top:8px;background:transparent;border:1px solid var(--border);color:var(--muted)">← Back</button>
@@ -65,9 +74,18 @@
     <h2>Change Password</h2>
     <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Enter your current password to continue</p>
 
-    <input type="password" id="currentPasswordInput" placeholder="Current password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:10px;transition:border-color 0.15s">
-    <input type="password" id="newPasswordChange" placeholder="New password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:10px;transition:border-color 0.15s">
-    <input type="password" id="confirmPasswordChange" placeholder="Confirm new password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:14px;transition:border-color 0.15s">
+    <div style="position:relative;margin-bottom:10px">
+      <input type="password" id="currentPasswordInput" placeholder="Current password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 40px 11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color 0.15s">
+      <span onclick="togglePasswordVisibility('currentPasswordInput', 'currentPasswordToggle')" id="currentPasswordToggle" style="position:absolute;right:12px;top:12px;cursor:pointer;font-size:18px;user-select:none;opacity:0.6;transition:opacity 0.15s">👁️</span>
+    </div>
+    <div style="position:relative;margin-bottom:10px">
+      <input type="password" id="newPasswordChange" placeholder="New password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 40px 11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color 0.15s">
+      <span onclick="togglePasswordVisibility('newPasswordChange', 'newPasswordChangeToggle')" id="newPasswordChangeToggle" style="position:absolute;right:12px;top:12px;cursor:pointer;font-size:18px;user-select:none;opacity:0.6;transition:opacity 0.15s">👁️</span>
+    </div>
+    <div style="position:relative;margin-bottom:14px">
+      <input type="password" id="confirmPasswordChange" placeholder="Confirm new password" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 40px 11px 14px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color 0.15s">
+      <span onclick="togglePasswordVisibility('confirmPasswordChange', 'confirmPasswordChangeToggle')" id="confirmPasswordChangeToggle" style="position:absolute;right:12px;top:12px;cursor:pointer;font-size:18px;user-select:none;opacity:0.6;transition:opacity 0.15s">👁️</span>
+    </div>
 
     <div id="changePasswordError" style="color:#e86e8a;font-size:12px;margin-bottom:10px;display:none"></div>
 
@@ -386,6 +404,19 @@
     <div class="confirm-buttons">
       <button class="btn-cancel" onclick="cancelUnarchive()">Cancel</button>
       <button class="btn-delete" style="background:var(--accent)" onclick="confirmUnarchive()">Unarchive</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGOUT CONFIRMATION MODAL -->
+<div class="confirm-overlay hidden" id="logoutOverlay">
+  <div class="confirm-box">
+    <div class="icon">🚪</div>
+    <h3>Logout?</h3>
+    <p>Are you sure you want to logout?</p>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelLogout()">Cancel</button>
+      <button class="btn-delete" onclick="confirmLogout()">Logout</button>
     </div>
   </div>
 </div>

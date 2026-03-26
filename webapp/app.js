@@ -33,6 +33,20 @@ function getRandomLoadingMessage() {
   return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
 }
 
+// ─── PASSWORD VISIBILITY TOGGLE ───────────────────────────
+function togglePasswordVisibility(inputId, toggleId) {
+  const input = document.getElementById(inputId);
+  const toggle = document.getElementById(toggleId);
+
+  if (input.type === 'password') {
+    input.type = 'text';
+    toggle.textContent = '👁️‍🗨️';
+  } else {
+    input.type = 'password';
+    toggle.textContent = '👁️';
+  }
+}
+
 // ─── STATE ────────────────────────────────────────────────
 let expenses = { 1: [], 2: [] };
 let archivedExpenses = [];
@@ -216,7 +230,6 @@ window.onload = () => {
     showLoading(false);
     sessionStorage.removeItem('authenticated');
     document.getElementById('loginOverlay').classList.remove('hidden');
-    setTimeout(() => document.getElementById('nameInput').focus(), 100);
   }
 
   // Hide status bar on scroll down, show on scroll up
@@ -415,6 +428,13 @@ function backToNameSelection() {
   selectedLoginValue = null;
   document.getElementById('loginNameLabel').textContent = 'Select your name...';
   document.getElementById('loginNameLabel').style.color = 'var(--muted)';
+
+  // Reset password button state
+  const passwordBtn = document.getElementById('passwordBtn');
+  if (passwordBtn) {
+    passwordBtn.disabled = false;
+    passwordBtn.textContent = 'Login →';
+  }
 }
 
 function hideLoginOverlay() {
@@ -460,6 +480,18 @@ function toggleProfileMenu() {
 function handleLogout() {
   // Close profile menu
   document.getElementById('profileDropdown').style.display = 'none';
+
+  // Show logout confirmation
+  document.getElementById('logoutOverlay').classList.remove('hidden');
+}
+
+function cancelLogout() {
+  document.getElementById('logoutOverlay').classList.add('hidden');
+}
+
+function confirmLogout() {
+  // Hide confirmation dialog
+  document.getElementById('logoutOverlay').classList.add('hidden');
 
   // Clear authentication
   sessionStorage.removeItem('authenticated');
