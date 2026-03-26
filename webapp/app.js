@@ -2340,23 +2340,18 @@ function toggleNoteSelection(id) {
 
 // Update note bulk action buttons based on selection
 function updateNoteBulkActions() {
+  const bulkActions = document.getElementById('noteBulkActions');
   const completeBtn = document.getElementById('bulkCompleteNotesBtn');
   const deleteBtn = document.getElementById('bulkDeleteNotesBtn');
 
   if (selectedNotes.size === 0) {
-    // No selection - show both buttons but disabled
-    if (completeBtn) {
-      completeBtn.style.display = 'inline-block';
-      completeBtn.disabled = true;
-      completeBtn.textContent = 'Mark as Complete';
-    }
-    if (deleteBtn) {
-      deleteBtn.style.display = 'inline-block';
-      deleteBtn.disabled = true;
-      deleteBtn.textContent = 'Delete Selected';
-    }
+    // No selection - hide entire bulk actions container
+    if (bulkActions) bulkActions.style.display = 'none';
     return;
   }
+
+  // Show bulk actions container when there's selection
+  if (bulkActions) bulkActions.style.display = 'flex';
 
   // Check if selection includes any completed notes
   let hasCompleted = false;
@@ -2884,17 +2879,17 @@ let visibleColumns = {
   day: true,
   desc: true,
   cat: true,
-  name: false,
-  paidBy: false,
-  time: false,
+  name: true,
+  paidBy: true,
+  time: true,
   amount: true
 };
 
 let archivedVisibleColumns = {
   desc: true,
   cat: true,
-  name: false,
-  paidBy: false,
+  name: true,
+  paidBy: true,
   amount: true,
   day: true
 };

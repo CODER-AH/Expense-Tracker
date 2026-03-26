@@ -266,11 +266,11 @@
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button id="noteMultiSelectBtn" onclick="event.stopPropagation();toggleNoteMultiSelect()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">☑️ Select Multiple</button>
       <button id="addNoteBtn" onclick="event.stopPropagation();showAddNoteDialog()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">+ Add</button>
+      <div id="noteBulkActions" style="display:none;gap:8px">
+        <button id="bulkCompleteNotesBtn" onclick="bulkCompleteNotes()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Mark as Complete</button>
+        <button id="bulkDeleteNotesBtn" onclick="bulkDeleteNotes()" style="padding:8px 14px;background:rgba(232, 110, 138, 0.2);border:1px solid #e86e8a;color:#e86e8a;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Delete Selected</button>
+      </div>
     </div>
-  </div>
-  <div id="noteBulkActions" style="display:none;margin-bottom:12px;gap:8px">
-    <button id="bulkCompleteNotesBtn" onclick="bulkCompleteNotes()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Mark as Complete</button>
-    <button id="bulkDeleteNotesBtn" onclick="bulkDeleteNotes()" style="padding:8px 14px;background:rgba(232, 110, 138, 0.2);border:1px solid #e86e8a;color:#e86e8a;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Delete Selected</button>
   </div>
   <!-- Notes section loader -->
   <div id="notesLoader" style="display:none;text-align:center;padding:40px">
