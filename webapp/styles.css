@@ -1093,13 +1093,20 @@
     .user-chip { padding: 2px 7px 2px 3px; font-size: 9px; }
     .user-chip .avatar { width: 16px; height: 16px; font-size: 10px; }
 
+    .add-section {
+      overflow: visible;
+    }
     .add-form {
       grid-template-columns: 1fr;
       gap: 12px;
+      overflow: visible;
     }
     .add-form > div { grid-column: span 1; }
     .add-btn { width: 100%; justify-content: center; }
 
+    .multi-row-container {
+      overflow: visible;
+    }
     .multi-row-entry {
       grid-template-columns: 1fr;
       gap: 12px;
@@ -1107,6 +1114,7 @@
       background: var(--surface);
       border-radius: 8px;
       margin-bottom: 12px;
+      overflow: visible;
     }
     .multi-row-entry > div:nth-child(6) { visibility: visible !important; }
     .multi-row-entry > div:last-child {
