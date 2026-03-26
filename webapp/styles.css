@@ -1101,7 +1101,12 @@
       gap: 12px;
       overflow: visible;
     }
-    .add-form > div { grid-column: span 1; }
+    .add-form > div {
+      grid-column: span 1;
+      overflow: visible;
+      position: relative;
+      z-index: 1;
+    }
     .add-btn { width: 100%; justify-content: center; }
 
     .multi-row-container {
@@ -1116,10 +1121,29 @@
       margin-bottom: 12px;
       overflow: visible;
     }
+    .multi-row-entry > div {
+      overflow: visible;
+      position: relative;
+      z-index: 1;
+    }
     .multi-row-entry > div:nth-child(6) { visibility: visible !important; }
     .multi-row-entry > div:last-child {
       display: flex;
       justify-content: center;
       margin-top: 8px;
+    }
+
+    /* Ensure custom dropdowns are visible on mobile */
+    .custom-select {
+      position: relative;
+      z-index: 10;
+    }
+    .custom-select-dropdown {
+      position: absolute;
+      z-index: 1000;
+    }
+    .custom-select-dropdown.active {
+      position: absolute;
+      z-index: 1000;
     }
   }
