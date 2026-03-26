@@ -5,9 +5,8 @@
 .vscode/
 .idea/
 
-# Clasp credentials and config (keep these secret!)
+# Clasp credentials (keep these secret!)
 .clasprc.json
-.clasp.json
 
 # Don't commit config with sensitive Google Sheets URL
 # (Firebase API keys are safe to expose publicly)
