@@ -2118,6 +2118,12 @@ function renderNotes() {
   const notesList = document.getElementById('notesList');
   if (!notesList) return;
 
+  // Update notes count
+  const notesCountEl = document.getElementById('notesCount');
+  if (notesCountEl) {
+    notesCountEl.textContent = notes.length;
+  }
+
   if (notes.length === 0) {
     notesList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">No notes yet. Click "Add Note" to create one.</div>';
     return;
