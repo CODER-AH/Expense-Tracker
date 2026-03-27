@@ -181,13 +181,13 @@ async function loadSectionData(section) {
     case 'settlement':
       // Always reload expenses to ensure settlements are up-to-date
       await loadFromDB();
-      updateSettlement();
+      await updateSettlement();
       break;
     case 'dashboard':
       // Always reload for fresh data
       await loadFromDB();
       calculateTotals();
-      updateSettlement();
+      await updateSettlement();
       break;
   }
 }
@@ -1683,7 +1683,7 @@ function updateSummary() {
 }
 
 // ─── SETTLEMENT ───────────────────────────────────────────
-function updateSettlement() {
+async function updateSettlement() {
   // Collect all expenses from all days
   let all = [];
   tripDays.forEach(dayObj => {
@@ -1711,6 +1711,24 @@ function updateSettlement() {
   splitAmong.forEach(person => {
     balance[person] = paidBy[person] - sharePerPerson;
   });
+
+  // Adjust for confirmed payments
+  try {
+    const confirmedPayments = await dbGetConfirmedPayments();
+    confirmedPayments.forEach(payment => {
+      // Person who sent payment loses money (negative adjustment)
+      if (balance[payment.from] !== undefined) {
+        balance[payment.from] -= payment.amount;
+      }
+      // Person who received payment gains money (positive adjustment)
+      if (balance[payment.to] !== undefined) {
+        balance[payment.to] += payment.amount;
+      }
+    });
+  } catch (error) {
+    console.error('Error loading confirmed payments for settlement:', error);
+    // Continue with unadjusted balance if payment loading fails
+  }
 
   // Generate settlement instructions
   const settlements = calculateSettlements(balance);

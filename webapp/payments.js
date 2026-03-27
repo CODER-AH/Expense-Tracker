@@ -106,6 +106,7 @@ function getCurrentSettlements() {
   // But adjust for confirmed payments
 
   const confirmedPayments = allPayments.filter(p => p.status === 'confirmed' && !p.deleted);
+  console.log('Confirmed payments:', confirmedPayments.length);
 
   // Calculate payment adjustments per person
   const paymentAdjustments = {};
@@ -120,8 +121,11 @@ function getCurrentSettlements() {
     paymentAdjustments[payment.to] = (paymentAdjustments[payment.to] || 0) + payment.amount;
   });
 
+  console.log('Payment adjustments:', paymentAdjustments);
+
   // Get base settlements from expenses
   const baseSettlements = calculateBaseSettlements();
+  console.log('Base settlements (balances):', baseSettlements);
 
   // Adjust settlements with payment data
   const adjustedBalances = {};
@@ -129,8 +133,13 @@ function getCurrentSettlements() {
     adjustedBalances[name] = (baseSettlements[name] || 0) + (paymentAdjustments[name] || 0);
   });
 
+  console.log('Adjusted balances:', adjustedBalances);
+
   // Calculate who owes whom with adjusted balances
-  return calculateMinimalTransactions(adjustedBalances);
+  const transactions = calculateMinimalTransactions(adjustedBalances);
+  console.log('Final transactions:', transactions);
+
+  return transactions;
 }
 
 function calculateBaseSettlements() {
