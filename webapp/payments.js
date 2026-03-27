@@ -236,17 +236,36 @@ function renderSettlementCards(settlements) {
     return '<div class="settlement-card"><p>You\'re all settled up! ✓</p></div>';
   }
 
+  // Get pending payments sent by current user
+  const pendingPaymentsByUser = allPayments.filter(p =>
+    p.from === currentUser && p.status === 'pending' && !p.deleted
+  );
+
   return userSettlements.map(s => {
     if (s.from === currentUser) {
+      // Check if there's already a pending payment to this person
+      const existingPending = pendingPaymentsByUser.filter(p => p.to === s.to);
+      const totalPendingAmount = existingPending.reduce((sum, p) => sum + p.amount, 0);
+      const remainingAmount = s.amount; // This already accounts for confirmed payments
+
+      // Disable button if total pending >= remaining amount needed
+      const canPayMore = totalPendingAmount < remainingAmount;
+      const buttonDisabled = !canPayMore;
+
       return `
         <div class="settlement-card">
           <div class="settlement-info">
             <span class="settlement-label">You owe</span>
             <span class="settlement-person">${s.to}</span>
             <span class="settlement-amount">₹${s.amount}</span>
+            ${totalPendingAmount > 0 ? `<span class="pending-note" style="font-size:12px;color:var(--accent2);margin-top:4px">₹${totalPendingAmount} pending confirmation</span>` : ''}
           </div>
-          <button class="btn-primary" onclick="showRecordPaymentModal('${s.from}', '${s.to}', ${s.amount})">
-            Pay Now
+          <button
+            class="btn-primary payment-pay-btn"
+            onclick="showRecordPaymentModal('${s.from}', '${s.to}', ${s.amount})"
+            ${buttonDisabled ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}
+          >
+            ${buttonDisabled ? 'Payment Pending' : 'Pay Now'}
           </button>
         </div>
       `;
@@ -413,7 +432,7 @@ async function submitPayment() {
     showLoading(false);
     hideRecordPaymentModal();
 
-    // Reload payments
+    // Reload payments to show new payment
     await loadPayments();
 
     showSuccess('Payment recorded! Waiting for confirmation.');
@@ -435,7 +454,12 @@ async function confirmPaymentAction(paymentId) {
     // Reload payments
     await loadPayments();
 
-    showSuccess('Payment confirmed!');
+    // Also reload expenses to update settlement calculations
+    if (typeof loadFromDB === 'function') {
+      await loadFromDB();
+    }
+
+    showSuccess('Payment confirmed! Settlements updated.');
   } catch (error) {
     showLoading(false);
     console.error('Error confirming payment:', error);
@@ -463,6 +487,8 @@ async function rejectPaymentAction(paymentId, reason) {
 
     // Reload payments
     await loadPayments();
+
+    // No need to reload expenses since rejected payments don't affect settlements
 
     showSuccess('Payment rejected.');
   } catch (error) {
