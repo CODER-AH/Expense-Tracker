@@ -22,7 +22,6 @@ function getCachedData(key) {
 
     // Check if cache is still valid
     if (now - timestamp < CACHE_DURATION_MS) {
-      console.log(`Using cached ${key} (${Math.round((now - timestamp) / 1000)}s old)`);
       return data;
     } else {
       // Cache expired, remove it
@@ -42,7 +41,6 @@ function setCachedData(key, data) {
       timestamp: Date.now()
     };
     localStorage.setItem(`cache_${key}`, JSON.stringify(cacheEntry));
-    console.log(`Cached ${key}`);
   } catch (e) {
     console.warn('Cache write error:', e);
   }
@@ -50,7 +48,6 @@ function setCachedData(key, data) {
 
 function invalidateCache(key) {
   localStorage.removeItem(`cache_${key}`);
-  console.log(`Invalidated cache: ${key}`);
 }
 
 // ============================================
@@ -272,6 +269,23 @@ async function dbSetBudget(amount) {
   } catch (error) {
     console.error('Error setting budget:', error);
     throw error;
+  }
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+async function dbIsAdmin(username) {
+  try {
+    if (USE_FIREBASE) {
+      return await firestoreIsAdmin(username);
+    }
+    // For Sheets, no admin system - return false
+    return false;
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
   }
 }
 

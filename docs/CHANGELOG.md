@@ -2,7 +2,56 @@
 
 All notable changes to the Coorg Trip Expense Tracker project.
 
-## [Unreleased] - 2026-03-26
+## [Unreleased] - 2026-03-27
+
+### Added
+- **Admin System**: Role-based access control with admin flag in Firebase users collection
+  - Only admins can permanently delete archived expenses
+  - Admin status checked on login and verified from Firebase
+- **Hamburger Menu Navigation**: Sidebar navigation with on-demand section loading
+  - Lazy loading for notes and archived sections improves performance
+  - Section state persists across page reloads
+- **Notes Enhancements**:
+  - Bulk complete and bulk delete with confirmation dialogs
+  - Custom styled radio buttons matching app theme
+  - Notes sorted newest first automatically
+  - Read-only mode for completed notes (no edit/delete/multi-select)
+  - "Show more" button for truncated note text
+- **Pagination**: Added to notes and archived sections (10 items per page)
+- **Mobile Padding Fix**: Content now has 16px margins on mobile (tiles no longer touch edges)
+
+### Changed
+- **Navigation Header**: Changed to "💰 Expense Hub"
+- **Archived Actions**: Unarchive and delete buttons combined in single centered column
+- **Completed Notes Visibility**: Text color changed from low opacity to readable muted green-gray (#8a9d92)
+- **Notes Layout**: Radio buttons and checkboxes vertically centered with entire note content
+- **Expense Sorting**: Time-based sorting now considers day first, then timestamp within day
+  - DESC order: Day 2 → Day 1, newest first within each day
+  - ASC order: Day 1 → Day 2, oldest first within each day
+
+### Fixed
+- Section state restoration after page reload
+- Hamburger menu visibility sync with scroll behavior
+- Strike-through effect only applies to note text, not metadata (added by, time)
+- Newly added notes appear at top immediately (no reload needed)
+- Loader messages specific to each section (expenses, notes, archived)
+- Archived table header colspan adjusted for single actions column
+
+### Removed
+- Expand/collapse functionality from sections (navigation provides separate pages)
+- Duplicate section-specific loaders (using single main page loader)
+- Unnecessary console.log statements throughout the codebase
+- Debug logging from sorting, pagination, and admin checks
+
+### Technical
+- Implemented Firebase Timestamp for proper note sorting
+- Added `isAdmin` flag with sessionStorage caching
+- Created confirmation overlays for bulk operations
+- Enhanced sorting algorithm with day-aware timestamp comparison
+- Added `dbIsAdmin()` function in db-layer.js
+- Custom radio button styling with CSS appearance override
+
+## [Previous] - 2026-03-26
 
 ### Added
 - Custom styled dropdowns replacing native select elements across all forms
