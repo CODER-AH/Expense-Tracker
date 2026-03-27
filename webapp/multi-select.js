@@ -8,11 +8,20 @@ function toggleMultiSelect() {
   const btn = document.getElementById('multiSelectBtn');
   const addBtn = document.getElementById('addExpenseBtn');
   const bulkActions = document.getElementById('bulkActions');
+  const header = document.getElementById('expenses-header');
 
   if (isMultiSelectMode) {
     btn.textContent = 'Cancel Selection';
     btn.style.background = 'rgba(232, 110, 138, 0.2)';
     if (addBtn) addBtn.style.display = 'none';
+    // Add checkbox column to header
+    if (header && !header.querySelector('.checkbox-col')) {
+      const checkboxTh = document.createElement('th');
+      checkboxTh.className = 'checkbox-col';
+      checkboxTh.style.textAlign = 'center';
+      checkboxTh.textContent = '☑️';
+      header.insertBefore(checkboxTh, header.firstChild);
+    }
     // Don't show bulk actions until at least one item is selected
     updateBulkActionButtons();
   } else {
@@ -20,6 +29,11 @@ function toggleMultiSelect() {
     btn.style.background = 'rgba(72, 126, 98, 0.2)';
     if (addBtn) addBtn.style.display = 'inline-block';
     bulkActions.style.display = 'none';
+    // Remove checkbox column from header
+    if (header) {
+      const checkboxTh = header.querySelector('.checkbox-col');
+      if (checkboxTh) checkboxTh.remove();
+    }
   }
 
   render(); // Re-render to show/hide checkboxes
@@ -28,6 +42,7 @@ function toggleMultiSelect() {
 // Toggle multi-select mode for archived expenses
 function toggleArchiveMultiSelect() {
   const archiveMultiSelectMode = document.getElementById('archiveMultiSelectBtn').dataset.active === 'true';
+  const header = document.getElementById('archived-header');
 
   if (archiveMultiSelectMode) {
     document.getElementById('archiveMultiSelectBtn').dataset.active = 'false';
@@ -35,10 +50,23 @@ function toggleArchiveMultiSelect() {
     document.getElementById('archiveMultiSelectBtn').style.background = 'rgba(72, 126, 98, 0.2)';
     document.getElementById('archiveBulkActions').style.display = 'none';
     selectedArchived.clear();
+    // Remove checkbox column from header
+    if (header) {
+      const checkboxTh = header.querySelector('.checkbox-col');
+      if (checkboxTh) checkboxTh.remove();
+    }
   } else {
     document.getElementById('archiveMultiSelectBtn').dataset.active = 'true';
     document.getElementById('archiveMultiSelectBtn').textContent = 'Cancel Selection';
     document.getElementById('archiveMultiSelectBtn').style.background = 'rgba(232, 110, 138, 0.2)';
+    // Add checkbox column to header
+    if (header && !header.querySelector('.checkbox-col')) {
+      const checkboxTh = document.createElement('th');
+      checkboxTh.className = 'checkbox-col';
+      checkboxTh.style.textAlign = 'center';
+      checkboxTh.textContent = '☑️';
+      header.insertBefore(checkboxTh, header.firstChild);
+    }
     // Don't show bulk actions until at least one item is selected
     updateArchiveBulkActionButtons();
   }

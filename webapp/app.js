@@ -1997,7 +1997,18 @@ function renderNotes() {
     return;
   }
 
-  notesList.innerHTML = notes.map(note => {
+  // Apply person filter
+  let filteredNotes = notes;
+  if (notePersonFilterBy !== 'all') {
+    filteredNotes = notes.filter(note => note.createdBy === notePersonFilterBy);
+  }
+
+  if (filteredNotes.length === 0) {
+    notesList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">No notes match the filter.</div>';
+    return;
+  }
+
+  notesList.innerHTML = filteredNotes.map(note => {
     const isCompleted = note.completed || false;
     const textStyle = isCompleted ? 'text-decoration:line-through;opacity:0.6' : '';
     const createdBy = note.createdBy || '—';
@@ -2986,3 +2997,62 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+// ─── FILTER PANEL TOGGLES ─────────────────────────────────
+function toggleExpenseFilters() {
+  const panel = document.getElementById('expenseFiltersPanel');
+  if (panel) {
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+function toggleArchivedFilters() {
+  const panel = document.getElementById('archivedFiltersPanel');
+  if (panel) {
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+function toggleNoteFilters() {
+  const panel = document.getElementById('noteFiltersPanel');
+  if (panel) {
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+// Close filter panels when clicking outside
+document.addEventListener('click', (e) => {
+  const expenseFilterBtn = document.getElementById('expenseFilterBtn');
+  const expensePanel = document.getElementById('expenseFiltersPanel');
+  const archivedFilterBtn = document.getElementById('archivedFilterBtn');
+  const archivedPanel = document.getElementById('archivedFiltersPanel');
+  const noteFilterBtn = document.getElementById('noteFilterBtn');
+  const notePanel = document.getElementById('noteFiltersPanel');
+
+  if (expensePanel && !expenseFilterBtn?.contains(e.target) && !expensePanel.contains(e.target)) {
+    expensePanel.style.display = 'none';
+  }
+  if (archivedPanel && !archivedFilterBtn?.contains(e.target) && !archivedPanel.contains(e.target)) {
+    archivedPanel.style.display = 'none';
+  }
+  if (notePanel && !noteFilterBtn?.contains(e.target) && !notePanel.contains(e.target)) {
+    notePanel.style.display = 'none';
+  }
+});
+
+// ─── NOTE PERSON FILTER ───────────────────────────────────
+let notePersonFilterBy = 'all';
+
+function selectNotePersonFilter(person, label) {
+  notePersonFilterBy = person;
+  document.getElementById('notePersonFilterLabel').textContent = label;
+  
+  // Update selected state
+  document.querySelectorAll('#notePersonFilterDropdown .filter-option').forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+  
+  renderNotes();
+  toggleFilterDropdown('notePerson');
+}
