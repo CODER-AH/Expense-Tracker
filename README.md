@@ -5,6 +5,7 @@ A modern, feature-rich expense tracking application designed for group trips wit
 ## Features
 
 - ✅ **Firebase Backend**: Fast, real-time database with offline support
+- ✅ **Payment Tracking**: Record and confirm payments with settlement adjustments
 - ✅ **Google Sheets Backup**: Automatic async backup to Sheets (non-blocking)
 - ✅ **Three-State System**: Active → Archived → Deleted (soft delete)
 - ✅ **Batch Add**: Add up to 3 expenses at once with custom dropdowns
@@ -15,12 +16,13 @@ A modern, feature-rich expense tracking application designed for group trips wit
 - ✅ Beautiful dark theme with custom styled dropdowns
 - ✅ Fully responsive design (mobile-first)
 - ✅ Budget tracking with visual indicators
-- ✅ Settlement calculations and summary cards
+- ✅ Settlement calculations with payment confirmations
 - ✅ Filter and sort functionality
 - ✅ Edit history tracking with timestamps
 - ✅ Automatic timestamp updates on edit
 - ✅ Lazy loading for performance optimization
 - ✅ Notes/Tasks with multi-select delete
+- ✅ Admin role system with secure permissions
 
 ## Tech Stack
 
@@ -39,7 +41,13 @@ The app is already configured with Firebase. To use your own:
 1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
 2. Enable Firestore Database
 3. Enable Analytics (optional)
-4. Update `webapp/firebase-service.js` with your config
+4. **Configure Security Rules** (IMPORTANT):
+   - Go to Firestore → Rules
+   - Copy rules from `docs/FIRESTORE_RULES.md`
+   - Publish the rules
+5. Update `webapp/config.js` with your Firebase config
+
+**Important**: The payment feature requires proper Firestore security rules. See `docs/FIRESTORE_RULES.md` for complete setup instructions.
 
 ### 2. Google Sheets Backup (Optional)
 
@@ -79,6 +87,35 @@ Open `webapp/index.html` in your browser
 3. **Deleted** (hidden from UI, kept in database for auditing)
 
 See `docs/THREE_STATE_SYSTEM.md` for details.
+
+### Payment Tracking
+
+**Record Payment:**
+1. Navigate to Payments section
+2. Click "Pay Now" on a settlement card
+3. Enter amount, payment method (GPay/PhonePe/Paytm/Cred/Cash/Other), and optional note
+4. Submit → Payment status: "Pending"
+
+**Confirm Payment:**
+1. Recipient logs in and navigates to Payments
+2. Sees payment in "Pending Confirmations"
+3. Clicks "Confirm" → Payment status: "Confirmed"
+4. Settlement amounts automatically adjust
+
+**Reject Payment:**
+1. Recipient clicks "Reject"
+2. Provides reason for rejection
+3. Payment status: "Rejected"
+
+**View History:**
+- All confirmed payments appear in Payment History
+- Shows amount, method, confirmation details
+- Full audit trail preserved
+
+**Settlement Calculation:**
+- Settlements = (Expenses) - (Confirmed Payments)
+- Updates in real-time after payment confirmations
+- Only confirmed payments affect settlements
 
 ## Configuration
 
