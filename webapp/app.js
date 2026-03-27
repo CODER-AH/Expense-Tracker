@@ -129,7 +129,7 @@ async function navigateTo(section) {
   // Update active nav item
   document.querySelectorAll('.nav-item').forEach(item => {
     item.classList.remove('active');
-    if (item.textContent.toLowerCase().includes(section)) {
+    if (item.getAttribute('data-section') === section) {
       item.classList.add('active');
     }
   });
