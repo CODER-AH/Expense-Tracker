@@ -75,6 +75,87 @@ function togglePasswordVisibility(inputId, toggleId) {
   }
 }
 
+// ─── NAVIGATION ───────────────────────────────────────────
+function toggleNav() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('navOverlay');
+  sidebar.classList.toggle('active');
+  overlay.classList.toggle('active');
+}
+
+function closeNav() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('navOverlay');
+  sidebar.classList.remove('active');
+  overlay.classList.remove('active');
+}
+
+async function navigateTo(section) {
+  // Close sidebar
+  closeNav();
+
+  // Update current section
+  currentSection = section;
+
+  // Update active nav item
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.remove('active');
+    if (item.textContent.toLowerCase().includes(section)) {
+      item.classList.add('active');
+    }
+  });
+
+  // Hide all sections
+  document.querySelectorAll('.app-section').forEach(sec => {
+    sec.classList.remove('active');
+  });
+
+  // Show selected section
+  const sectionEl = document.getElementById(section + 'Section');
+  if (sectionEl) {
+    sectionEl.classList.add('active');
+  }
+
+  // Load section data if not already loaded
+  if (!sectionsLoaded.has(section)) {
+    await loadSectionData(section);
+    sectionsLoaded.add(section);
+  }
+}
+
+async function loadSectionData(section) {
+  switch(section) {
+    case 'expenses':
+      if (expenses[1].length === 0 && expenses[2].length === 0) {
+        // Already loaded from initial load or need to render
+        render();
+      }
+      break;
+    case 'notes':
+      if (notes.length === 0) {
+        await loadNotes();
+      } else {
+        renderNotes();
+      }
+      break;
+    case 'archived':
+      if (archivedExpenses.length === 0) {
+        await loadArchived();
+      } else {
+        renderArchived();
+      }
+      break;
+    case 'settlement':
+      calculateSettlements();
+      break;
+    case 'dashboard':
+      // Dashboard is always loaded, just need to ensure data is up to date
+      calculateTotals();
+      calculateSettlements(); // Update settlements in case they're showing in dashboard too
+      break;
+  }
+}
+
 // ─── STATE ────────────────────────────────────────────────
 let expenses = { 1: [], 2: [] };
 let archivedExpenses = [];
@@ -98,6 +179,10 @@ let selectedExpenses = new Set(); // For active expenses
 let selectedArchived = new Set(); // For archived expenses
 let isMultiSelectMode = false; // Global multi-select mode
 let selectedNotes = new Set(); // For notes
+
+// Navigation state
+let currentSection = 'dashboard';
+let sectionsLoaded = new Set(['dashboard']); // Track which sections have been loaded
 let isNoteMultiSelectMode = false; // Notes multi-select mode
 
 // Notes/Tasks state
@@ -1476,7 +1561,7 @@ function updateSettlement() {
   const settlements = calculateSettlements(balance);
 
   // Render settlement cards
-  const grid = document.getElementById('settlement-section');
+  const grid = document.getElementById('settlementCards-section') || document.getElementById('settlement-section');
   grid.innerHTML = '';
 
   splitAmong.forEach(person => {
