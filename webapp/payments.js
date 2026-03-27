@@ -25,7 +25,7 @@ async function loadPayments() {
     renderPaymentSection();
   } catch (error) {
     console.error('Error loading payments:', error);
-    showError('Failed to load payments. Please try again.');
+    showToast('Failed to load payments. Please refresh the page', true);
   }
 }
 
@@ -398,22 +398,22 @@ async function submitPayment() {
 
   // Validation
   if (!from || !to) {
-    showError('Please specify sender and receiver.');
+    showToast('Please specify sender and receiver');
     return;
   }
 
   if (from === to) {
-    showError('Cannot send payment to yourself.');
+    showToast('Cannot send payment to yourself');
     return;
   }
 
   if (!amount || amount <= 0) {
-    showError('Please enter a valid amount.');
+    showToast('Please enter a valid amount');
     return;
   }
 
   if (!method) {
-    showError('Please select a payment method.');
+    showToast('Please select a payment method');
     return;
   }
 
@@ -440,7 +440,7 @@ async function submitPayment() {
   } catch (error) {
     showLoading(false);
     console.error('Error submitting payment:', error);
-    showError('Failed to record payment. Please try again.');
+    showToast('Failed to record payment. Please try again', true);
   }
 }
 
@@ -492,7 +492,7 @@ async function doConfirmPayment() {
   } catch (error) {
     showLoading(false);
     console.error('Error confirming payment:', error);
-    showError('Failed to confirm payment. Please try again.');
+    showToast('Failed to confirm payment. Please try again', true);
   }
 }
 
@@ -529,7 +529,7 @@ async function doRejectPayment() {
 
   const reason = document.getElementById('rejectPaymentReason').value.trim();
   if (!reason) {
-    showError('Please provide a reason for rejection.');
+    showToast('Please provide a reason for rejection');
     return;
   }
 
@@ -549,14 +549,30 @@ async function doRejectPayment() {
   } catch (error) {
     showLoading(false);
     console.error('Error rejecting payment:', error);
-    showError('Failed to reject payment. Please try again.');
+    showToast('Failed to reject payment. Please try again', true);
   }
 }
 
 async function deletePaymentAction(paymentId) {
+  console.log('deletePaymentAction called with ID:', paymentId);
+
+  // Validate payment ID
+  if (!paymentId || paymentId === 'undefined' || paymentId === 'null') {
+    console.error('Invalid payment ID provided:', paymentId);
+    showToast('Error: Invalid payment ID', true);
+    return;
+  }
+
   // Get payment details
   const payment = allPayments.find(p => p.id === paymentId);
-  if (!payment) return;
+  if (!payment) {
+    console.error('Payment not found:', paymentId);
+    console.log('Available payments:', allPayments.map(p => p.id));
+    showToast('Payment not found', true);
+    return;
+  }
+
+  console.log('Found payment to cancel:', payment);
 
   // Show custom cancel modal
   currentPaymentIdForAction = paymentId;
@@ -580,23 +596,26 @@ function hideCancelPaymentModal() {
 }
 
 async function doCancelPayment() {
-  if (!currentPaymentIdForAction) return;
+  if (!currentPaymentIdForAction) {
+    console.error('No payment ID for cancellation');
+    return;
+  }
 
   try {
     hideCancelPaymentModal();
     showLoading(true, 'default', 'Cancelling payment...');
     await dbDeletePayment(currentPaymentIdForAction);
-    showLoading(false);
 
     // Reload payments
     await loadPayments();
 
+    showLoading(false);
     showToast('Payment cancelled');
     currentPaymentIdForAction = null;
   } catch (error) {
     showLoading(false);
     console.error('Error cancelling payment:', error);
-    showError('Failed to cancel payment. Please try again.');
+    showToast('Failed to cancel payment. Please try again', true);
   }
 }
 
@@ -604,14 +623,15 @@ async function doCancelPayment() {
 // HELPER FUNCTIONS
 // ============================================
 
-function showError(message) {
-  alert(message);
-}
-
-function showToast(message) {
+function showToast(message, isError = false) {
   // Use the app's toast function
   if (typeof toast === 'function') {
-    toast(message);
+    if (isError) {
+      // For error toasts, use red styling like the app does
+      toast(message, true); // Second parameter indicates error
+    } else {
+      toast(message);
+    }
   } else {
     // Fallback if toast is not available
     console.log('Toast:', message);
