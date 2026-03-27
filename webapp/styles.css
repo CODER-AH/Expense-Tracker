@@ -609,18 +609,14 @@
     border: none;
     color: var(--muted);
     cursor: pointer;
-    font-size: 15px;
-    padding: 2px 6px;
+    font-size: 18px;
+    padding: 0 4px;
     border-radius: 4px;
-    transition: color 0.15s, background 0.15s, opacity 0.15s;
+    transition: color 0.15s, background 0.15s;
   }
   .del-btn:hover { color: var(--accent3); background: #2a1a16; }
   .del-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-  .del-btn.edit-btn {
-    opacity: 0.4;
-  }
   .del-btn.edit-btn:hover {
-    opacity: 1;
     color: var(--accent);
     background: #0e2418;
   }
@@ -663,7 +659,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 99;
+    z-index: 150;
     flex-direction: column;
     gap: 16px;
   }
@@ -1165,6 +1161,8 @@
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
+      margin-left: 0;
+      margin-right: 0;
     }
     .sum-card.big-card {
       grid-column: span 2;

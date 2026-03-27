@@ -199,35 +199,41 @@
 
 <!-- EXPENSE TABLE -->
 <div class="timeline" id="expenseHistory-section">
-  <!-- FILTERS AND ACTION BUTTONS -->
+  <!-- ACTION BUTTONS -->
   <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <div style="position:relative">
-        <div class="filter-btn" id="dayFilterBtn" onclick="toggleFilterDropdown('day')">
-          <span id="dayFilterLabel">All Days</span>
-        </div>
-        <div class="filter-dropdown" id="dayFilterDropdown">
-          <div class="filter-option selected" onclick="selectDayFilter('all', 'All Days')">All Days</div>
-          <div class="filter-option" onclick="selectDayFilter('1', 'Day 1 — Sat, 28 Mar')">Day 1 — Sat, 28 Mar</div>
-          <div class="filter-option" onclick="selectDayFilter('2', 'Day 2 — Sun, 29 Mar')">Day 2 — Sun, 29 Mar</div>
-        </div>
-      </div>
+    <div style="position:relative">
+      <button id="expenseFilterBtn" onclick="toggleExpenseFilters()" style="width:40px;height:40px;padding:0;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:18px;display:flex;align-items:center;justify-content:center" title="Filters">⚙️</button>
+      <div id="expenseFiltersPanel" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:12px;min-width:250px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:'DM Sans',sans-serif;font-weight:500">FILTER BY</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="position:relative">
+            <div class="filter-btn" id="dayFilterBtn" onclick="toggleFilterDropdown('day')">
+              <span id="dayFilterLabel">All Days</span>
+            </div>
+            <div class="filter-dropdown" id="dayFilterDropdown">
+              <div class="filter-option selected" onclick="selectDayFilter('all', 'All Days')">All Days</div>
+              <div class="filter-option" onclick="selectDayFilter('1', 'Day 1 — Sat, 28 Mar')">Day 1 — Sat, 28 Mar</div>
+              <div class="filter-option" onclick="selectDayFilter('2', 'Day 2 — Sun, 29 Mar')">Day 2 — Sun, 29 Mar</div>
+            </div>
+          </div>
 
-      <div style="position:relative">
-        <div class="filter-btn" id="personFilterBtn" onclick="toggleFilterDropdown('person')">
-          <span id="personFilterLabel">All People</span>
-        </div>
-        <div class="filter-dropdown" id="personFilterDropdown">
-          <div class="filter-option selected" onclick="selectPersonFilter('all', 'All People')">All People</div>
-          <div class="filter-option" onclick="selectPersonFilter('Afsar', '👨‍💻 Afsar')">👨‍💻 Afsar</div>
-          <div class="filter-option" onclick="selectPersonFilter('Adham', '👨‍💻 Adham')">👨‍💻 Adham</div>
-          <div class="filter-option" onclick="selectPersonFilter('Aakif', '👨‍💻 Aakif')">👨‍💻 Aakif</div>
-          <div class="filter-option" onclick="selectPersonFilter('Sahlaan', '👨‍⚕️ Sahlaan')">👨‍⚕️ Sahlaan</div>
+          <div style="position:relative">
+            <div class="filter-btn" id="personFilterBtn" onclick="toggleFilterDropdown('person')">
+              <span id="personFilterLabel">All People</span>
+            </div>
+            <div class="filter-dropdown" id="personFilterDropdown">
+              <div class="filter-option selected" onclick="selectPersonFilter('all', 'All People')">All People</div>
+              <div class="filter-option" onclick="selectPersonFilter('Afsar', '👨‍💻 Afsar')">👨‍💻 Afsar</div>
+              <div class="filter-option" onclick="selectPersonFilter('Adham', '👨‍💻 Adham')">👨‍💻 Adham</div>
+              <div class="filter-option" onclick="selectPersonFilter('Aakif', '👨‍💻 Aakif')">👨‍💻 Aakif</div>
+              <div class="filter-option" onclick="selectPersonFilter('Sahlaan', '👨‍⚕️ Sahlaan')">👨‍⚕️ Sahlaan</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto">
       <button id="multiSelectBtn" onclick="toggleMultiSelect()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">☑️ Select Multiple</button>
       <button id="addExpenseBtn" onclick="showBatchAddDialog()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">+ Add</button>
       <div id="bulkActions" style="display:none;gap:8px">
@@ -238,7 +244,7 @@
 
   <div class="table-wrap">
     <table>
-      <thead><tr>
+      <thead><tr id="expenses-header">
         <th>#</th>
         <th data-column="day">Day</th>
         <th data-column="desc" class="sortable" onclick="sortByColumn('desc')">Description</th>
@@ -261,14 +267,32 @@
 
 <!-- NOTES SECTION -->
 <div class="notes-container" id="notes-section" style="display:none;max-width:1000px;margin:16px auto">
-  <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div style="position:relative">
+      <button id="noteFilterBtn" onclick="toggleNoteFilters()" style="width:40px;height:40px;padding:0;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:18px;display:flex;align-items:center;justify-content:center" title="Filters">⚙️</button>
+      <div id="noteFiltersPanel" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:12px;min-width:200px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:'DM Sans',sans-serif;font-weight:500">FILTER BY</div>
+        <div style="position:relative">
+          <div class="filter-btn" id="notePersonFilterBtn" onclick="toggleFilterDropdown('notePerson')">
+            <span id="notePersonFilterLabel">All People</span>
+          </div>
+          <div class="filter-dropdown" id="notePersonFilterDropdown">
+            <div class="filter-option selected" onclick="selectNotePersonFilter('all', 'All People')">All People</div>
+            <div class="filter-option" onclick="selectNotePersonFilter('Afsar', '👨‍💻 Afsar')">👨‍💻 Afsar</div>
+            <div class="filter-option" onclick="selectNotePersonFilter('Adham', '👨‍💻 Adham')">👨‍💻 Adham</div>
+            <div class="filter-option" onclick="selectNotePersonFilter('Aakif', '👨‍💻 Aakif')">👨‍💻 Aakif</div>
+            <div class="filter-option" onclick="selectNotePersonFilter('Sahlaan', '👨‍⚕️ Sahlaan')">👨‍⚕️ Sahlaan</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-left:auto;flex-wrap:wrap">
       <button id="noteMultiSelectBtn" onclick="event.stopPropagation();toggleNoteMultiSelect()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">☑️ Select Multiple</button>
       <button id="addNoteBtn" onclick="event.stopPropagation();showAddNoteDialog()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">+ Add</button>
-      <div id="noteBulkActions" style="display:none;gap:8px">
-        <button id="bulkCompleteNotesBtn" onclick="bulkCompleteNotes()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Mark as Complete</button>
-        <button id="bulkDeleteNotesBtn" onclick="bulkDeleteNotes()" style="padding:8px 14px;background:rgba(232, 110, 138, 0.2);border:1px solid #e86e8a;color:#e86e8a;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Delete Selected</button>
-      </div>
+    </div>
+    <div id="noteBulkActions" style="display:none;gap:8px;flex-wrap:wrap">
+      <button id="bulkCompleteNotesBtn" onclick="bulkCompleteNotes()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Mark as Complete</button>
+      <button id="bulkDeleteNotesBtn" onclick="bulkDeleteNotes()" style="padding:8px 14px;background:rgba(232, 110, 138, 0.2);border:1px solid #e86e8a;color:#e86e8a;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Delete Selected</button>
     </div>
   </div>
   <!-- Notes section loader -->
@@ -291,37 +315,44 @@
     <div style="margin-top:12px;color:var(--muted);font-size:13px;font-family:'DM Sans',sans-serif">Loading archived expenses...</div>
   </div>
   <div class="timeline">
-    <!-- Filters and Actions Row -->
+    <!-- Actions Row -->
     <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
-      <!-- Filters -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <!-- Day Filter -->
-        <div class="filter-btn-group" style="position:relative">
-          <button class="filter-btn" onclick="toggleFilterDropdown('archivedDay')">
-            <span id="archivedDayFilterLabel">All Days</span>
-          </button>
-          <div class="filter-dropdown" id="archivedDayFilterDropdown" style="min-width:180px">
-            <div class="filter-option selected" onclick="selectArchivedDayFilter('all', 'All Days')">All Days</div>
-          </div>
-        </div>
+      <div style="position:relative">
+        <button id="archivedFilterBtn" onclick="toggleArchivedFilters()" style="width:40px;height:40px;padding:0;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:18px;display:flex;align-items:center;justify-content:center" title="Filters">⚙️</button>
+        <div id="archivedFiltersPanel" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:12px;min-width:250px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:'DM Sans',sans-serif;font-weight:500">FILTER BY</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <!-- Day Filter -->
+            <div class="filter-btn-group" style="position:relative">
+              <button class="filter-btn" onclick="toggleFilterDropdown('archivedDay')">
+                <span id="archivedDayFilterLabel">All Days</span>
+              </button>
+              <div class="filter-dropdown" id="archivedDayFilterDropdown" style="min-width:180px">
+                <div class="filter-option selected" onclick="selectArchivedDayFilter('all', 'All Days')">All Days</div>
+                <div class="filter-option" onclick="selectArchivedDayFilter('1', 'Day 1 — Sat, 28 Mar')">Day 1 — Sat, 28 Mar</div>
+                <div class="filter-option" onclick="selectArchivedDayFilter('2', 'Day 2 — Sun, 29 Mar')">Day 2 — Sun, 29 Mar</div>
+              </div>
+            </div>
 
-        <!-- Person Filter -->
-        <div class="filter-btn-group" style="position:relative">
-          <button class="filter-btn" onclick="toggleFilterDropdown('archivedPerson')">
-            <span id="archivedPersonFilterLabel">All People</span>
-          </button>
-          <div class="filter-dropdown" id="archivedPersonFilterDropdown">
-            <div class="filter-option selected" onclick="selectArchivedPersonFilter('all', 'All People')">All People</div>
-            <div class="filter-option" onclick="selectArchivedPersonFilter('Afsar', 'Afsar')">Afsar</div>
-            <div class="filter-option" onclick="selectArchivedPersonFilter('Adham', 'Adham')">Adham</div>
-            <div class="filter-option" onclick="selectArchivedPersonFilter('Aakif', 'Aakif')">Aakif</div>
-            <div class="filter-option" onclick="selectArchivedPersonFilter('Sahlaan', 'Sahlaan')">Sahlaan</div>
+            <!-- Person Filter -->
+            <div class="filter-btn-group" style="position:relative">
+              <button class="filter-btn" onclick="toggleFilterDropdown('archivedPerson')">
+                <span id="archivedPersonFilterLabel">All People</span>
+              </button>
+              <div class="filter-dropdown" id="archivedPersonFilterDropdown">
+                <div class="filter-option selected" onclick="selectArchivedPersonFilter('all', 'All People')">All People</div>
+                <div class="filter-option" onclick="selectArchivedPersonFilter('Afsar', 'Afsar')">Afsar</div>
+                <div class="filter-option" onclick="selectArchivedPersonFilter('Adham', 'Adham')">Adham</div>
+                <div class="filter-option" onclick="selectArchivedPersonFilter('Aakif', 'Aakif')">Aakif</div>
+                <div class="filter-option" onclick="selectArchivedPersonFilter('Sahlaan', 'Sahlaan')">Sahlaan</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Actions -->
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;margin-left:auto">
         <button id="archiveMultiSelectBtn" data-active="false" onclick="toggleArchiveMultiSelect()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">☑️ Select Multiple</button>
         <div id="archiveBulkActions" style="display:none;gap:8px">
           <button id="bulkUnarchiveBtn" onclick="bulkUnarchiveExpenses()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Unarchive Selected</button>
@@ -332,7 +363,7 @@
 
     <div class="table-wrap">
       <table>
-        <thead><tr>
+        <thead><tr id="archived-header">
           <th style="white-space:nowrap">#</th>
           <th data-column="desc" style="white-space:nowrap">Description</th>
           <th data-column="cat" style="white-space:nowrap">Category</th>

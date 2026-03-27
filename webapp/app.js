@@ -29,6 +29,17 @@ const loadingMessages = [
   'One sec...'
 ];
 
+const checkingUserMessages = [
+  'Checking user details...',
+  'Looking up your account...',
+  'Finding your profile...',
+  'One moment...',
+  'Getting your info...',
+  'Just a sec...',
+  'Fetching user data...',
+  'Almost there...'
+];
+
 const authMessages = [
   'Authenticating...',
   'Verifying credentials...',
@@ -40,6 +51,10 @@ const authMessages = [
 
 function getRandomLoadingMessage() {
   return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+}
+
+function getRandomCheckingUserMessage() {
+  return checkingUserMessages[Math.floor(Math.random() * checkingUserMessages.length)];
 }
 
 function getRandomAuthMessage() {
@@ -317,8 +332,8 @@ async function proceedToPassword() {
 
   selectedLoginUser = name;
 
-  // Show loading overlay
-  showLoading(true, 'auth');
+  // Show loading overlay with user checking messages
+  showLoading(true, 'checkingUser');
 
   // Check if user has a password set
   try {
@@ -365,16 +380,16 @@ async function handlePasswordSubmit() {
     const isValid = await firestoreVerifyPassword(selectedLoginUser, password);
 
     if (isValid) {
-      // Login successful
+      // Login successful - hide auth loader immediately
+      showLoading(false);
       currentUser = selectedLoginUser;
       localStorage.setItem('coorg_username', currentUser);
       sessionStorage.setItem('authenticated', 'true');
       hideLoginOverlay();
 
       if (!dataLoaded) {
+        // loadFromSheet will show its own loading overlay
         loadFromSheet();
-      } else {
-        showLoading(false);
       }
     } else {
       // Invalid password
@@ -1788,7 +1803,13 @@ function showLoading(show, type = 'default') {
   if (show) {
     // Set a random loading message based on type
     if (loadingText) {
-      loadingText.textContent = type === 'auth' ? getRandomAuthMessage() : getRandomLoadingMessage();
+      if (type === 'auth') {
+        loadingText.textContent = getRandomAuthMessage();
+      } else if (type === 'checkingUser') {
+        loadingText.textContent = getRandomCheckingUserMessage();
+      } else {
+        loadingText.textContent = getRandomLoadingMessage();
+      }
     }
     overlay.classList.remove('hidden');
   } else {
@@ -1997,12 +2018,25 @@ function renderNotes() {
     return;
   }
 
-  notesList.innerHTML = notes.map(note => {
+  // Apply person filter
+  let filteredNotes = notes;
+  if (notePersonFilterBy !== 'all') {
+    filteredNotes = notes.filter(note => note.createdBy === notePersonFilterBy);
+  }
+
+  if (filteredNotes.length === 0) {
+    notesList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">No notes match the filter.</div>';
+    return;
+  }
+
+  notesList.innerHTML = filteredNotes.map((note, idx) => {
     const isCompleted = note.completed || false;
     const textStyle = isCompleted ? 'text-decoration:line-through;opacity:0.6' : '';
     const createdBy = note.createdBy || '—';
     const isOwner = note.createdBy === currentUser;
     const isEdited = note.edited || false;
+    const noteTextId = `note-text-${note.id}`;
+    const toggleId = `note-toggle-${note.id}`;
 
     // Handle timestamp - prefer createdAtLocal (formatted string), fallback to Firebase timestamp
     let createdAt = '—';
@@ -2022,6 +2056,9 @@ function renderNotes() {
         });
       }
     }
+
+    // Edited badge
+    const editedBadge = isEdited ? '<span style="display:inline-block;font-size:10px;padding:2px 6px;background:#2a2410;border:1px solid #f5c842;color:#f5c842;border-radius:4px;font-family:\'DM Mono\',monospace;margin-bottom:4px">edited</span>' : '';
 
     return `
       <div class="note-item" style="display:flex;gap:12px;padding:12px;background:rgba(72, 126, 98, 0.1);border-radius:8px;margin-bottom:8px;align-items:start">
@@ -2045,11 +2082,10 @@ function renderNotes() {
           />
         `}
         <div style="flex:1;${textStyle}">
-          <div style="font-size:14px;line-height:1.5;margin-bottom:4px">
-            ${note.text}
-            ${isEdited ? '<span style="font-size:10px;color:var(--muted);margin-left:6px;font-family:\'DM Mono\',monospace">(edited)</span>' : ''}
-          </div>
-          <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">
+          ${editedBadge ? `<div>${editedBadge}</div>` : ''}
+          <div id="${noteTextId}" style="font-size:14px;line-height:1.5;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;"></div>
+          <button id="${toggleId}" onclick="toggleNoteExpand('${noteTextId}', '${toggleId}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;padding:0;margin-top:4px;font-family:'DM Sans',sans-serif;display:none">Show more</button>
+          <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:8px">
             👤 ${createdBy} • 🕐 ${createdAt}
           </div>
         </div>
@@ -2068,6 +2104,19 @@ function renderNotes() {
       </div>
     `;
   }).join('');
+
+  // After rendering, set text content and check if truncation is needed
+  filteredNotes.forEach(note => {
+    const textEl = document.getElementById(`note-text-${note.id}`);
+    const toggleEl = document.getElementById(`note-toggle-${note.id}`);
+    if (textEl) {
+      textEl.textContent = note.text;
+      // Check if text is truncated (scrollHeight > clientHeight)
+      if (textEl.scrollHeight > textEl.clientHeight) {
+        if (toggleEl) toggleEl.style.display = 'inline-block';
+      }
+    }
+  });
 }
 
 // Show add note dialog
@@ -2986,3 +3035,128 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+// ─── FILTER PANEL TOGGLES ─────────────────────────────────
+function toggleExpenseFilters() {
+  const panel = document.getElementById('expenseFiltersPanel');
+  if (panel) {
+    const isHidden = panel.style.display === 'none';
+    panel.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) {
+      setTimeout(() => positionFilterPanel('expenseFiltersPanel', 'expenseFilterBtn'), 10);
+    }
+  }
+}
+
+function toggleArchivedFilters() {
+  const panel = document.getElementById('archivedFiltersPanel');
+  if (panel) {
+    const isHidden = panel.style.display === 'none';
+    panel.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) {
+      setTimeout(() => positionFilterPanel('archivedFiltersPanel', 'archivedFilterBtn'), 10);
+    }
+  }
+}
+
+function toggleNoteFilters() {
+  const panel = document.getElementById('noteFiltersPanel');
+  if (panel) {
+    const isHidden = panel.style.display === 'none';
+    panel.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) {
+      setTimeout(() => positionFilterPanel('noteFiltersPanel', 'noteFilterBtn'), 10);
+    }
+  }
+}
+
+// Close filter panels when clicking outside
+document.addEventListener('click', (e) => {
+  const expenseFilterBtn = document.getElementById('expenseFilterBtn');
+  const expensePanel = document.getElementById('expenseFiltersPanel');
+  const archivedFilterBtn = document.getElementById('archivedFilterBtn');
+  const archivedPanel = document.getElementById('archivedFiltersPanel');
+  const noteFilterBtn = document.getElementById('noteFilterBtn');
+  const notePanel = document.getElementById('noteFiltersPanel');
+
+  if (expensePanel && !expenseFilterBtn?.contains(e.target) && !expensePanel.contains(e.target)) {
+    expensePanel.style.display = 'none';
+  }
+  if (archivedPanel && !archivedFilterBtn?.contains(e.target) && !archivedPanel.contains(e.target)) {
+    archivedPanel.style.display = 'none';
+  }
+  if (notePanel && !noteFilterBtn?.contains(e.target) && !notePanel.contains(e.target)) {
+    notePanel.style.display = 'none';
+  }
+});
+
+// ─── NOTE PERSON FILTER ───────────────────────────────────
+let notePersonFilterBy = 'all';
+
+function selectNotePersonFilter(person, label) {
+  notePersonFilterBy = person;
+  document.getElementById('notePersonFilterLabel').textContent = label;
+  
+  // Update selected state
+  document.querySelectorAll('#notePersonFilterDropdown .filter-option').forEach(opt => {
+    opt.classList.remove('selected');
+  });
+  event.target.classList.add('selected');
+  
+  renderNotes();
+  toggleFilterDropdown('notePerson');
+}
+
+// Toggle note text expansion
+function toggleNoteExpand(textId, toggleId) {
+  const textEl = document.getElementById(textId);
+  const toggleEl = document.getElementById(toggleId);
+  if (!textEl || !toggleEl) return;
+
+  const isExpanded = textEl.style.webkitLineClamp === 'unset';
+  if (isExpanded) {
+    textEl.style.webkitLineClamp = '2';
+    toggleEl.textContent = 'Show more';
+  } else {
+    textEl.style.webkitLineClamp = 'unset';
+    toggleEl.textContent = 'Show less';
+  }
+}
+
+// Position filter panel within viewport
+function positionFilterPanel(panelId, buttonId) {
+  const panel = document.getElementById(panelId);
+  const button = document.getElementById(buttonId);
+  if (!panel || !button) return;
+
+  const buttonRect = button.getBoundingClientRect();
+  const panelRect = panel.getBoundingClientRect();
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+
+  // Reset position
+  panel.style.top = '100%';
+  panel.style.bottom = 'auto';
+  panel.style.left = '0';
+  panel.style.right = 'auto';
+
+  // Check vertical space
+  const spaceBelow = viewportHeight - buttonRect.bottom;
+  const spaceAbove = buttonRect.top;
+  
+  if (spaceBelow < panelRect.height && spaceAbove > spaceBelow) {
+    // Not enough space below, show above
+    panel.style.top = 'auto';
+    panel.style.bottom = '100%';
+    panel.style.marginTop = '0';
+    panel.style.marginBottom = '4px';
+  }
+
+  // Check horizontal space
+  const spaceRight = viewportWidth - buttonRect.left;
+  if (spaceRight < panelRect.width) {
+    // Not enough space on right, align to right edge
+    panel.style.left = 'auto';
+    panel.style.right = '0';
+  }
+}
