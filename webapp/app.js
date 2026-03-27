@@ -188,7 +188,7 @@ async function loadSectionData(section) {
       // Always reload for fresh data
       invalidateCache('expenses'); // Clear cache to force fresh load
       await loadFromSheet();
-      calculateTotals();
+      updateSummary();
       await updateSettlement();
       break;
   }
