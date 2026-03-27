@@ -565,10 +565,12 @@ function hideConfirmPaymentModal() {
 async function doConfirmPayment() {
   if (!currentPaymentIdForAction) return;
 
+  const paymentId = currentPaymentIdForAction; // Save ID before hiding modal
+
   try {
     hideConfirmPaymentModal();
     showLoading(true, 'default', 'Confirming payment...');
-    await dbConfirmPayment(currentPaymentIdForAction, currentUser);
+    await dbConfirmPayment(paymentId, currentUser);
 
     // Reload payments
     await loadPayments();
@@ -625,10 +627,12 @@ async function doRejectPayment() {
     return;
   }
 
+  const paymentId = currentPaymentIdForAction; // Save ID before hiding modal
+
   try {
     hideRejectPaymentModal();
     showLoading(true, 'default', 'Rejecting payment...');
-    await dbRejectPayment(currentPaymentIdForAction, reason);
+    await dbRejectPayment(paymentId, reason);
 
     // Reload payments
     await loadPayments();
