@@ -1480,3 +1480,296 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+  /* PAYMENTS SECTION */
+  .payments-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  .payments-container h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 16px;
+    margin-top: 32px;
+    text-align: left;
+  }
+
+  .settlements-section {
+    margin-bottom: 32px;
+  }
+
+  .settlement-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+    max-width: 1000px;
+  }
+
+  .settlement-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 200px;
+  }
+
+  .settlement-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .settlement-label {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .settlement-person {
+    font-size: 16px;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .settlement-amount {
+    font-size: 24px;
+    color: var(--accent);
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .pending-note {
+    display: block;
+    font-size: 12px;
+    color: var(--accent2);
+    margin-top: 4px;
+  }
+
+  .payment-pay-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--accent);
+    color: #0e1412;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    margin-top: auto;
+  }
+
+  .payment-pay-btn:hover:not(:disabled) {
+    background: rgba(93, 186, 138, 0.9);
+    transform: translateY(-1px);
+  }
+
+  .payment-pay-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .pending-confirmations,
+  .pending-sent,
+  .payment-history {
+    margin-bottom: 32px;
+  }
+
+  .pending-confirmations h3,
+  .pending-sent h3,
+  .payment-history h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .empty-state-message {
+    color: var(--muted);
+    font-size: 14px;
+    padding: 20px;
+    text-align: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .payment-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .payment-card.payment-status-pending {
+    border-left: 4px solid var(--accent2);
+    background: rgba(245, 200, 66, 0.05);
+  }
+
+  .payment-card.payment-status-confirmed {
+    border-left: 4px solid var(--accent);
+    background: rgba(93, 186, 138, 0.05);
+  }
+
+  .payment-card.payment-status-rejected {
+    border-left: 4px solid #e86e8a;
+    background: rgba(232, 110, 138, 0.05);
+  }
+
+  .payment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .payment-from {
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .payment-method-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(93, 186, 138, 0.15);
+    border: 1px solid rgba(93, 186, 138, 0.3);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .payment-note {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+    padding: 8px 12px;
+    background: var(--surface);
+    border-radius: 6px;
+  }
+
+  .payment-details {
+    font-size: 14px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .payment-time {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .payment-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .payment-amount {
+    font-size: 18px;
+    color: var(--accent);
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .btn-success {
+    background: var(--accent);
+    color: #0e1412;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-success:hover {
+    background: rgba(93, 186, 138, 0.9);
+    transform: translateY(-1px);
+  }
+
+  .btn-danger {
+    background: rgba(232, 110, 138, 0.2);
+    color: #e86e8a;
+    border: 1px solid #e86e8a;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-danger:hover {
+    background: rgba(232, 110, 138, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-secondary:hover {
+    background: rgba(72, 126, 98, 0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .payment-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Responsive adjustments for payments */
+  @media (max-width: 640px) {
+    .settlement-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .payment-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .payment-actions {
+      width: 100%;
+    }
+
+    .payment-actions button {
+      flex: 1;
+    }
+  }
+

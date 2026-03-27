@@ -118,17 +118,21 @@
       <span class="nav-icon">💰</span>
       <span class="nav-label">Expenses</span>
     </button>
+    <button class="nav-item" onclick="navigateTo('settlement')" data-section="settlement">
+      <span class="nav-icon">💸</span>
+      <span class="nav-label">Settlements</span>
+    </button>
+    <button class="nav-item" onclick="navigateTo('payments')" data-section="payments">
+      <span class="nav-icon">💳</span>
+      <span class="nav-label">Payments</span>
+    </button>
     <button class="nav-item" onclick="navigateTo('notes')" data-section="notes">
       <span class="nav-icon">📝</span>
       <span class="nav-label">Notes</span>
     </button>
     <button class="nav-item" onclick="navigateTo('archived')" data-section="archived">
       <span class="nav-icon">🗃️</span>
-      <span class="nav-label">Archived</span>
-    </button>
-    <button class="nav-item" onclick="navigateTo('settlement')" data-section="settlement">
-      <span class="nav-icon">💸</span>
-      <span class="nav-label">Settlement</span>
+      <span class="nav-label">Archived Expenses</span>
     </button>
   </div>
 </nav>
@@ -152,7 +156,7 @@
 <!-- DASHBOARD SECTION -->
 <div class="app-section active" id="dashboardSection">
 <div class="section-title" style="margin-top: 28px">
-  📊 Insights
+  📊 Dashboard
 </div>
 
 <!-- SUMMARY CARDS -->
@@ -337,7 +341,7 @@
 <!-- ARCHIVED SECTION -->
 <div class="app-section" id="archivedSection">
 <div class="section-title">
-  🗃️ Archived (<span id="archivedCount">0</span>)
+  🗃️ Archived Expenses (<span id="archivedCount">0</span>)
 </div>
 
 <!-- ARCHIVED SECTION -->
@@ -410,10 +414,16 @@
 </div>
 <!-- END ARCHIVED SECTION -->
 
+<!-- PAYMENTS SECTION -->
+<div class="app-section" id="paymentsSection">
+  <div id="payments-section"></div>
+</div>
+<!-- END PAYMENTS SECTION -->
+
 <!-- SETTLEMENT SECTION -->
 <div class="app-section" id="settlementSection">
 <div class="section-title" style="margin-top:28px">
-  💸 Settlement
+  💸 Settlements
 </div>
 
 <!-- SETTLEMENT CARDS -->
@@ -717,11 +727,101 @@
   </div>
 </div>
 
+<!-- RECORD PAYMENT MODAL -->
+<div class="confirm-overlay hidden" id="record-payment-modal" style="display:none">
+  <div class="confirm-box" style="max-width:500px">
+    <div class="icon">💳</div>
+    <h3>Record Payment</h3>
+    <div style="margin:20px 0;text-align:left">
+      <div style="margin-bottom:15px">
+        <label style="display:block;margin-bottom:5px;color:var(--text);font-size:14px">From:</label>
+        <input type="text" id="payment-from" readonly style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text)">
+      </div>
+      <div style="margin-bottom:15px">
+        <label style="display:block;margin-bottom:5px;color:var(--text);font-size:14px">To:</label>
+        <input type="text" id="payment-to" readonly style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text)">
+      </div>
+      <div style="margin-bottom:15px">
+        <label style="display:block;margin-bottom:5px;color:var(--text);font-size:14px">Amount (₹):</label>
+        <input type="number" id="payment-amount" placeholder="500" min="0" step="0.01" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text)">
+      </div>
+      <div style="margin-bottom:15px">
+        <label style="display:block;margin-bottom:5px;color:var(--text);font-size:14px">Payment Method:</label>
+        <select id="payment-method" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text)">
+          <option value="">Select method...</option>
+          <option value="GPay">GPay</option>
+          <option value="PhonePe">PhonePe</option>
+          <option value="Paytm">Paytm</option>
+          <option value="Cred">Cred</option>
+          <option value="Cash">Cash</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div style="margin-bottom:15px">
+        <label style="display:block;margin-bottom:5px;color:var(--text);font-size:14px">Note (optional):</label>
+        <input type="text" id="payment-note" placeholder="Settlement payment" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text)">
+      </div>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="hideRecordPaymentModal()">Cancel</button>
+      <button class="btn-primary" onclick="submitPayment()" style="background:var(--accent);color:#0e1412">Record Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM PAYMENT MODAL -->
+<div class="confirm-overlay hidden" id="confirmPaymentOverlay">
+  <div class="confirm-box">
+    <div class="icon">💰</div>
+    <h3>Confirm Payment?</h3>
+    <p>Confirm that you received this payment?</p>
+    <div id="confirmPaymentDetails" style="padding:12px 14px;background:rgba(93, 186, 138, 0.15);border-radius:8px;margin:16px 0;border-left:3px solid var(--accent)"></div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="hideConfirmPaymentModal()">Cancel</button>
+      <button class="btn-primary" onclick="doConfirmPayment()" style="background:var(--accent);color:#0e1412">Confirm Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- REJECT PAYMENT MODAL -->
+<div class="confirm-overlay hidden" id="rejectPaymentOverlay">
+  <div class="confirm-box" style="max-width:500px">
+    <div class="icon">❌</div>
+    <h3>Reject Payment?</h3>
+    <p>Please provide a reason for rejecting this payment</p>
+    <div id="rejectPaymentDetails" style="padding:12px 14px;background:rgba(232, 110, 138, 0.15);border-radius:8px;margin:16px 0;border-left:3px solid #e86e8a"></div>
+    <div style="margin:16px 0">
+      <label style="display:block;margin-bottom:8px;font-size:13px;color:var(--muted);font-family:'DM Sans',sans-serif">Reason for rejection</label>
+      <textarea id="rejectPaymentReason" placeholder="e.g., Didn't receive the payment..." style="width:100%;min-height:80px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;resize:vertical"></textarea>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="hideRejectPaymentModal()">Cancel</button>
+      <button class="btn-delete" onclick="doRejectPayment()">Reject Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- CANCEL PAYMENT MODAL -->
+<div class="confirm-overlay hidden" id="cancelPaymentOverlay">
+  <div class="confirm-box">
+    <div class="icon">⚠️</div>
+    <h3>Cancel Payment?</h3>
+    <p>Are you sure you want to cancel this payment?</p>
+    <div id="cancelPaymentDetails" style="padding:12px 14px;background:rgba(245, 200, 66, 0.15);border-radius:8px;margin:16px 0;border-left:3px solid var(--accent2)"></div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="hideCancelPaymentModal()">No, Keep It</button>
+      <button class="btn-delete" onclick="doCancelPayment()">Yes, Cancel Payment</button>
+    </div>
+  </div>
+</div>
+
 <!-- Core Configuration & Services -->
 <script src="config.js"></script>
 <script src="firebase-service.js"></script>
+<script src="firebase-payments.js"></script>
 <script src="db-layer.js"></script>
 <script src="multi-select.js"></script>
+<script src="payments.js"></script>
 <script src="app.js"></script>
 
 </body>

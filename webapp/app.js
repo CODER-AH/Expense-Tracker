@@ -145,8 +145,12 @@ async function navigateTo(section) {
     sectionEl.classList.add('active');
   }
 
-  // Load section data if not already loaded
-  if (!sectionsLoaded.has(section)) {
+  // Load section data
+  // For payments, settlement, and dashboard: always reload for fresh data
+  // For others: load only if not already loaded
+  if (section === 'payments' || section === 'settlement' || section === 'dashboard') {
+    await loadSectionData(section);
+  } else if (!sectionsLoaded.has(section)) {
     await loadSectionData(section);
     sectionsLoaded.add(section);
   }
@@ -170,13 +174,22 @@ async function loadSectionData(section) {
         await loadArchivedExpenses();
       }
       break;
+    case 'payments':
+      // Always reload payments to get fresh data
+      await loadPayments();
+      break;
     case 'settlement':
-      updateSettlement();
+      // Always reload expenses to ensure settlements are up-to-date
+      invalidateCache('expenses'); // Clear cache to force fresh load
+      await loadFromSheet();
+      await updateSettlement();
       break;
     case 'dashboard':
-      // Dashboard is always loaded, just need to ensure data is up to date
+      // Always reload for fresh data
+      invalidateCache('expenses'); // Clear cache to force fresh load
+      await loadFromSheet();
       calculateTotals();
-      updateSettlement();
+      await updateSettlement();
       break;
   }
 }
@@ -1435,7 +1448,7 @@ async function confirmPermanentDelete() {
 }
 
 // ─── RENDER ───────────────────────────────────────────────
-function render() {
+async function render() {
   const tbody = document.getElementById('expenses-body');
   tbody.innerHTML = '';
 
@@ -1629,18 +1642,20 @@ function render() {
     renderPagination(totalPages);
   }
   updateSummary();
-  updateSettlement();
+  await updateSettlement();
   renderArchived();
 }
 
 function updateSummary() {
-  // Collect all expenses from all days
+  // Collect all expenses from all days in the expenses object
   let all = [];
-  tripDays.forEach(dayObj => {
-    if (expenses[dayObj.day]) {
-      all = all.concat(expenses[dayObj.day]);
-    }
-  });
+  if (typeof expenses !== 'undefined') {
+    Object.values(expenses).forEach(dayExpenses => {
+      if (Array.isArray(dayExpenses)) {
+        all = all.concat(dayExpenses);
+      }
+    });
+  }
 
   const total = all.reduce((s, e) => s + (e.amount || 0), 0);
   const cats = { food: 0, fuel: 0, stay: 0, transport: 0, entry: 0, misc: 0 };
@@ -1672,14 +1687,17 @@ function updateSummary() {
 }
 
 // ─── SETTLEMENT ───────────────────────────────────────────
-function updateSettlement() {
-  // Collect all expenses from all days
+async function updateSettlement() {
+  // Collect all expenses from all days in the expenses object
+  // Use Object.values to get all expense arrays, regardless of tripDays
   let all = [];
-  tripDays.forEach(dayObj => {
-    if (expenses[dayObj.day]) {
-      all = all.concat(expenses[dayObj.day]);
-    }
-  });
+  if (typeof expenses !== 'undefined') {
+    Object.values(expenses).forEach(dayExpenses => {
+      if (Array.isArray(dayExpenses)) {
+        all = all.concat(dayExpenses);
+      }
+    });
+  }
 
   const total = all.reduce((s, e) => s + (e.amount || 0), 0);
 
@@ -1700,6 +1718,24 @@ function updateSettlement() {
   splitAmong.forEach(person => {
     balance[person] = paidBy[person] - sharePerPerson;
   });
+
+  // Adjust for confirmed payments
+  try {
+    const confirmedPayments = await dbGetConfirmedPayments();
+    confirmedPayments.forEach(payment => {
+      // Person who sent payment loses money (negative adjustment)
+      if (balance[payment.from] !== undefined) {
+        balance[payment.from] -= payment.amount;
+      }
+      // Person who received payment gains money (positive adjustment)
+      if (balance[payment.to] !== undefined) {
+        balance[payment.to] += payment.amount;
+      }
+    });
+  } catch (error) {
+    console.error('Error loading confirmed payments for settlement:', error);
+    // Continue with unadjusted balance if payment loading fails
+  }
 
   // Generate settlement instructions
   const settlements = calculateSettlements(balance);
@@ -1722,11 +1758,20 @@ function updateSettlement() {
     } else if (personSettlements.length > 0) {
       personSettlements.forEach(s => {
         if (s.from === person) {
-          actionHTML += `<div class="action owes">Pay ₹${s.amount.toLocaleString('en-IN')} to ${s.to}</div>`;
+          actionHTML += `
+            <div class="action owes">
+              Pay ₹${s.amount.toLocaleString('en-IN')} to ${s.to}
+            </div>
+          `;
         } else {
           actionHTML += `<div class="action gets">Gets ₹${s.amount.toLocaleString('en-IN')} from ${s.from}</div>`;
         }
       });
+
+      // Add single "Go to Payments" button for current user if they have any settlements
+      if (person === currentUser) {
+        actionHTML += `<button class="go-to-payments-btn" onclick="navigateTo('payments')" style="margin-top:8px;width:100%;padding:8px;background:var(--surface);color:var(--accent);border:1px solid var(--accent);border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;transition:all 0.2s" onmouseover="this.style.background='rgba(93,186,138,0.15)'" onmouseout="this.style.background='var(--surface)'">Go to Payments →</button>`;
+      }
     }
 
     const emojiMap = { 'Afsar': '👨‍💻', 'Adham': '👨‍💻', 'Aakif': '👨‍💻', 'Sahlaan': '👨‍⚕️' };
@@ -1771,6 +1816,10 @@ function calculateSettlements(balance) {
       gets.push({ person, amount });
     }
   });
+
+  // Sort by amount (largest first) for optimal greedy matching
+  owes.sort((a, b) => b.amount - a.amount);
+  gets.sort((a, b) => b.amount - a.amount);
 
   // Calculate minimum transactions
   const settlements = [];
@@ -2909,17 +2958,26 @@ async function confirmBulkCompleteNotes() {
   showLoading(true);
 
   try {
+    const completedTimestamp = new Date().toLocaleString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+
     const updatePromises = [];
     selectedNotes.forEach(id => {
       const note = notes.find(n => n.id === id);
       if (note && !note.completed) {
         note.completed = true;
         note.completedBy = currentUser;
-        note.completedAt = new Date().toISOString();
+        note.completedAt = completedTimestamp;
         updatePromises.push(dbUpdateNote(id, {
           completed: true,
           completedBy: currentUser,
-          completedAt: note.completedAt
+          completedAt: completedTimestamp
         }));
       }
     });

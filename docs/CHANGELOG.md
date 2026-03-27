@@ -2,96 +2,108 @@
 
 All notable changes to the Coorg Trip Expense Tracker project.
 
-## [Unreleased] - 2026-03-27
+## [2.0.0] - 2026-03-27
 
 ### Added
-- **Admin System**: Role-based access control with admin flag in Firebase users collection
-  - Only admins can permanently delete archived expenses
-  - Admin status checked on login and verified from Firebase
-- **Hamburger Menu Navigation**: Sidebar navigation with on-demand section loading
-  - Lazy loading for notes and archived sections improves performance
-  - Section state persists across page reloads
-- **Notes Enhancements**:
-  - Bulk complete and bulk delete with confirmation dialogs
-  - Custom styled radio buttons matching app theme
-  - Notes sorted newest first automatically
-  - Read-only mode for completed notes (no edit/delete/multi-select)
-  - "Show more" button for truncated note text
-- **Pagination**: Added to notes and archived sections (10 items per page)
-- **Mobile Padding Fix**: Content now has 16px margins on mobile (tiles no longer touch edges)
+- **Payment Tracking System**: Complete payment confirmation workflow
+  - Record payments with amount, payment method (GPay/PhonePe/Paytm/Cred/Cash/Other), and optional note
+  - Recipients can confirm or reject pending payments with reasons
+  - Confirmed payments automatically adjust settlement amounts
+  - Payment history with full audit trail and timestamps
+  - Three-state workflow: pending → confirmed/rejected
+  - Duplicate payment prevention and partial payment support
+  - Time-relative display (just now, X mins ago, X hours ago, X days ago)
+- **Minimal Transaction Algorithm**: Greedy algorithm for optimal settlement calculations
+  - Sorts by largest amounts first for efficient matching
+  - Reduces total number of transactions needed
+  - Accounts for both confirmed and pending payments
+- **Navigation Reorganization**: Updated section order for better UX
+  1. Dashboard
+  2. Expenses
+  3. Settlements
+  4. Payments
+  5. Notes
+  6. Archived Expenses
+- **Consistent Section Titles**: All section titles match navigation labels exactly
+- **Admin System**: Role-based access control with admin flag
+- **Custom Authentication**: Username/password system with SHA-256 hashing
 
 ### Changed
-- **Navigation Header**: Changed to "💰 Expense Hub"
-- **Archived Actions**: Unarchive and delete buttons combined in single centered column
-- **Completed Notes Visibility**: Text color changed from low opacity to readable muted green-gray (#8a9d92)
-- **Notes Layout**: Radio buttons and checkboxes vertically centered with entire note content
-- **Expense Sorting**: Time-based sorting now considers day first, then timestamp within day
-  - DESC order: Day 2 → Day 1, newest first within each day
-  - ASC order: Day 1 → Day 2, oldest first within each day
+- **Settlement Calculation**: Now includes expenses from all days, not just tripDays array
+  - Fixed bug where day 3+ expenses were excluded
+  - Uses `Object.values(expenses)` for complete data coverage
+- **Payment Section Settlements**: Accounts for pending payments to show remaining amounts
+- **Settlement Section**: Shows single "Go to Payments →" button instead of per-transaction buttons
+- **Button Labels**:
+  - Settlement navigation changed from "Settlement" to "Settlements"
+  - Archived changed from "Archived" to "Archived Expenses"
+  - Dashboard label updated from "Insights" to "Dashboard"
+- **Notes Completion**: Timestamp format now uses localized format (e.g., "27 Mar, 10:02 AM") instead of ISO string
+- **Toast Notifications**: All alerts replaced with consistent toast messages (green for success, red for errors)
+- **Async Rendering**: `render()` function now async, properly awaits `updateSettlement()`
 
 ### Fixed
-- Section state restoration after page reload
-- Hamburger menu visibility sync with scroll behavior
-- Strike-through effect only applies to note text, not metadata (added by, time)
-- Newly added notes appear at top immediately (no reload needed)
-- Loader messages specific to each section (expenses, notes, archived)
-- Archived table header colspan adjusted for single actions column
-
-### Removed
-- Expand/collapse functionality from sections (navigation provides separate pages)
-- Duplicate section-specific loaders (using single main page loader)
-- Unnecessary console.log statements throughout the codebase
-- Debug logging from sorting, pagination, and admin checks
+- **Settlement Amount Discrepancy**: Both Payments and Settlements now show identical amounts
+  - Fixed missing sorting in `calculateSettlements()` algorithm
+  - Both sections use same greedy algorithm with amount-based sorting
+- **Data Loading Issue**: Fixed non-existent `loadFromDB()` calls replaced with `loadFromSheet()`
+- **Cache Invalidation**: Expenses cache cleared on navigation to Settlements/Dashboard
+- **Notes Timestamp Bug**: Bulk complete now uses formatted timestamps instead of ISO strings
+- **Payment Button Text**: Changed from "Payment Pending" to "Awaiting Confirmation"
+- **Go to Payments Button**: Shows for all users with settlements (not just those who owe)
 
 ### Technical
-- Implemented Firebase Timestamp for proper note sorting
-- Added `isAdmin` flag with sessionStorage caching
-- Created confirmation overlays for bulk operations
-- Enhanced sorting algorithm with day-aware timestamp comparison
-- Added `dbIsAdmin()` function in db-layer.js
-- Custom radio button styling with CSS appearance override
+- Modular file structure:
+  - `payments.js` - Payment tracking logic
+  - `firebase-payments.js` - Payment Firestore operations
+  - `multi-select.js` - Multi-select functionality
+- Session-based data reloading for Payments, Settlements, and Dashboard
+- Fixed expense iteration to use all days in expenses object
+- Consolidated settlement algorithm with consistent sorting
+- Added payment cache invalidation on load
 
-## [Previous] - 2026-03-26
+### Documentation
+- Updated README with correct navigation order
+- Removed outdated documentation files:
+  - CHANGES_SUMMARY.md
+  - CODE_ORGANIZATION.md
+  - FIREBASE_SECURITY_RULES.md (replaced by FIRESTORE_RULES.md)
+  - FIREBASE_STATUS.md
+  - REFACTORING_*.md files
+  - SECURITY_*.md files
+- Kept essential docs:
+  - CHANGELOG.md
+  - DEPLOYMENT.md
+  - FIRESTORE_RULES.md
+  - THREE_STATE_SYSTEM.md
+
+## [1.0.0] - 2026-03-26
 
 ### Added
-- Custom styled dropdowns replacing native select elements across all forms
-- Modular code structure with separate CSS and JavaScript files
-- Enhanced mobile responsiveness with adaptive layouts
-- Consistent placeholder text across single and multi-row entry forms
+- Custom styled dropdowns replacing native select elements
+- Modular code structure with separate files
+- Enhanced mobile responsiveness
+- Notes with multi-select operations
+- Pagination for notes and archived sections
+- Hamburger menu navigation with lazy loading
 
 ### Changed
-- Increased section width from 860px to 1000px for better laptop viewing
-- Settlement cards now display in 2x2 grid layout (2 per row)
-- Description field placeholder updated to "e.g. Masala Dosa at Mylari" in both single and multi-row forms
-- Delete button column width reduced from 60px to 40px to prevent overflow
+- Increased section width to 1000px
+- Settlement cards in 2x2 grid layout
+- Mobile padding and layout improvements
 
 ### Fixed
-- Delete button overflow in add multiple items section
-- Day dropdown selection issue in add row section
-- Tile alignment in summary and settlement sections (centered when fewer items)
-- Mobile layout overflow issues with dynamic width handling
-- Dropdown visibility clipping in expense sections
-- Missing Google Fonts (Playfair Display, DM Mono, DM Sans)
-- Dropdown width sizing for better content fit
+- Dropdown visibility and positioning
+- Tile alignment in summary sections
+- Mobile layout overflow issues
 
 ### Technical
-- Reorganized codebase from monolithic 3271-line HTML into:
-  - `index.html` (431 lines) - structure
-  - `styles.css` (1107 lines) - all styles
-  - `app.js` (1731 lines) - all logic
-- Implemented custom dropdown component system with JavaScript state management
-- Added responsive overflow handling for medium screens (641-900px)
-- Single-column layout for mobile screens (<640px)
-
-## Previous Releases
-
-### Feature Branches Merged
-- Column-based sorting functionality
-- Inline edit improvements
-- Settlement calculator
-- Filter by name with 300 character description limit
-- Budget tracking integration
+- Reorganized from monolithic HTML to modular structure
+- Firebase Firestore integration
+- Google Sheets backup system
+- Three-state architecture (Active/Archived/Deleted)
 
 ---
 
-For deployment instructions and feature documentation, see [README.md](README.md)
+For deployment instructions and feature documentation, see [README.md](../README.md)
+
