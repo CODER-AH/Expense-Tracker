@@ -1594,6 +1594,25 @@
     margin-bottom: 32px;
   }
 
+  .pending-confirmations h3,
+  .pending-sent h3,
+  .payment-history h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .empty-state-message {
+    color: var(--muted);
+    font-size: 14px;
+    padding: 20px;
+    text-align: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
   .payment-card {
     background: var(--card);
     border: 1px solid var(--border);

@@ -64,33 +64,27 @@ function renderPaymentSection() {
           ${renderSettlementCards(settlements)}
         </div>
       </div>
-  `;
 
-  // Pending Confirmations
-  if (pendingToConfirm.length > 0) {
-    html += `
+      <!-- Pending Confirmations -->
       <div class="pending-confirmations">
         <h3>Pending Confirmations (${pendingToConfirm.length})</h3>
-        ${pendingToConfirm.map(p => renderPendingConfirmation(p)).join('')}
+        ${pendingToConfirm.length > 0
+          ? pendingToConfirm.map(p => renderPendingConfirmation(p)).join('')
+          : '<p class="empty-state-message">No pending payments to confirm</p>'}
       </div>
-    `;
-  }
 
-  // Pending Sent
-  if (pendingSent.length > 0) {
-    html += `
+      <!-- Pending Sent -->
       <div class="pending-sent">
-        <h3>Pending Sent (${pendingSent.length})</h3>
-        ${pendingSent.map(p => renderPendingSent(p)).join('')}
+        <h3>Payments Awaiting Confirmation (${pendingSent.length})</h3>
+        ${pendingSent.length > 0
+          ? pendingSent.map(p => renderPendingSent(p)).join('')
+          : '<p class="empty-state-message">No payments awaiting confirmation</p>'}
       </div>
-    `;
-  }
 
-  // Payment History
-  html += `
+      <!-- Payment History -->
       <div class="payment-history">
         <h3>Payment History</h3>
-        ${confirmedPayments.length > 0 ? renderPaymentHistory(confirmedPayments) : '<p>No confirmed payments yet.</p>'}
+        ${confirmedPayments.length > 0 ? renderPaymentHistory(confirmedPayments) : '<p class="empty-state-message">No confirmed payments yet</p>'}
       </div>
     </div>
   `;
@@ -436,13 +430,13 @@ async function submitPayment() {
 
     await dbAddPayment(payment);
 
-    showLoading(false);
     hideRecordPaymentModal();
 
     // Reload payments to show new payment
     await loadPayments();
 
-    showSuccess('Payment recorded! Waiting for confirmation.');
+    showLoading(false);
+    showToast('Payment recorded! Waiting for confirmation');
   } catch (error) {
     showLoading(false);
     console.error('Error submitting payment:', error);
@@ -483,7 +477,6 @@ async function doConfirmPayment() {
     hideConfirmPaymentModal();
     showLoading(true, 'default', 'Confirming payment...');
     await dbConfirmPayment(currentPaymentIdForAction, currentUser);
-    showLoading(false);
 
     // Reload payments
     await loadPayments();
@@ -493,7 +486,8 @@ async function doConfirmPayment() {
       await loadFromDB();
     }
 
-    showSuccess('Payment confirmed! Settlements updated.');
+    showLoading(false);
+    showToast('Payment confirmed! Settlements updated');
     currentPaymentIdForAction = null;
   } catch (error) {
     showLoading(false);
@@ -543,14 +537,14 @@ async function doRejectPayment() {
     hideRejectPaymentModal();
     showLoading(true, 'default', 'Rejecting payment...');
     await dbRejectPayment(currentPaymentIdForAction, reason);
-    showLoading(false);
 
     // Reload payments
     await loadPayments();
 
     // No need to reload expenses since rejected payments don't affect settlements
 
-    showSuccess('Payment rejected.');
+    showLoading(false);
+    showToast('Payment rejected');
     currentPaymentIdForAction = null;
   } catch (error) {
     showLoading(false);
@@ -560,17 +554,45 @@ async function doRejectPayment() {
 }
 
 async function deletePaymentAction(paymentId) {
-  if (!confirm('Cancel this payment?')) return;
+  // Get payment details
+  const payment = allPayments.find(p => p.id === paymentId);
+  if (!payment) return;
+
+  // Show custom cancel modal
+  currentPaymentIdForAction = paymentId;
+  const modal = document.getElementById('cancelPaymentOverlay');
+  const detailsEl = document.getElementById('cancelPaymentDetails');
+
+  if (modal && detailsEl) {
+    detailsEl.innerHTML = `
+      Payment to <strong>${payment.to}</strong> for <strong>₹${payment.amount}</strong><br>
+      via <strong>${payment.paymentMethod}</strong>
+      ${payment.note ? `<br><em>"${payment.note}"</em>` : ''}
+    `;
+    modal.classList.remove('hidden');
+  }
+}
+
+function hideCancelPaymentModal() {
+  const modal = document.getElementById('cancelPaymentOverlay');
+  if (modal) modal.classList.add('hidden');
+  currentPaymentIdForAction = null;
+}
+
+async function doCancelPayment() {
+  if (!currentPaymentIdForAction) return;
 
   try {
+    hideCancelPaymentModal();
     showLoading(true, 'default', 'Cancelling payment...');
-    await dbDeletePayment(paymentId);
+    await dbDeletePayment(currentPaymentIdForAction);
     showLoading(false);
 
     // Reload payments
     await loadPayments();
 
-    showSuccess('Payment cancelled.');
+    showToast('Payment cancelled');
+    currentPaymentIdForAction = null;
   } catch (error) {
     showLoading(false);
     console.error('Error cancelling payment:', error);
@@ -586,6 +608,12 @@ function showError(message) {
   alert(message);
 }
 
-function showSuccess(message) {
-  alert(message);
+function showToast(message) {
+  // Use the app's toast function
+  if (typeof toast === 'function') {
+    toast(message);
+  } else {
+    // Fallback if toast is not available
+    console.log('Toast:', message);
+  }
 }
