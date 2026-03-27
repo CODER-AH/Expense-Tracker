@@ -19,11 +19,9 @@ const PARTICIPANTS = ['Afsar', 'Adham', 'Aakif', 'Sahlaan'];
 
 async function loadPayments() {
   // Always reload payments to ensure fresh data
-  console.log('loadPayments() called - fetching fresh data...');
   try {
     allPayments = await dbGetAllPayments();
     paymentsLoaded = true;
-    console.log('Loaded payments:', allPayments.length);
     renderPaymentSection();
   } catch (error) {
     console.error('Error loading payments:', error);
@@ -558,8 +556,6 @@ async function doRejectPayment() {
 }
 
 async function deletePaymentAction(paymentId) {
-  console.log('deletePaymentAction called with ID:', paymentId);
-
   // Validate payment ID
   if (!paymentId || paymentId === 'undefined' || paymentId === 'null') {
     console.error('Invalid payment ID provided:', paymentId);
@@ -571,12 +567,9 @@ async function deletePaymentAction(paymentId) {
   const payment = allPayments.find(p => p.id === paymentId);
   if (!payment) {
     console.error('Payment not found:', paymentId);
-    console.log('Available payments:', allPayments.map(p => p.id));
     showToast('Payment not found', true);
     return;
   }
-
-  console.log('Found payment to cancel:', payment);
 
   // Show custom cancel modal
   currentPaymentIdForAction = paymentId;

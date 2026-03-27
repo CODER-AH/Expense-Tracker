@@ -145,8 +145,12 @@ async function navigateTo(section) {
     sectionEl.classList.add('active');
   }
 
-  // Load section data if not already loaded
-  if (!sectionsLoaded.has(section)) {
+  // Load section data
+  // For payments, settlement, and dashboard: always reload for fresh data
+  // For others: load only if not already loaded
+  if (section === 'payments' || section === 'settlement' || section === 'dashboard') {
+    await loadSectionData(section);
+  } else if (!sectionsLoaded.has(section)) {
     await loadSectionData(section);
     sectionsLoaded.add(section);
   }

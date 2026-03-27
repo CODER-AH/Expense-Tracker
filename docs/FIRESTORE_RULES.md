@@ -21,6 +21,8 @@ service cloud.firestore {
     // Username/password hashes are stored in the users collection
     // Session is managed with sessionStorage in the browser
 
+  
+
     // ============================================
     // USERS COLLECTION
     // ============================================
