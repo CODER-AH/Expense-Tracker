@@ -1527,12 +1527,14 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    min-height: 200px;
   }
 
   .settlement-info {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    flex: 1;
   }
 
   .settlement-label {
@@ -1573,6 +1575,7 @@
     cursor: pointer;
     transition: all 0.2s;
     font-family: 'DM Sans', sans-serif;
+    margin-top: auto;
   }
 
   .payment-pay-btn:hover:not(:disabled) {
