@@ -126,24 +126,14 @@ async function navigateTo(section) {
 async function loadSectionData(section) {
   switch(section) {
     case 'expenses':
-      if (expenses[1].length === 0 && expenses[2].length === 0) {
-        // Already loaded from initial load or need to render
-        render();
-      }
+      // Expenses are loaded on initial page load
+      render();
       break;
     case 'notes':
-      if (notes.length === 0) {
-        await loadNotes();
-      } else {
-        renderNotes();
-      }
+      await loadNotes();
       break;
     case 'archived':
-      if (archivedExpenses.length === 0) {
-        await loadArchived();
-      } else {
-        renderArchived();
-      }
+      await loadArchivedExpenses();
       break;
     case 'settlement':
       calculateSettlements();
@@ -151,7 +141,7 @@ async function loadSectionData(section) {
     case 'dashboard':
       // Dashboard is always loaded, just need to ensure data is up to date
       calculateTotals();
-      calculateSettlements(); // Update settlements in case they're showing in dashboard too
+      calculateSettlements();
       break;
   }
 }
