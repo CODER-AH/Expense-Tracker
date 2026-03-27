@@ -156,18 +156,24 @@ async function loadSectionData(section) {
       render();
       break;
     case 'notes':
-      // Don't auto-load or expand - wait for user to click section header
+      // Load notes if not already loaded
+      if (!notesLoaded) {
+        await loadNotes();
+      }
       break;
     case 'archived':
-      // Don't auto-load or expand - wait for user to click section header
+      // Load archived if not already loaded
+      if (!archivedLoaded) {
+        await loadArchivedExpenses();
+      }
       break;
     case 'settlement':
-      calculateSettlements();
+      updateSettlement();
       break;
     case 'dashboard':
       // Dashboard is always loaded, just need to ensure data is up to date
       calculateTotals();
-      calculateSettlements();
+      updateSettlement();
       break;
   }
 }
