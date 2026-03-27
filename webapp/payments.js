@@ -92,10 +92,12 @@ function renderPaymentSection() {
           : '<p class="empty-state-message">No payments awaiting confirmation</p>'}
       </div>
 
-      <!-- Payment History -->
+      <!-- Payment History (includes confirmed, rejected, and cancelled) -->
       <div class="payment-history">
         <h3>Payment History</h3>
-        ${confirmedPayments.length > 0 ? renderPaymentHistory(confirmedPayments) : '<p class="empty-state-message">No confirmed payments yet</p>'}
+        ${allPayments.some(p => p.status !== 'pending' && (p.from === currentUser || p.to === currentUser))
+          ? renderPaymentHistory(confirmedPayments)
+          : '<p class="empty-state-message">No payment history yet</p>'}
       </div>
     </div>
   `;
@@ -340,28 +342,82 @@ function renderPendingSent(payment) {
 }
 
 function renderPaymentHistory(payments) {
-  // Show most recent 10 payments
-  const recentPayments = payments
-    .sort((a, b) => (b.confirmedAt?.seconds || 0) - (a.confirmedAt?.seconds || 0))
+  // Include all non-pending payments (confirmed, rejected, and deleted/cancelled)
+  const allHistoricalPayments = allPayments.filter(p =>
+    (p.status !== 'pending' || p.deleted) && (p.from === currentUser || p.to === currentUser)
+  );
+
+  // Sort by most recent activity (confirmedAt for confirmed, updatedAt for rejected/deleted)
+  const sortedPayments = allHistoricalPayments
+    .sort((a, b) => {
+      const timeA = a.confirmedAt?.seconds || a.updatedAt?.seconds || 0;
+      const timeB = b.confirmedAt?.seconds || b.updatedAt?.seconds || 0;
+      return timeB - timeA;
+    })
     .slice(0, 10);
 
   return `
     <div class="payment-history-list">
-      ${recentPayments.map(p => `
-        <div class="payment-card payment-status-confirmed">
-          <div class="payment-header">
-            <span>${p.from} → ${p.to}</span>
-            <span class="payment-amount">₹${p.amount}</span>
-          </div>
-          <div class="payment-details">
-            <span class="payment-method-badge">${p.paymentMethod}</span>
-            ${p.note ? `<span class="payment-note">"${p.note}"</span>` : ''}
-          </div>
-          <div class="payment-time">
-            Confirmed by ${p.confirmedBy} ${getTimeAgo(p.confirmedAt)}
-          </div>
-        </div>
-      `).join('')}
+      ${sortedPayments.map(p => {
+        const statusClass = p.deleted ? 'payment-status-cancelled' : `payment-status-${p.status}`;
+        const timestamp = p.confirmedAt || p.updatedAt || p.createdAt;
+
+        if (p.deleted) {
+          // Cancelled payment
+          return `
+            <div class="payment-card ${statusClass}">
+              <div class="payment-header">
+                <span>${p.from} → ${p.to}</span>
+                <span class="payment-amount">₹${p.amount}</span>
+              </div>
+              <div class="payment-details">
+                <span class="payment-method-badge">${p.paymentMethod}</span>
+                ${p.note ? `<span class="payment-note">"${p.note}"</span>` : ''}
+                <span class="payment-status-label" style="color: #ff9500; font-weight: 600">Cancelled by ${p.from}</span>
+              </div>
+              <div class="payment-time">
+                ${getTimeAgo(timestamp)}
+              </div>
+            </div>
+          `;
+        } else if (p.status === 'rejected') {
+          // Rejected payment
+          return `
+            <div class="payment-card ${statusClass}">
+              <div class="payment-header">
+                <span>${p.from} → ${p.to}</span>
+                <span class="payment-amount">₹${p.amount}</span>
+              </div>
+              <div class="payment-details">
+                <span class="payment-method-badge">${p.paymentMethod}</span>
+                ${p.note ? `<span class="payment-note">"${p.note}"</span>` : ''}
+                <span class="payment-status-label" style="color: #e86e8a; font-weight: 600">Rejected by ${p.to}</span>
+              </div>
+              ${p.rejectionReason ? `<div class="payment-note" style="color: #e86e8a; font-style: italic">Reason: "${p.rejectionReason}"</div>` : ''}
+              <div class="payment-time">
+                ${getTimeAgo(timestamp)}
+              </div>
+            </div>
+          `;
+        } else {
+          // Confirmed payment
+          return `
+            <div class="payment-card ${statusClass}">
+              <div class="payment-header">
+                <span>${p.from} → ${p.to}</span>
+                <span class="payment-amount">₹${p.amount}</span>
+              </div>
+              <div class="payment-details">
+                <span class="payment-method-badge">${p.paymentMethod}</span>
+                ${p.note ? `<span class="payment-note">"${p.note}"</span>` : ''}
+              </div>
+              <div class="payment-time">
+                Confirmed by ${p.confirmedBy} ${getTimeAgo(timestamp)}
+              </div>
+            </div>
+          `;
+        }
+      }).join('')}
     </div>
   `;
 }

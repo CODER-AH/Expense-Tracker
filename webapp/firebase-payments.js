@@ -35,9 +35,8 @@ async function firestoreAddPayment(payment) {
  */
 async function firestoreGetAllPayments() {
   try {
-    const snapshot = await db.collection('payments')
-      .where('deleted', '==', false)
-      .get();
+    // Get all payments (including deleted ones for history)
+    const snapshot = await db.collection('payments').get();
 
     const payments = [];
     snapshot.forEach(doc => {

@@ -1629,6 +1629,17 @@
     background: rgba(232, 110, 138, 0.05);
   }
 
+  .payment-card.payment-status-cancelled {
+    border-left: 4px solid #ff9500;
+    background: rgba(255, 149, 0, 0.08);
+  }
+
+  .payment-status-label {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+  }
+
   .payment-header {
     display: flex;
     justify-content: space-between;
