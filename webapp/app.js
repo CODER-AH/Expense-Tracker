@@ -3019,21 +3019,33 @@ document.addEventListener('DOMContentLoaded', function() {
 function toggleExpenseFilters() {
   const panel = document.getElementById('expenseFiltersPanel');
   if (panel) {
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    const isHidden = panel.style.display === 'none';
+    panel.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) {
+      setTimeout(() => positionFilterPanel('expenseFiltersPanel', 'expenseFilterBtn'), 10);
+    }
   }
 }
 
 function toggleArchivedFilters() {
   const panel = document.getElementById('archivedFiltersPanel');
   if (panel) {
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    const isHidden = panel.style.display === 'none';
+    panel.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) {
+      setTimeout(() => positionFilterPanel('archivedFiltersPanel', 'archivedFilterBtn'), 10);
+    }
   }
 }
 
 function toggleNoteFilters() {
   const panel = document.getElementById('noteFiltersPanel');
   if (panel) {
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    const isHidden = panel.style.display === 'none';
+    panel.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) {
+      setTimeout(() => positionFilterPanel('noteFiltersPanel', 'noteFilterBtn'), 10);
+    }
   }
 }
 
@@ -3087,5 +3099,43 @@ function toggleNoteExpand(textId, toggleId) {
   } else {
     textEl.style.webkitLineClamp = 'unset';
     toggleEl.textContent = 'Show less';
+  }
+}
+
+// Position filter panel within viewport
+function positionFilterPanel(panelId, buttonId) {
+  const panel = document.getElementById(panelId);
+  const button = document.getElementById(buttonId);
+  if (!panel || !button) return;
+
+  const buttonRect = button.getBoundingClientRect();
+  const panelRect = panel.getBoundingClientRect();
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+
+  // Reset position
+  panel.style.top = '100%';
+  panel.style.bottom = 'auto';
+  panel.style.left = '0';
+  panel.style.right = 'auto';
+
+  // Check vertical space
+  const spaceBelow = viewportHeight - buttonRect.bottom;
+  const spaceAbove = buttonRect.top;
+  
+  if (spaceBelow < panelRect.height && spaceAbove > spaceBelow) {
+    // Not enough space below, show above
+    panel.style.top = 'auto';
+    panel.style.bottom = '100%';
+    panel.style.marginTop = '0';
+    panel.style.marginBottom = '4px';
+  }
+
+  // Check horizontal space
+  const spaceRight = viewportWidth - buttonRect.left;
+  if (spaceRight < panelRect.width) {
+    // Not enough space on right, align to right edge
+    panel.style.left = 'auto';
+    panel.style.right = '0';
   }
 }
