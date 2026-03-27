@@ -171,16 +171,17 @@ async function loadSectionData(section) {
       }
       break;
     case 'payments':
-      // Load payments if not already loaded
-      if (!paymentsLoaded) {
-        await loadPayments();
-      }
+      // Always reload payments to get fresh data
+      await loadPayments();
       break;
     case 'settlement':
+      // Always reload expenses to ensure settlements are up-to-date
+      await loadFromDB();
       updateSettlement();
       break;
     case 'dashboard':
-      // Dashboard is always loaded, just need to ensure data is up to date
+      // Always reload for fresh data
+      await loadFromDB();
       calculateTotals();
       updateSettlement();
       break;

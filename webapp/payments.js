@@ -364,6 +364,8 @@ function getTimeAgo(timestamp) {
 // MODAL ACTIONS
 // ============================================
 
+let currentPaymentIdForAction = null;
+
 function showRecordPaymentModal(from, to, suggestedAmount) {
   const modal = document.getElementById('record-payment-modal');
   if (!modal) return;
@@ -380,12 +382,17 @@ function showRecordPaymentModal(from, to, suggestedAmount) {
     methodDropdown.selectedIndex = 0;
   }
 
+  // Show modal using confirm-overlay pattern
+  modal.classList.remove('hidden');
   modal.style.display = 'flex';
 }
 
 function hideRecordPaymentModal() {
   const modal = document.getElementById('record-payment-modal');
-  if (modal) modal.style.display = 'none';
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 }
 
 async function submitPayment() {
@@ -444,11 +451,38 @@ async function submitPayment() {
 }
 
 async function confirmPaymentAction(paymentId) {
-  if (!confirm('Confirm that you received this payment?')) return;
+  // Get payment details
+  const payment = allPayments.find(p => p.id === paymentId);
+  if (!payment) return;
+
+  // Show custom confirmation modal
+  currentPaymentIdForAction = paymentId;
+  const modal = document.getElementById('confirmPaymentOverlay');
+  const detailsEl = document.getElementById('confirmPaymentDetails');
+
+  if (modal && detailsEl) {
+    detailsEl.innerHTML = `
+      <strong>${payment.from}</strong> sent you <strong>₹${payment.amount}</strong><br>
+      via <strong>${payment.paymentMethod}</strong>
+      ${payment.note ? `<br><em>"${payment.note}"</em>` : ''}
+    `;
+    modal.classList.remove('hidden');
+  }
+}
+
+function hideConfirmPaymentModal() {
+  const modal = document.getElementById('confirmPaymentOverlay');
+  if (modal) modal.classList.add('hidden');
+  currentPaymentIdForAction = null;
+}
+
+async function doConfirmPayment() {
+  if (!currentPaymentIdForAction) return;
 
   try {
+    hideConfirmPaymentModal();
     showLoading(true, 'default', 'Confirming payment...');
-    await dbConfirmPayment(paymentId, currentUser);
+    await dbConfirmPayment(currentPaymentIdForAction, currentUser);
     showLoading(false);
 
     // Reload payments
@@ -460,6 +494,7 @@ async function confirmPaymentAction(paymentId) {
     }
 
     showSuccess('Payment confirmed! Settlements updated.');
+    currentPaymentIdForAction = null;
   } catch (error) {
     showLoading(false);
     console.error('Error confirming payment:', error);
@@ -468,21 +503,46 @@ async function confirmPaymentAction(paymentId) {
 }
 
 function showRejectPaymentModal(paymentId) {
-  const reason = prompt('Please provide a reason for rejection:');
-  if (reason === null) return; // User cancelled
+  // Get payment details
+  const payment = allPayments.find(p => p.id === paymentId);
+  if (!payment) return;
 
-  if (!reason.trim()) {
+  // Show custom rejection modal
+  currentPaymentIdForAction = paymentId;
+  const modal = document.getElementById('rejectPaymentOverlay');
+  const detailsEl = document.getElementById('rejectPaymentDetails');
+  const reasonInput = document.getElementById('rejectPaymentReason');
+
+  if (modal && detailsEl && reasonInput) {
+    detailsEl.innerHTML = `
+      <strong>${payment.from}</strong> sent you <strong>₹${payment.amount}</strong><br>
+      via <strong>${payment.paymentMethod}</strong>
+      ${payment.note ? `<br><em>"${payment.note}"</em>` : ''}
+    `;
+    reasonInput.value = '';
+    modal.classList.remove('hidden');
+  }
+}
+
+function hideRejectPaymentModal() {
+  const modal = document.getElementById('rejectPaymentOverlay');
+  if (modal) modal.classList.add('hidden');
+  currentPaymentIdForAction = null;
+}
+
+async function doRejectPayment() {
+  if (!currentPaymentIdForAction) return;
+
+  const reason = document.getElementById('rejectPaymentReason').value.trim();
+  if (!reason) {
     showError('Please provide a reason for rejection.');
     return;
   }
 
-  rejectPaymentAction(paymentId, reason.trim());
-}
-
-async function rejectPaymentAction(paymentId, reason) {
   try {
+    hideRejectPaymentModal();
     showLoading(true, 'default', 'Rejecting payment...');
-    await dbRejectPayment(paymentId, reason);
+    await dbRejectPayment(currentPaymentIdForAction, reason);
     showLoading(false);
 
     // Reload payments
@@ -491,6 +551,7 @@ async function rejectPaymentAction(paymentId, reason) {
     // No need to reload expenses since rejected payments don't affect settlements
 
     showSuccess('Payment rejected.');
+    currentPaymentIdForAction = null;
   } catch (error) {
     showLoading(false);
     console.error('Error rejecting payment:', error);

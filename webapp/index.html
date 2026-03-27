@@ -769,6 +769,38 @@
   </div>
 </div>
 
+<!-- CONFIRM PAYMENT MODAL -->
+<div class="confirm-overlay hidden" id="confirmPaymentOverlay">
+  <div class="confirm-box">
+    <div class="icon">💰</div>
+    <h3>Confirm Payment?</h3>
+    <p>Confirm that you received this payment?</p>
+    <div id="confirmPaymentDetails" style="padding:12px 14px;background:rgba(93, 186, 138, 0.15);border-radius:8px;margin:16px 0;border-left:3px solid var(--accent)"></div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="hideConfirmPaymentModal()">Cancel</button>
+      <button class="btn-primary" onclick="doConfirmPayment()" style="background:var(--accent);color:#0e1412">Confirm Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- REJECT PAYMENT MODAL -->
+<div class="confirm-overlay hidden" id="rejectPaymentOverlay">
+  <div class="confirm-box" style="max-width:500px">
+    <div class="icon">❌</div>
+    <h3>Reject Payment?</h3>
+    <p>Please provide a reason for rejecting this payment</p>
+    <div id="rejectPaymentDetails" style="padding:12px 14px;background:rgba(232, 110, 138, 0.15);border-radius:8px;margin:16px 0;border-left:3px solid #e86e8a"></div>
+    <div style="margin:16px 0">
+      <label style="display:block;margin-bottom:8px;font-size:13px;color:var(--muted);font-family:'DM Sans',sans-serif">Reason for rejection</label>
+      <textarea id="rejectPaymentReason" placeholder="e.g., Didn't receive the payment..." style="width:100%;min-height:80px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;resize:vertical"></textarea>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="hideRejectPaymentModal()">Cancel</button>
+      <button class="btn-delete" onclick="doRejectPayment()">Reject Payment</button>
+    </div>
+  </div>
+</div>
+
 <!-- Core Configuration & Services -->
 <script src="config.js"></script>
 <script src="firebase-service.js"></script>
