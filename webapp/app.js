@@ -1254,8 +1254,8 @@ function renderArchived() {
       <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
       <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
       <td data-column="amount" class="amount-col" style="white-space:nowrap;text-align:right">₹${Number(exp.amount).toLocaleString('en-IN')}</td>
-      <td data-column="day" style="font-size:11px;color:var(--muted)">Day ${exp.archivedDay}</td>
-      ${!archiveMultiSelectMode ? `<td style="text-align:center">
+      <td data-column="day" style="font-size:11px;color:var(--muted);white-space:nowrap">Day ${exp.archivedDay}</td>
+      ${!archiveMultiSelectMode ? `<td style="text-align:center;white-space:nowrap">
         <button class="del-btn" onclick="showUnarchiveConfirm('${exp.id}')" title="Unarchive" style="background:var(--accent);color:#0e1412;margin-right:${isAdmin ? '4px' : '0'}">↩️</button>${isAdmin ? `<button class="del-btn" onclick="showPermanentDeleteConfirm('${exp.id}')" title="Delete Permanently">🗑️</button>` : ''}
       </td>` : ''}
     `;
@@ -2774,9 +2774,10 @@ function updateNoteBulkActions() {
   // Show bulk actions container when there's selection
   if (bulkActions) bulkActions.style.display = 'flex';
 
-  // Check if selection includes any completed notes
+  // Check if selection includes any completed notes and check ownership
   let hasCompleted = false;
   let hasIncomplete = false;
+  let allOwnedByCurrentUser = true;
 
   selectedNotes.forEach(id => {
     const note = notes.find(n => n.id === id);
@@ -2786,37 +2787,57 @@ function updateNoteBulkActions() {
       } else {
         hasIncomplete = true;
       }
+      // Check if note is owned by current user
+      if (note.createdBy !== currentUser) {
+        allOwnedByCurrentUser = false;
+      }
     }
   });
 
-  // Show/hide buttons based on selection
+  // Show/hide buttons based on selection and ownership
   if (hasCompleted && hasIncomplete) {
-    // Mixed selection - only show delete
-    if (completeBtn) completeBtn.style.display = 'none';
+    // Mixed selection - show complete and delete (if owned)
+    if (completeBtn) {
+      completeBtn.style.display = 'inline-block';
+      completeBtn.disabled = false;
+      completeBtn.textContent = `Complete Selected (${selectedNotes.size})`;
+    }
     if (deleteBtn) {
-      deleteBtn.style.display = 'inline-block';
-      deleteBtn.disabled = false;
-      deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
+      if (allOwnedByCurrentUser) {
+        deleteBtn.style.display = 'inline-block';
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
+      } else {
+        deleteBtn.style.display = 'none';
+      }
     }
   } else if (hasCompleted) {
-    // Only completed notes - only show delete
+    // Only completed notes - only show delete if all owned by current user
     if (completeBtn) completeBtn.style.display = 'none';
     if (deleteBtn) {
-      deleteBtn.style.display = 'inline-block';
-      deleteBtn.disabled = false;
-      deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
+      if (allOwnedByCurrentUser) {
+        deleteBtn.style.display = 'inline-block';
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
+      } else {
+        deleteBtn.style.display = 'none';
+      }
     }
   } else {
-    // Only incomplete notes - show both
+    // Only incomplete notes - show complete always, delete only if all owned
     if (completeBtn) {
       completeBtn.style.display = 'inline-block';
       completeBtn.disabled = false;
       completeBtn.textContent = `Mark as Complete (${selectedNotes.size})`;
     }
     if (deleteBtn) {
-      deleteBtn.style.display = 'inline-block';
-      deleteBtn.disabled = false;
-      deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
+      if (allOwnedByCurrentUser) {
+        deleteBtn.style.display = 'inline-block';
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = `Delete Selected (${selectedNotes.size})`;
+      } else {
+        deleteBtn.style.display = 'none';
+      }
     }
   }
 }
