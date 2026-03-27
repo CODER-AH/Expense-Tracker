@@ -29,6 +29,17 @@ const loadingMessages = [
   'One sec...'
 ];
 
+const checkingUserMessages = [
+  'Checking user details...',
+  'Looking up your account...',
+  'Finding your profile...',
+  'One moment...',
+  'Getting your info...',
+  'Just a sec...',
+  'Fetching user data...',
+  'Almost there...'
+];
+
 const authMessages = [
   'Authenticating...',
   'Verifying credentials...',
@@ -40,6 +51,10 @@ const authMessages = [
 
 function getRandomLoadingMessage() {
   return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+}
+
+function getRandomCheckingUserMessage() {
+  return checkingUserMessages[Math.floor(Math.random() * checkingUserMessages.length)];
 }
 
 function getRandomAuthMessage() {
@@ -317,8 +332,8 @@ async function proceedToPassword() {
 
   selectedLoginUser = name;
 
-  // Show loading overlay
-  showLoading(true, 'auth');
+  // Show loading overlay with user checking messages
+  showLoading(true, 'checkingUser');
 
   // Check if user has a password set
   try {
@@ -365,16 +380,16 @@ async function handlePasswordSubmit() {
     const isValid = await firestoreVerifyPassword(selectedLoginUser, password);
 
     if (isValid) {
-      // Login successful
+      // Login successful - hide auth loader immediately
+      showLoading(false);
       currentUser = selectedLoginUser;
       localStorage.setItem('coorg_username', currentUser);
       sessionStorage.setItem('authenticated', 'true');
       hideLoginOverlay();
 
       if (!dataLoaded) {
+        // loadFromSheet will show its own loading overlay
         loadFromSheet();
-      } else {
-        showLoading(false);
       }
     } else {
       // Invalid password
@@ -1788,7 +1803,13 @@ function showLoading(show, type = 'default') {
   if (show) {
     // Set a random loading message based on type
     if (loadingText) {
-      loadingText.textContent = type === 'auth' ? getRandomAuthMessage() : getRandomLoadingMessage();
+      if (type === 'auth') {
+        loadingText.textContent = getRandomAuthMessage();
+      } else if (type === 'checkingUser') {
+        loadingText.textContent = getRandomCheckingUserMessage();
+      } else {
+        loadingText.textContent = getRandomLoadingMessage();
+      }
     }
     overlay.classList.remove('hidden');
   } else {
