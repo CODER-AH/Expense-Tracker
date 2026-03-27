@@ -10,6 +10,9 @@ let allPayments = [];
 
 const PAYMENT_METHODS = ['GPay', 'PhonePe', 'Paytm', 'Cred', 'Cash', 'Other'];
 
+// Participants list (matches app.js)
+const PARTICIPANTS = ['Afsar', 'Adham', 'Aakif', 'Sahlaan'];
+
 // ============================================
 // MAIN LOAD FUNCTION
 // ============================================
@@ -111,7 +114,7 @@ function getCurrentSettlements() {
 
   // Calculate payment adjustments per person
   const paymentAdjustments = {};
-  participants.forEach(name => {
+  PARTICIPANTS.forEach(name => {
     paymentAdjustments[name] = 0;
   });
 
@@ -127,7 +130,7 @@ function getCurrentSettlements() {
 
   // Adjust settlements with payment data
   const adjustedBalances = {};
-  participants.forEach(name => {
+  PARTICIPANTS.forEach(name => {
     adjustedBalances[name] = (baseSettlements[name] || 0) + (paymentAdjustments[name] || 0);
   });
 
@@ -138,24 +141,39 @@ function getCurrentSettlements() {
 function calculateBaseSettlements() {
   // Copy logic from app.js updateSettlement()
   const balances = {};
-  participants.forEach(name => {
+  PARTICIPANTS.forEach(name => {
     balances[name] = 0;
   });
 
-  // Calculate from expenses
-  expenses.forEach(exp => {
-    if (exp.paidBy && participants.includes(exp.paidBy)) {
-      balances[exp.paidBy] += exp.amount || 0;
-    }
+  // Get all active expenses (not archived, not deleted)
+  const allActiveExpenses = [];
+  if (typeof expenses !== 'undefined') {
+    Object.values(expenses).forEach(dayExpenses => {
+      if (Array.isArray(dayExpenses)) {
+        allActiveExpenses.push(...dayExpenses.filter(e => !e.archived && !e.deleted));
+      }
+    });
+  }
 
-    if (exp.sharedBy && exp.sharedBy.length > 0) {
-      const shareAmount = (exp.amount || 0) / exp.sharedBy.length;
-      exp.sharedBy.forEach(person => {
-        if (participants.includes(person)) {
-          balances[person] -= shareAmount;
-        }
-      });
+  // Calculate total and share per person
+  const total = allActiveExpenses.reduce((s, e) => s + (e.amount || 0), 0);
+  const sharePerPerson = total / PARTICIPANTS.length;
+
+  // Calculate how much each person paid
+  const paidBy = {};
+  PARTICIPANTS.forEach(name => {
+    paidBy[name] = 0;
+  });
+
+  allActiveExpenses.forEach(e => {
+    if (paidBy[e.paidBy] !== undefined) {
+      paidBy[e.paidBy] += (e.amount || 0);
     }
+  });
+
+  // Calculate balance (positive = gets money, negative = owes money)
+  PARTICIPANTS.forEach(person => {
+    balances[person] = paidBy[person] - sharePerPerson;
   });
 
   return balances;
