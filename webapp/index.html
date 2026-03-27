@@ -399,7 +399,7 @@
           <th data-column="paidBy" style="white-space:nowrap">Paid By</th>
           <th data-column="amount" style="white-space:nowrap;text-align:right">Amount</th>
           <th data-column="day" style="white-space:nowrap">Day</th>
-          <th style="white-space:nowrap" colspan="2">Actions</th>
+          <th style="white-space:nowrap;text-align:center">Actions</th>
         </tr></thead>
         <tbody id="archived-body"></tbody>
       </table>
@@ -685,6 +685,20 @@
     <div class="confirm-buttons">
       <button class="btn-cancel" onclick="cancelBulkDeleteNotes()">Cancel</button>
       <button class="btn-delete" onclick="confirmBulkDeleteNotes()">Delete All</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK COMPLETE NOTES CONFIRM -->
+<div class="confirm-overlay hidden" id="bulkCompleteNotesOverlay">
+  <div class="confirm-box">
+    <div class="icon">✅</div>
+    <h3>Complete Multiple Notes?</h3>
+    <p style="color:var(--accent)">Mark these notes as completed?</p>
+    <div id="bulkCompleteNotesDetails"></div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="cancelBulkCompleteNotes()">Cancel</button>
+      <button class="btn-primary" onclick="confirmBulkCompleteNotes()" style="background:var(--accent);color:#0e1412">Complete All</button>
     </div>
   </div>
 </div>

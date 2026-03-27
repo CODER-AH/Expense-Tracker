@@ -123,6 +123,9 @@ async function navigateTo(section) {
   // Update current section
   currentSection = section;
 
+  // Save current section to localStorage
+  localStorage.setItem('coorg_currentSection', section);
+
   // Update active nav item
   document.querySelectorAll('.nav-item').forEach(item => {
     item.classList.remove('active');
@@ -182,6 +185,7 @@ async function loadSectionData(section) {
 let expenses = { 1: [], 2: [] };
 let archivedExpenses = [];
 let currentUser = '';
+let isAdmin = false; // Admin flag for current user
 let editingId = null;
 let deleteTarget = null;
 let permanentDeleteTarget = null;
@@ -359,9 +363,33 @@ window.onload = () => {
   if (saved && isAuthenticated) {
     // User is logged in and authenticated
     currentUser = saved;
+    isAdmin = sessionStorage.getItem('isAdmin') === 'true';
     hideLoginOverlay();
     updateFilterOptions();
     loadFromSheet();
+
+    // Verify admin status from Firebase (async, won't block UI)
+    dbIsAdmin(currentUser).then(adminStatus => {
+      if (adminStatus !== isAdmin) {
+        isAdmin = adminStatus;
+        sessionStorage.setItem('isAdmin', isAdmin ? 'true' : 'false');
+        // Re-render archived if it's loaded to update delete buttons
+        if (archivedLoaded) {
+          renderArchived();
+        }
+      }
+    }).catch(err => {
+      console.error('Failed to verify admin status:', err);
+    });
+
+    // Restore last visited section
+    const savedSection = localStorage.getItem('coorg_currentSection');
+    if (savedSection && savedSection !== 'dashboard') {
+      // Use setTimeout to ensure DOM is ready
+      setTimeout(() => {
+        navigateTo(savedSection);
+      }, 100);
+    }
   } else {
     // Show login screen
     showLoading(false);
@@ -497,6 +525,11 @@ async function handlePasswordSubmit() {
       currentUser = selectedLoginUser;
       localStorage.setItem('coorg_username', currentUser);
       sessionStorage.setItem('authenticated', 'true');
+
+      // Check if user is admin
+      isAdmin = await dbIsAdmin(currentUser);
+      sessionStorage.setItem('isAdmin', isAdmin ? 'true' : 'false');
+
       hideLoginOverlay();
 
       if (!dataLoaded) {
@@ -553,6 +586,11 @@ async function handleSetPassword() {
     currentUser = selectedLoginUser;
     localStorage.setItem('coorg_username', currentUser);
     sessionStorage.setItem('authenticated', 'true');
+
+    // Check if user is admin
+    isAdmin = await dbIsAdmin(currentUser);
+    sessionStorage.setItem('isAdmin', isAdmin ? 'true' : 'false');
+
     hideLoginOverlay();
 
     showToast('Password set successfully!', 'ok');
@@ -807,12 +845,11 @@ function loadFromLocal() {
 
 // ─── GOOGLE SHEETS ────────────────────────────────────────
 async function loadFromSheet() {
-  showLoading(true);
+  showLoading(true, 'default', 'Loading expenses...');
   setStatus('syncing', 'Loading…');
   try {
     // Load active expenses from Firebase
     const data = await dbGetAllExpenses();
-    console.log('Loaded active expenses from Firebase:', data);
 
     // Initialize expenses object for all trip days
     expenses = {};
@@ -831,7 +868,6 @@ async function loadFromSheet() {
 
     // Load budget from Firebase
     tripBudget = await dbGetBudget();
-    console.log('Loaded budget from Firebase:', tripBudget);
     if (tripBudget) {
       localStorage.setItem('coorg_budget', tripBudget);
     }
@@ -1121,7 +1157,6 @@ async function loadArchivedExpenses() {
     showLoading(true, 'default', getRandomArchivedLoadingMessage());
 
     const archivedData = await dbGetArchivedExpenses();
-    console.log('Loaded archived expenses from Firebase:', archivedData);
 
     archivedExpenses = [];
     (archivedData || []).forEach(e => {
@@ -1187,7 +1222,7 @@ function renderArchived() {
   if (filteredArchived.length === 0) {
     const tr = document.createElement('tr');
     tr.className = 'empty-row';
-    tr.innerHTML = `<td colspan="${archiveMultiSelectMode ? 10 : 9}">No archived expenses${archivedDayFilterBy !== 'all' || archivedPersonFilterBy !== 'all' ? ' (filters active)' : ''}</td>`;
+    tr.innerHTML = `<td colspan="${archiveMultiSelectMode ? 9 : 8}">No archived expenses${archivedDayFilterBy !== 'all' || archivedPersonFilterBy !== 'all' ? ' (filters active)' : ''}</td>`;
     tbody.appendChild(tr);
     renderArchivedPagination(0);
     return;
@@ -1219,8 +1254,9 @@ function renderArchived() {
       <td data-column="paidBy" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.paidBy || '—'}</td>
       <td data-column="amount" class="amount-col" style="white-space:nowrap;text-align:right">₹${Number(exp.amount).toLocaleString('en-IN')}</td>
       <td data-column="day" style="font-size:11px;color:var(--muted)">Day ${exp.archivedDay}</td>
-      ${!archiveMultiSelectMode ? `<td><button class="del-btn" onclick="showUnarchiveConfirm('${exp.id}')" title="Unarchive" style="background:var(--accent);color:#0e1412">↩️</button></td>` : ''}
-      ${!archiveMultiSelectMode ? `<td><button class="del-btn" onclick="showPermanentDeleteConfirm('${exp.id}')" title="Delete Permanently">🗑️</button></td>` : ''}
+      ${!archiveMultiSelectMode ? `<td style="text-align:center">
+        <button class="del-btn" onclick="showUnarchiveConfirm('${exp.id}')" title="Unarchive" style="background:var(--accent);color:#0e1412;margin-right:${isAdmin ? '4px' : '0'}">↩️</button>${isAdmin ? `<button class="del-btn" onclick="showPermanentDeleteConfirm('${exp.id}')" title="Delete Permanently">🗑️</button>` : ''}
+      </td>` : ''}
     `;
     tbody.appendChild(tr);
   });
@@ -1235,7 +1271,8 @@ function renderArchivedPagination(totalPages) {
   if (!container) return;
 
   if (totalPages <= 1) {
-    container.innerHTML = '';
+    // Show a simple message when there's only one page
+    container.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:8px">Page 1 of 1</div>`;
     return;
   }
 
@@ -1452,8 +1489,19 @@ function render() {
         break;
       case 'time':
       default:
-        // Use createdAt timestamp if available, otherwise parse ts string
+        // For time sorting, we need to consider both the day and the timestamp
+        // Sort by day first, then by timestamp within the same day
+        const dayA = a.day || 0;
+        const dayB = b.day || 0;
+
+        // If different days, sort by day
+        if (dayA !== dayB) {
+          return sortOrder === 'asc' ? dayA - dayB : dayB - dayA;
+        }
+
+        // Same day, sort by timestamp
         if (a.createdAt && b.createdAt) {
+          // Firebase Timestamp objects - these are absolute timestamps
           valA = a.createdAt.seconds || 0;
           valB = b.createdAt.seconds || 0;
         } else if (a.ts && b.ts) {
@@ -2220,6 +2268,31 @@ function renderNotes() {
     return;
   }
 
+  // Sort notes by creation time (newest first)
+  filteredNotes.sort((a, b) => {
+    let timeA = 0, timeB = 0;
+
+    // Get timestamp from createdAt
+    if (a.createdAt) {
+      if (a.createdAt.seconds) {
+        timeA = a.createdAt.seconds;
+      } else if (typeof a.createdAt === 'string') {
+        timeA = new Date(a.createdAt).getTime() / 1000;
+      }
+    }
+
+    if (b.createdAt) {
+      if (b.createdAt.seconds) {
+        timeB = b.createdAt.seconds;
+      } else if (typeof b.createdAt === 'string') {
+        timeB = new Date(b.createdAt).getTime() / 1000;
+      }
+    }
+
+    // Sort descending (newest first)
+    return timeB - timeA;
+  });
+
   // Apply pagination
   const totalPages = Math.ceil(filteredNotes.length / ITEMS_PER_PAGE);
   const page = notesPage || 1;
@@ -2229,7 +2302,7 @@ function renderNotes() {
 
   notesList.innerHTML = paginatedNotes.map((note, idx) => {
     const isCompleted = note.completed || false;
-    const textStyle = isCompleted ? 'text-decoration:line-through;opacity:0.6' : '';
+    const textStyle = isCompleted ? 'text-decoration:line-through;color:#8a9d92' : '';
     const createdBy = note.createdBy || '—';
     const isOwner = note.createdBy === currentUser;
     const isEdited = note.edited || false;
@@ -2262,7 +2335,7 @@ function renderNotes() {
     const completedInfo = isCompleted && note.completedBy ? `<div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:4px">✓ Completed by ${note.completedBy}${note.completedAt ? ` • ${note.completedAt}` : ''}</div>` : '';
 
     return `
-      <div class="note-item" style="display:flex;gap:12px;padding:12px;background:rgba(72, 126, 98, 0.1);border-radius:8px;margin-bottom:8px;align-items:start">
+      <div class="note-item" style="display:flex;gap:12px;padding:12px;background:rgba(72, 126, 98, 0.1);border-radius:8px;margin-bottom:8px;align-items:center">
         ${isNoteMultiSelectMode && !isCompleted ? `
           <input
             type="checkbox"
@@ -2270,23 +2343,23 @@ function renderNotes() {
             ${selectedNotes.has(note.id) ? 'checked' : ''}
             onchange="event.stopPropagation();toggleNoteSelection('${note.id}')"
             onclick="event.stopPropagation()"
-            style="margin-top:2px;flex-shrink:0"
+            style="flex-shrink:0"
           />
         ` : isNoteMultiSelectMode && isCompleted ? `
-          <div style="width:20px;margin-top:2px;flex-shrink:0"></div>
+          <div style="width:20px;flex-shrink:0"></div>
         ` : `
           <input
             type="radio"
+            class="note-radio"
             ${isCompleted ? 'checked' : ''}
             onchange="event.stopPropagation();showMarkCompleteDialog('${note.id}')"
             onclick="event.stopPropagation()"
-            style="margin-top:2px;flex-shrink:0"
             ${isCompleted ? 'disabled' : ''}
           />
         `}
-        <div style="flex:1;${textStyle}">
+        <div style="flex:1">
           ${editedBadge ? `<div>${editedBadge}</div>` : ''}
-          <div id="${noteTextId}" style="font-size:14px;line-height:1.5;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;"></div>
+          <div id="${noteTextId}" style="font-size:14px;line-height:1.5;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--text);${textStyle}"></div>
           <button id="${toggleId}" onclick="toggleNoteExpand('${noteTextId}', '${toggleId}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;padding:0;margin-top:4px;font-family:'DM Sans',sans-serif;display:none">Show more</button>
           <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:8px">
             👤 ${createdBy} • 🕐 ${createdAt}
@@ -2312,17 +2385,20 @@ function renderNotes() {
   }).join('');
 
   // After rendering, set text content and check if truncation is needed
-  paginatedNotes.forEach(note => {
-    const textEl = document.getElementById(`note-text-${note.id}`);
-    const toggleEl = document.getElementById(`note-toggle-${note.id}`);
-    if (textEl) {
-      textEl.textContent = note.text;
-      // Check if text is truncated (scrollHeight > clientHeight)
-      if (textEl.scrollHeight > textEl.clientHeight) {
-        if (toggleEl) toggleEl.style.display = 'inline-block';
+  // Use setTimeout to ensure DOM has been painted and heights are calculated
+  setTimeout(() => {
+    paginatedNotes.forEach(note => {
+      const textEl = document.getElementById(`note-text-${note.id}`);
+      const toggleEl = document.getElementById(`note-toggle-${note.id}`);
+      if (textEl && toggleEl) {
+        textEl.textContent = note.text;
+        // Check if text is truncated (scrollHeight > clientHeight)
+        if (textEl.scrollHeight > textEl.clientHeight) {
+          toggleEl.style.display = 'inline-block';
+        }
       }
-    }
-  });
+    });
+  }, 0);
 
   // Render pagination
   renderNotesPagination(totalPages);
@@ -2334,7 +2410,8 @@ function renderNotesPagination(totalPages) {
   if (!container) return;
 
   if (totalPages <= 1) {
-    container.innerHTML = '';
+    // Show a simple message when there's only one page
+    container.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:8px">Page 1 of 1</div>`;
     return;
   }
 
@@ -2427,7 +2504,7 @@ async function addNote() {
       text: text,
       completed: false,
       createdBy: currentUser,
-      createdAt: ts,
+      createdAt: firebase.firestore.Timestamp.now(), // Use Firebase Timestamp for proper sorting
       createdAtLocal: ts
     };
 
@@ -2756,9 +2833,52 @@ function toggleNoteSelection(id) {
   updateNoteBulkActions();
 }
 
-async function bulkCompleteNotes() {
+function bulkCompleteNotes() {
   if (selectedNotes.size === 0) return;
 
+  // Get note details for confirmation
+  const notesToComplete = [];
+  selectedNotes.forEach(id => {
+    const note = notes.find(n => n.id === id);
+    if (note && !note.completed) {
+      notesToComplete.push(note);
+    }
+  });
+
+  if (notesToComplete.length === 0) {
+    showToast('No incomplete notes selected', 'err');
+    return;
+  }
+
+  // Show confirmation dialog
+  showBulkCompleteNotesConfirm(notesToComplete);
+}
+
+function showBulkCompleteNotesConfirm(notesArray) {
+  const overlay = document.getElementById('bulkCompleteNotesOverlay');
+  const detailsEl = document.getElementById('bulkCompleteNotesDetails');
+
+  let html = `<div style="max-height:300px;overflow-y:auto;margin:16px 0;padding:4px">`;
+  notesArray.forEach((note, idx) => {
+    html += `<div style="padding:12px 14px;background:rgba(72, 126, 98, 0.15);margin-bottom:8px;border-radius:8px;border-left:3px solid var(--accent)">
+      <div style="font-weight:500;margin-bottom:6px;color:var(--text);font-size:14px">${idx + 1}. ${note.text}</div>
+      <div style="font-size:11px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap;font-family:'DM Sans',sans-serif">
+        <span style="display:flex;align-items:center;gap:4px">👤 ${note.createdBy || '—'}</span>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  detailsEl.innerHTML = html;
+  overlay.classList.remove('hidden');
+}
+
+function cancelBulkCompleteNotes() {
+  document.getElementById('bulkCompleteNotesOverlay').classList.add('hidden');
+}
+
+async function confirmBulkCompleteNotes() {
+  document.getElementById('bulkCompleteNotesOverlay').classList.add('hidden');
   showLoading(true);
 
   try {
@@ -2767,7 +2887,13 @@ async function bulkCompleteNotes() {
       const note = notes.find(n => n.id === id);
       if (note && !note.completed) {
         note.completed = true;
-        updatePromises.push(dbUpdateNote(id, { completed: true }));
+        note.completedBy = currentUser;
+        note.completedAt = new Date().toISOString();
+        updatePromises.push(dbUpdateNote(id, {
+          completed: true,
+          completedBy: currentUser,
+          completedAt: note.completedAt
+        }));
       }
     });
 

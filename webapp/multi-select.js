@@ -148,8 +148,14 @@ function updateArchiveBulkActionButtons() {
       bulkUnarchiveBtn.textContent = `Unarchive Selected (${count})`;
     }
     if (bulkDeleteBtn) {
-      bulkDeleteBtn.disabled = false;
-      bulkDeleteBtn.textContent = `Delete Selected (${count})`;
+      // Only show delete button for admins
+      if (isAdmin) {
+        bulkDeleteBtn.style.display = 'inline-block';
+        bulkDeleteBtn.disabled = false;
+        bulkDeleteBtn.textContent = `Delete Selected (${count})`;
+      } else {
+        bulkDeleteBtn.style.display = 'none';
+      }
     }
   }
 }

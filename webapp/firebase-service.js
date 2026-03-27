@@ -410,3 +410,22 @@ async function firestoreVerifyPassword(username, password) {
     throw error;
   }
 }
+
+/**
+ * Check if user is an admin
+ * @param {string} username - Username
+ * @returns {Promise<boolean>} True if user is admin
+ */
+async function firestoreIsAdmin(username) {
+  try {
+    const userDoc = await db.collection('users').doc(username).get();
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      return userData.isAdmin === true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
+}

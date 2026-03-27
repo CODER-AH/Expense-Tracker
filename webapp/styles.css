@@ -1439,3 +1439,44 @@
       font-size: 20px;
     }
   }
+
+  /* CUSTOM RADIO BUTTONS (for notes) */
+  input[type="radio"].note-radio {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    background: var(--surface);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  input[type="radio"].note-radio:hover:not(:disabled) {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(93, 186, 138, 0.1);
+  }
+
+  input[type="radio"].note-radio:checked {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  input[type="radio"].note-radio:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #0e1412;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  input[type="radio"].note-radio:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
