@@ -2189,7 +2189,7 @@ function renderNotes() {
 
     return `
       <div class="note-item" style="display:flex;gap:12px;padding:12px;background:rgba(72, 126, 98, 0.1);border-radius:8px;margin-bottom:8px;align-items:start">
-        ${isNoteMultiSelectMode ? `
+        ${isNoteMultiSelectMode && !isCompleted ? `
           <input
             type="checkbox"
             id="check-note-${note.id}"
@@ -2198,6 +2198,8 @@ function renderNotes() {
             onclick="event.stopPropagation()"
             style="margin-top:2px;flex-shrink:0"
           />
+        ` : isNoteMultiSelectMode && isCompleted ? `
+          <div style="width:20px;margin-top:2px;flex-shrink:0"></div>
         ` : `
           <input
             type="radio"
@@ -2217,7 +2219,7 @@ function renderNotes() {
           </div>
           ${completedInfo}
         </div>
-        ${!isNoteMultiSelectMode && isOwner ? `
+        ${!isNoteMultiSelectMode && isOwner && !isCompleted ? `
           <button
             onclick="event.stopPropagation();showEditNoteDialog('${note.id}')"
             style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px;margin-right:4px"
@@ -2228,6 +2230,8 @@ function renderNotes() {
             style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px"
             title="Delete note"
           >🗑️</button>
+        ` : !isNoteMultiSelectMode && !isOwner ? '' : isCompleted ? `
+          <div style="width:44px;flex-shrink:0"></div>
         ` : ''}
       </div>
     `;
