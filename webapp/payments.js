@@ -21,6 +21,12 @@ async function loadPayments() {
   // Always reload payments to ensure fresh data
   try {
     showLoading(true, 'default', 'Loading payments...');
+
+    // Clear cache to force fresh load
+    if (typeof invalidateCache === 'function') {
+      invalidateCache('payments');
+    }
+
     allPayments = await dbGetAllPayments();
     paymentsLoaded = true;
     renderPaymentSection();
@@ -103,10 +109,10 @@ function renderPaymentSection() {
 
 function getCurrentSettlements() {
   // Use existing settlement calculation from app.js
-  // But adjust for confirmed payments
+  // But adjust for confirmed AND pending payments
 
   const confirmedPayments = allPayments.filter(p => p.status === 'confirmed' && !p.deleted);
-  console.log('Confirmed payments:', confirmedPayments.length);
+  const pendingPayments = allPayments.filter(p => p.status === 'pending' && !p.deleted);
 
   // Calculate payment adjustments per person
   const paymentAdjustments = {};
@@ -114,6 +120,7 @@ function getCurrentSettlements() {
     paymentAdjustments[name] = 0;
   });
 
+  // Apply confirmed payments
   confirmedPayments.forEach(payment => {
     // Person who sent loses money (negative)
     paymentAdjustments[payment.from] = (paymentAdjustments[payment.from] || 0) - payment.amount;
@@ -121,11 +128,16 @@ function getCurrentSettlements() {
     paymentAdjustments[payment.to] = (paymentAdjustments[payment.to] || 0) + payment.amount;
   });
 
-  console.log('Payment adjustments:', paymentAdjustments);
+  // Apply pending payments to show remaining amounts
+  pendingPayments.forEach(payment => {
+    // Person who sent loses money (negative)
+    paymentAdjustments[payment.from] = (paymentAdjustments[payment.from] || 0) - payment.amount;
+    // Person who received gains money (positive)
+    paymentAdjustments[payment.to] = (paymentAdjustments[payment.to] || 0) + payment.amount;
+  });
 
   // Get base settlements from expenses
   const baseSettlements = calculateBaseSettlements();
-  console.log('Base settlements (balances):', baseSettlements);
 
   // Adjust settlements with payment data
   const adjustedBalances = {};
@@ -133,11 +145,8 @@ function getCurrentSettlements() {
     adjustedBalances[name] = (baseSettlements[name] || 0) + (paymentAdjustments[name] || 0);
   });
 
-  console.log('Adjusted balances:', adjustedBalances);
-
   // Calculate who owes whom with adjusted balances
   const transactions = calculateMinimalTransactions(adjustedBalances);
-  console.log('Final transactions:', transactions);
 
   return transactions;
 }
@@ -154,7 +163,8 @@ function calculateBaseSettlements() {
   if (typeof expenses !== 'undefined') {
     Object.values(expenses).forEach(dayExpenses => {
       if (Array.isArray(dayExpenses)) {
-        allActiveExpenses.push(...dayExpenses.filter(e => !e.archived && !e.deleted));
+        // Don't filter - expenses object already only contains active expenses
+        allActiveExpenses.push(...dayExpenses);
       }
     });
   }
@@ -273,7 +283,7 @@ function renderSettlementCards(settlements) {
             onclick="showRecordPaymentModal('${s.from}', '${s.to}', ${s.amount})"
             ${buttonDisabled ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}
           >
-            ${buttonDisabled ? 'Payment Pending' : 'Pay Now'}
+            ${buttonDisabled ? 'Awaiting Confirmation' : 'Pay Now'}
           </button>
         </div>
       `;
@@ -496,8 +506,8 @@ async function doConfirmPayment() {
     await loadPayments();
 
     // Also reload expenses to update settlement calculations
-    if (typeof loadFromDB === 'function') {
-      await loadFromDB();
+    if (typeof loadFromSheet === 'function') {
+      await loadFromSheet();
     }
 
     showLoading(false);

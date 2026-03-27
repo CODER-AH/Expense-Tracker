@@ -118,21 +118,21 @@
       <span class="nav-icon">💰</span>
       <span class="nav-label">Expenses</span>
     </button>
+    <button class="nav-item" onclick="navigateTo('settlement')" data-section="settlement">
+      <span class="nav-icon">💸</span>
+      <span class="nav-label">Settlements</span>
+    </button>
+    <button class="nav-item" onclick="navigateTo('payments')" data-section="payments">
+      <span class="nav-icon">💳</span>
+      <span class="nav-label">Payments</span>
+    </button>
     <button class="nav-item" onclick="navigateTo('notes')" data-section="notes">
       <span class="nav-icon">📝</span>
       <span class="nav-label">Notes</span>
     </button>
     <button class="nav-item" onclick="navigateTo('archived')" data-section="archived">
       <span class="nav-icon">🗃️</span>
-      <span class="nav-label">Archived</span>
-    </button>
-    <button class="nav-item" onclick="navigateTo('payments')" data-section="payments">
-      <span class="nav-icon">💳</span>
-      <span class="nav-label">Payments</span>
-    </button>
-    <button class="nav-item" onclick="navigateTo('settlement')" data-section="settlement">
-      <span class="nav-icon">💸</span>
-      <span class="nav-label">Settlement</span>
+      <span class="nav-label">Archived Expenses</span>
     </button>
   </div>
 </nav>
@@ -156,7 +156,7 @@
 <!-- DASHBOARD SECTION -->
 <div class="app-section active" id="dashboardSection">
 <div class="section-title" style="margin-top: 28px">
-  📊 Insights
+  📊 Dashboard
 </div>
 
 <!-- SUMMARY CARDS -->
@@ -341,7 +341,7 @@
 <!-- ARCHIVED SECTION -->
 <div class="app-section" id="archivedSection">
 <div class="section-title">
-  🗃️ Archived (<span id="archivedCount">0</span>)
+  🗃️ Archived Expenses (<span id="archivedCount">0</span>)
 </div>
 
 <!-- ARCHIVED SECTION -->
@@ -423,7 +423,7 @@
 <!-- SETTLEMENT SECTION -->
 <div class="app-section" id="settlementSection">
 <div class="section-title" style="margin-top:28px">
-  💸 Settlement
+  💸 Settlements
 </div>
 
 <!-- SETTLEMENT CARDS -->
