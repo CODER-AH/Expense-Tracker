@@ -2182,6 +2182,9 @@ function renderNotes() {
     // Edited badge
     const editedBadge = isEdited ? '<span style="display:inline-block;font-size:10px;padding:2px 6px;background:#2a2410;border:1px solid #f5c842;color:#f5c842;border-radius:4px;font-family:\'DM Mono\',monospace;margin-bottom:4px">edited</span>' : '';
 
+    // Completed badge with who completed it
+    const completedInfo = isCompleted && note.completedBy ? `<div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:4px">✓ Completed by ${note.completedBy}${note.completedAt ? ` • ${note.completedAt}` : ''}</div>` : '';
+
     return `
       <div class="note-item" style="display:flex;gap:12px;padding:12px;background:rgba(72, 126, 98, 0.1);border-radius:8px;margin-bottom:8px;align-items:start">
         ${isNoteMultiSelectMode ? `
@@ -2210,6 +2213,7 @@ function renderNotes() {
           <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:8px">
             👤 ${createdBy} • 🕐 ${createdAt}
           </div>
+          ${completedInfo}
         </div>
         ${!isNoteMultiSelectMode && isOwner ? `
           <button
@@ -2326,8 +2330,24 @@ async function confirmMarkComplete() {
     const note = notes.find(n => n.id === markCompleteTargetId);
     if (!note) return;
 
+    const completedTimestamp = new Date().toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+
     note.completed = true;
-    await dbUpdateNote(markCompleteTargetId, { completed: true });
+    note.completedBy = currentUser;
+    note.completedAt = completedTimestamp;
+
+    await dbUpdateNote(markCompleteTargetId, {
+      completed: true,
+      completedBy: currentUser,
+      completedAt: completedTimestamp
+    });
 
     renderNotes();
     showToast('Note marked as complete', 'ok');
