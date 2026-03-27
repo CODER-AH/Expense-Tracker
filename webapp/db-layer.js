@@ -462,3 +462,124 @@ async function sheetDeleteNote(id) {
     body: JSON.stringify({ action: 'deleteNote', id })
   });
 }
+
+// ============================================
+// PAYMENTS OPERATIONS
+// ============================================
+
+async function dbAddPayment(payment) {
+  try {
+    let id;
+
+    // Add to Firebase (primary)
+    if (USE_FIREBASE) {
+      id = await firestoreAddPayment(payment);
+    }
+
+    // If not using Firebase, use Sheets as primary
+    // Note: Sheets doesn't support payments yet
+    if (!USE_FIREBASE) {
+      throw new Error('Payments are only supported with Firebase');
+    }
+
+    return id;
+  } catch (error) {
+    console.error('Error adding payment:', error);
+    throw error;
+  }
+}
+
+async function dbGetAllPayments() {
+  try {
+    if (USE_FIREBASE) {
+      return await firestoreGetAllPayments();
+    } else {
+      // Sheets doesn't support payments
+      return [];
+    }
+  } catch (error) {
+    console.error('Error getting payments:', error);
+    throw error;
+  }
+}
+
+async function dbGetPendingPaymentsTo(username) {
+  try {
+    if (USE_FIREBASE) {
+      return await firestoreGetPendingPaymentsTo(username);
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error('Error getting pending payments to user:', error);
+    throw error;
+  }
+}
+
+async function dbGetPendingPaymentsFrom(username) {
+  try {
+    if (USE_FIREBASE) {
+      return await firestoreGetPendingPaymentsFrom(username);
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error('Error getting pending payments from user:', error);
+    throw error;
+  }
+}
+
+async function dbConfirmPayment(id, confirmedBy) {
+  try {
+    if (USE_FIREBASE) {
+      await firestoreConfirmPayment(id, confirmedBy);
+    } else {
+      throw new Error('Payments are only supported with Firebase');
+    }
+    return true;
+  } catch (error) {
+    console.error('Error confirming payment:', error);
+    throw error;
+  }
+}
+
+async function dbRejectPayment(id, reason) {
+  try {
+    if (USE_FIREBASE) {
+      await firestoreRejectPayment(id, reason);
+    } else {
+      throw new Error('Payments are only supported with Firebase');
+    }
+    return true;
+  } catch (error) {
+    console.error('Error rejecting payment:', error);
+    throw error;
+  }
+}
+
+async function dbDeletePayment(id) {
+  try {
+    if (USE_FIREBASE) {
+      await firestoreDeletePayment(id);
+    } else {
+      throw new Error('Payments are only supported with Firebase');
+    }
+    return true;
+  } catch (error) {
+    console.error('Error deleting payment:', error);
+    throw error;
+  }
+}
+
+async function dbGetConfirmedPayments() {
+  try {
+    if (USE_FIREBASE) {
+      return await firestoreGetConfirmedPayments();
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error('Error getting confirmed payments:', error);
+    throw error;
+  }
+}

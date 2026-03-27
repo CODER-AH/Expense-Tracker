@@ -170,6 +170,12 @@ async function loadSectionData(section) {
         await loadArchivedExpenses();
       }
       break;
+    case 'payments':
+      // Load payments if not already loaded
+      if (!paymentsLoaded) {
+        await loadPayments();
+      }
+      break;
     case 'settlement':
       updateSettlement();
       break;

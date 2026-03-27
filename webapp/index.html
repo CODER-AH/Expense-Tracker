@@ -126,6 +126,10 @@
       <span class="nav-icon">🗃️</span>
       <span class="nav-label">Archived</span>
     </button>
+    <button class="nav-item" onclick="navigateTo('payments')" data-section="payments">
+      <span class="nav-icon">💳</span>
+      <span class="nav-label">Payments</span>
+    </button>
     <button class="nav-item" onclick="navigateTo('settlement')" data-section="settlement">
       <span class="nav-icon">💸</span>
       <span class="nav-label">Settlement</span>
@@ -409,6 +413,12 @@
 </div>
 </div>
 <!-- END ARCHIVED SECTION -->
+
+<!-- PAYMENTS SECTION -->
+<div class="app-section" id="paymentsSection">
+  <div id="payments-section"></div>
+</div>
+<!-- END PAYMENTS SECTION -->
 
 <!-- SETTLEMENT SECTION -->
 <div class="app-section" id="settlementSection">
@@ -717,11 +727,55 @@
   </div>
 </div>
 
+<!-- RECORD PAYMENT MODAL -->
+<div class="confirm-overlay hidden" id="record-payment-modal" style="display:none">
+  <div class="confirm-box" style="max-width:500px">
+    <div class="icon">💳</div>
+    <h3>Record Payment</h3>
+    <div style="margin:20px 0;text-align:left">
+      <div style="margin-bottom:15px">
+        <label style="display:block;margin-bottom:5px;color:var(--text);font-size:14px">From:</label>
+        <input type="text" id="payment-from" readonly style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text)">
+      </div>
+      <div style="margin-bottom:15px">
+        <label style="display:block;margin-bottom:5px;color:var(--text);font-size:14px">To:</label>
+        <input type="text" id="payment-to" readonly style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text)">
+      </div>
+      <div style="margin-bottom:15px">
+        <label style="display:block;margin-bottom:5px;color:var(--text);font-size:14px">Amount (₹):</label>
+        <input type="number" id="payment-amount" placeholder="500" min="0" step="0.01" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text)">
+      </div>
+      <div style="margin-bottom:15px">
+        <label style="display:block;margin-bottom:5px;color:var(--text);font-size:14px">Payment Method:</label>
+        <select id="payment-method" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text)">
+          <option value="">Select method...</option>
+          <option value="GPay">GPay</option>
+          <option value="PhonePe">PhonePe</option>
+          <option value="Paytm">Paytm</option>
+          <option value="Cred">Cred</option>
+          <option value="Cash">Cash</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div style="margin-bottom:15px">
+        <label style="display:block;margin-bottom:5px;color:var(--text);font-size:14px">Note (optional):</label>
+        <input type="text" id="payment-note" placeholder="Settlement payment" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text)">
+      </div>
+    </div>
+    <div class="confirm-buttons">
+      <button class="btn-cancel" onclick="hideRecordPaymentModal()">Cancel</button>
+      <button class="btn-primary" onclick="submitPayment()" style="background:var(--accent);color:#0e1412">Record Payment</button>
+    </div>
+  </div>
+</div>
+
 <!-- Core Configuration & Services -->
 <script src="config.js"></script>
 <script src="firebase-service.js"></script>
+<script src="firebase-payments.js"></script>
 <script src="db-layer.js"></script>
 <script src="multi-select.js"></script>
+<script src="payments.js"></script>
 <script src="app.js"></script>
 
 </body>
