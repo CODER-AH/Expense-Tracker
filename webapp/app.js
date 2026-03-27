@@ -1116,16 +1116,9 @@ function toggleSection(sectionId) {
 async function loadArchivedExpenses() {
   if (archivedLoaded) return; // Already loaded
 
-  const loader = document.getElementById('archivedLoader');
-  const timeline = document.querySelector('#archived-section .timeline');
-
   try {
     // Show loading overlay
     showLoading(true, 'default', getRandomArchivedLoadingMessage());
-
-    // Show section loader, hide content
-    if (loader) loader.style.display = 'block';
-    if (timeline) timeline.style.display = 'none';
 
     const archivedData = await dbGetArchivedExpenses();
     console.log('Loaded archived expenses from Firebase:', archivedData);
@@ -1141,26 +1134,17 @@ async function loadArchivedExpenses() {
     console.error('Error loading archived expenses:', error);
     showToast('Failed to load archived expenses', 'err');
   } finally {
-    // Hide loader, show content
+    // Hide loader
     showLoading(false);
-    if (loader) loader.style.display = 'none';
-    if (timeline) timeline.style.display = 'block';
   }
 }
 
 async function loadNotes() {
   if (notesLoaded) return; // Already loaded
 
-  const loader = document.getElementById('notesLoader');
-  const notesList = document.getElementById('notesList');
-
   try {
     // Show loading overlay
     showLoading(true, 'default', getRandomNotesLoadingMessage());
-
-    // Show section loader, hide content
-    if (loader) loader.style.display = 'block';
-    if (notesList) notesList.style.display = 'none';
 
     notes = await dbGetAllNotes();
     notesLoaded = true;
@@ -1169,10 +1153,8 @@ async function loadNotes() {
     console.error('Error loading notes:', error);
     showToast('Failed to load notes', 'err');
   } finally {
-    // Hide loader, show content
+    // Hide loader
     showLoading(false);
-    if (loader) loader.style.display = 'none';
-    if (notesList) notesList.style.display = 'block';
   }
 }
 
