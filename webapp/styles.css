@@ -1359,6 +1359,27 @@
     margin-bottom: 24px;
     padding-bottom: 16px;
     border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+
+  .sidebar-menu-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .sidebar-menu-btn:hover {
+    background: rgba(93, 186, 138, 0.15);
   }
 
   .close-nav {
@@ -1375,6 +1396,7 @@
     justify-content: center;
     border-radius: 6px;
     transition: all 0.2s;
+    flex-shrink: 0;
   }
   .close-nav:hover {
     background: rgba(232, 110, 138, 0.2);

@@ -49,6 +49,24 @@ const authMessages = [
   'Almost there...'
 ];
 
+const notesLoadingMessages = [
+  'Loading notes...',
+  'Fetching your tasks...',
+  'Getting notes ready...',
+  'Retrieving notes...',
+  'Loading your reminders...',
+  'One moment...'
+];
+
+const archivedLoadingMessages = [
+  'Loading archived expenses...',
+  'Fetching archive...',
+  'Getting archived data...',
+  'Retrieving old expenses...',
+  'Loading history...',
+  'One sec...'
+];
+
 function getRandomLoadingMessage() {
   return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
 }
@@ -59,6 +77,14 @@ function getRandomCheckingUserMessage() {
 
 function getRandomAuthMessage() {
   return authMessages[Math.floor(Math.random() * authMessages.length)];
+}
+
+function getRandomNotesLoadingMessage() {
+  return notesLoadingMessages[Math.floor(Math.random() * notesLoadingMessages.length)];
+}
+
+function getRandomArchivedLoadingMessage() {
+  return archivedLoadingMessages[Math.floor(Math.random() * archivedLoadingMessages.length)];
 }
 
 // ─── PASSWORD VISIBILITY TOGGLE ───────────────────────────
@@ -130,19 +156,13 @@ async function loadSectionData(section) {
       render();
       break;
     case 'notes':
-      await loadNotes();
-      // Expand the notes section after loading
-      expandSection('notes');
+      // Don't auto-load or expand - wait for user to click section header
       break;
     case 'archived':
-      await loadArchivedExpenses();
-      // Expand the archived section after loading
-      expandSection('archived');
+      // Don't auto-load or expand - wait for user to click section header
       break;
     case 'settlement':
       calculateSettlements();
-      // Expand settlement section
-      expandSection('settlementCards');
       break;
     case 'dashboard':
       // Dashboard is always loaded, just need to ensure data is up to date
@@ -150,30 +170,6 @@ async function loadSectionData(section) {
       calculateSettlements();
       break;
   }
-}
-
-// Helper function to expand a section
-function expandSection(sectionId) {
-  const section = document.getElementById(`${sectionId}-section`);
-  const icon = document.getElementById(`${sectionId}-icon`);
-
-  if (section) {
-    // Determine display type based on section
-    if (sectionId === 'notes' || sectionId === 'archived') {
-      section.style.display = 'block';
-    } else if (sectionId === 'settlementCards') {
-      section.style.display = 'flex';
-    } else {
-      section.style.display = 'block';
-    }
-  }
-
-  if (icon) {
-    icon.textContent = '▼';
-  }
-
-  // Update collapsed state
-  collapsedSections[sectionId] = false;
 }
 
 // ─── STATE ────────────────────────────────────────────────
@@ -1049,8 +1045,13 @@ async function confirmDelete() {
 
 // ─── TOGGLE COLLAPSIBLE SECTIONS ──────────────────────────
 const collapsedSections = {
-  'notes': true,      // Default collapsed
-  'archived': true    // Default collapsed
+  'insights': false,        // Default expanded
+  'whoPaid': false,         // Default expanded
+  'settlement': false,      // Default expanded (in dashboard)
+  'expenseHistory': false,  // Default expanded
+  'notes': true,            // Default collapsed
+  'archived': true,         // Default collapsed
+  'settlementCards': false  // Default expanded (in settlement section)
 };
 
 function toggleSection(sectionId) {
@@ -1108,6 +1109,9 @@ async function loadArchivedExpenses() {
   const timeline = document.querySelector('#archived-section .timeline');
 
   try {
+    // Show loading overlay
+    showLoading(true, 'default', getRandomArchivedLoadingMessage());
+
     // Show section loader, hide content
     if (loader) loader.style.display = 'block';
     if (timeline) timeline.style.display = 'none';
@@ -1127,6 +1131,7 @@ async function loadArchivedExpenses() {
     showToast('Failed to load archived expenses', 'err');
   } finally {
     // Hide loader, show content
+    showLoading(false);
     if (loader) loader.style.display = 'none';
     if (timeline) timeline.style.display = 'block';
   }
@@ -1139,6 +1144,9 @@ async function loadNotes() {
   const notesList = document.getElementById('notesList');
 
   try {
+    // Show loading overlay
+    showLoading(true, 'default', getRandomNotesLoadingMessage());
+
     // Show section loader, hide content
     if (loader) loader.style.display = 'block';
     if (notesList) notesList.style.display = 'none';
@@ -1151,6 +1159,7 @@ async function loadNotes() {
     showToast('Failed to load notes', 'err');
   } finally {
     // Hide loader, show content
+    showLoading(false);
     if (loader) loader.style.display = 'none';
     if (notesList) notesList.style.display = 'block';
   }
@@ -1901,14 +1910,16 @@ function setStatus(state, text) {
   document.getElementById('statusText').textContent = text;
 }
 // ─── LOADING & TOAST ──────────────────────────────────────
-function showLoading(show, type = 'default') {
+function showLoading(show, type = 'default', customMessage = null) {
   const overlay = document.getElementById('loadingOverlay');
   const loadingText = document.getElementById('loadingText');
 
   if (show) {
-    // Set a random loading message based on type
+    // Set a random loading message based on type or use custom message
     if (loadingText) {
-      if (type === 'auth') {
+      if (customMessage) {
+        loadingText.textContent = customMessage;
+      } else if (type === 'auth') {
         loadingText.textContent = getRandomAuthMessage();
       } else if (type === 'checkingUser') {
         loadingText.textContent = getRandomCheckingUserMessage();
