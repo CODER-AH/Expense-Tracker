@@ -1189,10 +1189,18 @@ function renderArchived() {
     tr.className = 'empty-row';
     tr.innerHTML = `<td colspan="${archiveMultiSelectMode ? 10 : 9}">No archived expenses${archivedDayFilterBy !== 'all' || archivedPersonFilterBy !== 'all' ? ' (filters active)' : ''}</td>`;
     tbody.appendChild(tr);
+    renderArchivedPagination(0);
     return;
   }
 
-  filteredArchived.forEach((exp, idx) => {
+  // Apply pagination
+  const totalPages = Math.ceil(filteredArchived.length / ITEMS_PER_PAGE);
+  const page = archivedPage || 1;
+  const startIdx = (page - 1) * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+  const paginatedArchived = filteredArchived.slice(startIdx, endIdx);
+
+  paginatedArchived.forEach((exp, idx) => {
     const cfg = CAT_CONFIG[exp.cat] || CAT_CONFIG.misc;
 
     // Checkbox for multi-select
@@ -1204,7 +1212,7 @@ function renderArchived() {
     tr.style.opacity = '0.7';
     tr.innerHTML = `
       ${archiveMultiSelectMode ? `<td style="text-align:center">${checkboxHtml}</td>` : ''}
-      <td class="num-col">${idx + 1}</td>
+      <td class="num-col">${startIdx + idx + 1}</td>
       <td data-column="desc" style="font-size:13px">${exp.desc}</td>
       <td data-column="cat" style="white-space:nowrap"><span class="cat-badge" style="color:${cfg.color};background:${cfg.bg}">${cfg.label}</span></td>
       <td data-column="name" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap">${exp.name || '—'}</td>
@@ -1216,6 +1224,68 @@ function renderArchived() {
     `;
     tbody.appendChild(tr);
   });
+
+  // Render pagination
+  renderArchivedPagination(totalPages);
+}
+
+// Render archived pagination
+function renderArchivedPagination(totalPages) {
+  const container = document.getElementById('archived-pagination');
+  if (!container) return;
+
+  if (totalPages <= 1) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const page = archivedPage || 1;
+  let html = '';
+
+  // Previous button
+  html += `<button class="page-btn" onclick="goToArchivedPage(${page - 1})" ${page === 1 ? 'disabled' : ''}>‹ Prev</button>`;
+
+  // Page numbers
+  const maxVisible = 7;
+  let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+  if (endPage - startPage < maxVisible - 1) {
+    startPage = Math.max(1, endPage - maxVisible + 1);
+  }
+
+  if (startPage > 1) {
+    html += `<button class="page-btn" onclick="goToArchivedPage(1)">1</button>`;
+    if (startPage > 2) {
+      html += `<span style="color:var(--muted);padding:0 4px">...</span>`;
+    }
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="goToArchivedPage(${i})">${i}</button>`;
+  }
+
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      html += `<span style="color:var(--muted);padding:0 4px">...</span>`;
+    }
+    html += `<button class="page-btn" onclick="goToArchivedPage(${totalPages})">${totalPages}</button>`;
+  }
+
+  // Next button
+  html += `<button class="page-btn" onclick="goToArchivedPage(${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next ›</button>`;
+
+  container.innerHTML = html;
+}
+
+function goToArchivedPage(page) {
+  archivedPage = page;
+  renderArchived();
+  // Scroll to top of archived section
+  const archivedSection = document.getElementById('archived-section');
+  if (archivedSection) {
+    archivedSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 async function unarchiveExpense(id) {
@@ -1782,6 +1852,8 @@ function selectArchivedDayFilter(value, label) {
   // Close dropdown
   document.getElementById('archivedDayFilterDropdown').classList.remove('active');
 
+  // Reset to first page when filter changes
+  archivedPage = 1;
   renderArchived();
 }
 
@@ -1798,6 +1870,8 @@ function selectArchivedPersonFilter(value, label) {
   // Close dropdown
   document.getElementById('archivedPersonFilterDropdown').classList.remove('active');
 
+  // Reset to first page when filter changes
+  archivedPage = 1;
   renderArchived();
 }
 
@@ -3306,13 +3380,15 @@ let notePersonFilterBy = 'all';
 function selectNotePersonFilter(person, label) {
   notePersonFilterBy = person;
   document.getElementById('notePersonFilterLabel').textContent = label;
-  
+
   // Update selected state
   document.querySelectorAll('#notePersonFilterDropdown .filter-option').forEach(opt => {
     opt.classList.remove('selected');
   });
   event.target.classList.add('selected');
-  
+
+  // Reset to first page when filter changes
+  notesPage = 1;
   renderNotes();
   toggleFilterDropdown('notePerson');
 }
