@@ -1723,13 +1723,13 @@ async function updateSettlement() {
   try {
     const confirmedPayments = await dbGetConfirmedPayments();
     confirmedPayments.forEach(payment => {
-      // Person who sent payment loses money (negative adjustment)
+      // Person who sent payment: debt decreases (add positive adjustment)
       if (balance[payment.from] !== undefined) {
-        balance[payment.from] -= payment.amount;
+        balance[payment.from] += payment.amount;
       }
-      // Person who received payment gains money (positive adjustment)
+      // Person who received payment: credit decreases (subtract)
       if (balance[payment.to] !== undefined) {
-        balance[payment.to] += payment.amount;
+        balance[payment.to] -= payment.amount;
       }
     });
   } catch (error) {
