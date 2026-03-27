@@ -192,6 +192,7 @@ let permanentDeleteTarget = null;
 let unarchiveTarget = null;
 let sortBy = 'time';
 let sortOrder = 'desc'; // 'asc' or 'desc'
+let userHasSorted = false; // Track if user has actively clicked sort
 let filterBy = 'all';
 let dayFilterBy = 'all'; // New day filter
 let archivedDayFilterBy = 'all'; // Archived day filter
@@ -1489,17 +1490,20 @@ function render() {
         break;
       case 'time':
       default:
-        // For time sorting, we need to consider both the day and the timestamp
-        // Sort by day first, then by timestamp within the same day
-        const dayA = a.day || 0;
-        const dayB = b.day || 0;
+        // For time sorting:
+        // - If user hasn't actively sorted yet (initial load), sort purely by timestamp
+        // - If user has clicked sort, consider day first then timestamp within day
+        if (userHasSorted) {
+          const dayA = a.day || 0;
+          const dayB = b.day || 0;
 
-        // If different days, sort by day
-        if (dayA !== dayB) {
-          return sortOrder === 'asc' ? dayA - dayB : dayB - dayA;
+          // If different days, sort by day
+          if (dayA !== dayB) {
+            return sortOrder === 'asc' ? dayA - dayB : dayB - dayA;
+          }
         }
 
-        // Same day, sort by timestamp
+        // Same day or user hasn't sorted yet - sort by timestamp
         if (a.createdAt && b.createdAt) {
           // Firebase Timestamp objects - these are absolute timestamps
           valA = a.createdAt.seconds || 0;
@@ -1795,6 +1799,8 @@ function calculateSettlements(balance) {
 
 // ─── SORT & FILTER ────────────────────────────────────────
 function sortByColumn(column) {
+  userHasSorted = true; // Mark that user has actively sorted
+
   if (sortBy === column) {
     // Toggle sort order
     sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
@@ -3284,6 +3290,7 @@ async function saveBatchExpenses() {
       amount: parseFloat(row.amount),
       paidBy: row.paidBy,
       ts: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+      createdAt: firebase.firestore.Timestamp.now(), // Add Firebase timestamp for proper sorting
       archived: false
     });
   }
