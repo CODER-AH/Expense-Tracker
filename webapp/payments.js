@@ -436,6 +436,9 @@ function showRecordPaymentModal(from, to, suggestedAmount) {
   document.getElementById('payment-amount').value = suggestedAmount || '';
   document.getElementById('payment-note').value = '';
 
+  // Store the suggested amount for validation
+  modal.setAttribute('data-max-amount', suggestedAmount || '0');
+
   // Reset payment method dropdown
   selectedPaymentMethod = '';
   document.getElementById('payment-method-label').textContent = 'Select method...';
@@ -475,6 +478,10 @@ async function submitPayment() {
   const method = selectedPaymentMethod;
   const note = document.getElementById('payment-note').value.trim();
 
+  // Get max allowed amount
+  const modal = document.getElementById('record-payment-modal');
+  const maxAmount = parseFloat(modal.getAttribute('data-max-amount') || '0');
+
   // Validation
   if (!from || !to) {
     showToast('Please specify sender and receiver', true);
@@ -493,6 +500,12 @@ async function submitPayment() {
 
   if (!method) {
     showToast('Please select a payment method', true);
+    return;
+  }
+
+  // Check if amount exceeds what is owed
+  if (maxAmount > 0 && amount > maxAmount) {
+    showToast(`Amount cannot exceed ₹${maxAmount.toLocaleString('en-IN')} (what you owe)`, true);
     return;
   }
 
