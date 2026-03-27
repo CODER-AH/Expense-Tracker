@@ -37,7 +37,6 @@ async function firestoreGetAllPayments() {
   try {
     const snapshot = await db.collection('payments')
       .where('deleted', '==', false)
-      .orderBy('createdAt', 'desc')
       .get();
 
     const payments = [];
@@ -46,6 +45,13 @@ async function firestoreGetAllPayments() {
         id: doc.id,
         ...doc.data()
       });
+    });
+
+    // Sort by createdAt client-side (most recent first)
+    payments.sort((a, b) => {
+      const aTime = a.createdAt?.seconds || 0;
+      const bTime = b.createdAt?.seconds || 0;
+      return bTime - aTime;
     });
 
     return payments;
@@ -66,7 +72,6 @@ async function firestoreGetPendingPaymentsTo(username) {
       .where('to', '==', username)
       .where('status', '==', 'pending')
       .where('deleted', '==', false)
-      .orderBy('createdAt', 'desc')
       .get();
 
     const payments = [];
@@ -75,6 +80,13 @@ async function firestoreGetPendingPaymentsTo(username) {
         id: doc.id,
         ...doc.data()
       });
+    });
+
+    // Sort by createdAt client-side (most recent first)
+    payments.sort((a, b) => {
+      const aTime = a.createdAt?.seconds || 0;
+      const bTime = b.createdAt?.seconds || 0;
+      return bTime - aTime;
     });
 
     return payments;
@@ -95,7 +107,6 @@ async function firestoreGetPendingPaymentsFrom(username) {
       .where('from', '==', username)
       .where('status', '==', 'pending')
       .where('deleted', '==', false)
-      .orderBy('createdAt', 'desc')
       .get();
 
     const payments = [];
@@ -104,6 +115,13 @@ async function firestoreGetPendingPaymentsFrom(username) {
         id: doc.id,
         ...doc.data()
       });
+    });
+
+    // Sort by createdAt client-side (most recent first)
+    payments.sort((a, b) => {
+      const aTime = a.createdAt?.seconds || 0;
+      const bTime = b.createdAt?.seconds || 0;
+      return bTime - aTime;
     });
 
     return payments;

@@ -5,6 +5,13 @@ All notable changes to the Coorg Trip Expense Tracker project.
 ## [Unreleased] - 2026-03-27
 
 ### Added
+- **Payment Tracking System**: Record and confirm payments between users
+  - Record payments with amount, payment method (GPay/PhonePe/Paytm/Cred/Cash/Other), and optional note
+  - Recipients can confirm or reject pending payments
+  - Confirmed payments automatically adjust settlement amounts
+  - Payment history with full audit trail
+  - Three-state workflow: pending → confirmed/rejected
+  - Soft delete preserves payment records for audit
 - **Admin System**: Role-based access control with admin flag in Firebase users collection
   - Only admins can permanently delete archived expenses
   - Admin status checked on login and verified from Firebase
