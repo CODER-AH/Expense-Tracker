@@ -20,10 +20,13 @@ const PARTICIPANTS = ['Afsar', 'Adham', 'Aakif', 'Sahlaan'];
 async function loadPayments() {
   // Always reload payments to ensure fresh data
   try {
+    showLoading(true, 'default', 'Loading payments...');
     allPayments = await dbGetAllPayments();
     paymentsLoaded = true;
     renderPaymentSection();
+    showLoading(false);
   } catch (error) {
+    showLoading(false);
     console.error('Error loading payments:', error);
     showToast('Failed to load payments. Please refresh the page', true);
   }
