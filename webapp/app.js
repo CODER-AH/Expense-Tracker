@@ -131,12 +131,18 @@ async function loadSectionData(section) {
       break;
     case 'notes':
       await loadNotes();
+      // Expand the notes section after loading
+      expandSection('notes');
       break;
     case 'archived':
       await loadArchivedExpenses();
+      // Expand the archived section after loading
+      expandSection('archived');
       break;
     case 'settlement':
       calculateSettlements();
+      // Expand settlement section
+      expandSection('settlementCards');
       break;
     case 'dashboard':
       // Dashboard is always loaded, just need to ensure data is up to date
@@ -144,6 +150,30 @@ async function loadSectionData(section) {
       calculateSettlements();
       break;
   }
+}
+
+// Helper function to expand a section
+function expandSection(sectionId) {
+  const section = document.getElementById(`${sectionId}-section`);
+  const icon = document.getElementById(`${sectionId}-icon`);
+
+  if (section) {
+    // Determine display type based on section
+    if (sectionId === 'notes' || sectionId === 'archived') {
+      section.style.display = 'block';
+    } else if (sectionId === 'settlementCards') {
+      section.style.display = 'flex';
+    } else {
+      section.style.display = 'block';
+    }
+  }
+
+  if (icon) {
+    icon.textContent = '▼';
+  }
+
+  // Update collapsed state
+  collapsedSections[sectionId] = false;
 }
 
 // ─── STATE ────────────────────────────────────────────────
