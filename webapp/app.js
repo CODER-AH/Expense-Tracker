@@ -363,18 +363,21 @@ window.onload = () => {
     document.getElementById('loginOverlay').classList.remove('hidden');
   }
 
-  // Hide status bar on scroll down, show on scroll up
+  // Hide status bar and menu toggle on scroll down, show on scroll up
   let lastScrollTop = 0;
   window.addEventListener('scroll', function() {
     const statusBar = document.getElementById('statusBar');
+    const menuToggle = document.getElementById('menuToggle');
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
     if (scrollTop > lastScrollTop && scrollTop > 100) {
       // Scrolling down and past 100px
       statusBar.classList.add('hidden-on-scroll');
+      if (menuToggle) menuToggle.classList.add('hidden-on-scroll');
     } else {
       // Scrolling up or at the top
       statusBar.classList.remove('hidden-on-scroll');
+      if (menuToggle) menuToggle.classList.remove('hidden-on-scroll');
     }
 
     lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;

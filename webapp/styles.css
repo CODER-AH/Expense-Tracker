@@ -1318,6 +1318,11 @@
     background: var(--surface);
     transform: scale(1.05);
   }
+  .menu-toggle.hidden-on-scroll {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-20px);
+  }
 
   .nav-overlay {
     position: fixed;
