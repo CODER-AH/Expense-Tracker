@@ -2008,12 +2008,14 @@ function renderNotes() {
     return;
   }
 
-  notesList.innerHTML = filteredNotes.map(note => {
+  notesList.innerHTML = filteredNotes.map((note, idx) => {
     const isCompleted = note.completed || false;
     const textStyle = isCompleted ? 'text-decoration:line-through;opacity:0.6' : '';
     const createdBy = note.createdBy || '—';
     const isOwner = note.createdBy === currentUser;
     const isEdited = note.edited || false;
+    const noteTextId = `note-text-${note.id}`;
+    const toggleId = `note-toggle-${note.id}`;
 
     // Handle timestamp - prefer createdAtLocal (formatted string), fallback to Firebase timestamp
     let createdAt = '—';
@@ -2033,6 +2035,9 @@ function renderNotes() {
         });
       }
     }
+
+    // Edited badge
+    const editedBadge = isEdited ? '<span style="display:inline-block;font-size:10px;padding:2px 6px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:4px;font-family:\'DM Mono\',monospace;margin-bottom:4px">edited</span>' : '';
 
     return `
       <div class="note-item" style="display:flex;gap:12px;padding:12px;background:rgba(72, 126, 98, 0.1);border-radius:8px;margin-bottom:8px;align-items:start">
@@ -2056,11 +2061,10 @@ function renderNotes() {
           />
         `}
         <div style="flex:1;${textStyle}">
-          <div style="font-size:14px;line-height:1.5;margin-bottom:4px">
-            ${note.text}
-            ${isEdited ? '<span style="font-size:10px;color:var(--muted);margin-left:6px;font-family:\'DM Mono\',monospace">(edited)</span>' : ''}
-          </div>
-          <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">
+          ${editedBadge ? `<div>${editedBadge}</div>` : ''}
+          <div id="${noteTextId}" style="font-size:14px;line-height:1.5;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;"></div>
+          <button id="${toggleId}" onclick="toggleNoteExpand('${noteTextId}', '${toggleId}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;padding:0;margin-top:4px;font-family:'DM Sans',sans-serif;display:none">Show more</button>
+          <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:8px">
             👤 ${createdBy} • 🕐 ${createdAt}
           </div>
         </div>
@@ -2079,6 +2083,19 @@ function renderNotes() {
       </div>
     `;
   }).join('');
+
+  // After rendering, set text content and check if truncation is needed
+  filteredNotes.forEach(note => {
+    const textEl = document.getElementById(`note-text-${note.id}`);
+    const toggleEl = document.getElementById(`note-toggle-${note.id}`);
+    if (textEl) {
+      textEl.textContent = note.text;
+      // Check if text is truncated (scrollHeight > clientHeight)
+      if (textEl.scrollHeight > textEl.clientHeight) {
+        if (toggleEl) toggleEl.style.display = 'inline-block';
+      }
+    }
+  });
 }
 
 // Show add note dialog
@@ -3055,4 +3072,20 @@ function selectNotePersonFilter(person, label) {
   
   renderNotes();
   toggleFilterDropdown('notePerson');
+}
+
+// Toggle note text expansion
+function toggleNoteExpand(textId, toggleId) {
+  const textEl = document.getElementById(textId);
+  const toggleEl = document.getElementById(toggleId);
+  if (!textEl || !toggleEl) return;
+
+  const isExpanded = textEl.style.webkitLineClamp === 'unset';
+  if (isExpanded) {
+    textEl.style.webkitLineClamp = '2';
+    toggleEl.textContent = 'Show more';
+  } else {
+    textEl.style.webkitLineClamp = 'unset';
+    toggleEl.textContent = 'Show less';
+  }
 }

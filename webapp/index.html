@@ -202,7 +202,7 @@
   <!-- ACTION BUTTONS -->
   <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
     <div style="position:relative">
-      <button id="expenseFilterBtn" onclick="toggleExpenseFilters()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">⚙️ Filters</button>
+      <button id="expenseFilterBtn" onclick="toggleExpenseFilters()" style="width:40px;height:40px;padding:0;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:18px;display:flex;align-items:center;justify-content:center" title="Filters">⚙️</button>
       <div id="expenseFiltersPanel" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:12px;min-width:250px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000">
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:'DM Sans',sans-serif;font-weight:500">FILTER BY</div>
         <div style="display:flex;flex-direction:column;gap:8px">
@@ -233,7 +233,7 @@
       </div>
     </div>
 
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto">
       <button id="multiSelectBtn" onclick="toggleMultiSelect()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">☑️ Select Multiple</button>
       <button id="addExpenseBtn" onclick="showBatchAddDialog()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">+ Add</button>
       <div id="bulkActions" style="display:none;gap:8px">
@@ -269,7 +269,7 @@
 <div class="notes-container" id="notes-section" style="display:none;max-width:1000px;margin:16px auto">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
     <div style="position:relative">
-      <button id="noteFilterBtn" onclick="toggleNoteFilters()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">⚙️ Filters</button>
+      <button id="noteFilterBtn" onclick="toggleNoteFilters()" style="width:40px;height:40px;padding:0;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:18px;display:flex;align-items:center;justify-content:center" title="Filters">⚙️</button>
       <div id="noteFiltersPanel" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:12px;min-width:200px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000">
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:'DM Sans',sans-serif;font-weight:500">FILTER BY</div>
         <div style="position:relative">
@@ -286,7 +286,7 @@
         </div>
       </div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-left:auto">
       <button id="noteMultiSelectBtn" onclick="event.stopPropagation();toggleNoteMultiSelect()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">☑️ Select Multiple</button>
       <button id="addNoteBtn" onclick="event.stopPropagation();showAddNoteDialog()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">+ Add</button>
       <div id="noteBulkActions" style="display:none;gap:8px">
@@ -318,7 +318,7 @@
     <!-- Actions Row -->
     <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
       <div style="position:relative">
-        <button id="archivedFilterBtn" onclick="toggleArchivedFilters()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">⚙️ Filters</button>
+        <button id="archivedFilterBtn" onclick="toggleArchivedFilters()" style="width:40px;height:40px;padding:0;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:18px;display:flex;align-items:center;justify-content:center" title="Filters">⚙️</button>
         <div id="archivedFiltersPanel" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:12px;min-width:250px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000">
           <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:'DM Sans',sans-serif;font-weight:500">FILTER BY</div>
           <div style="display:flex;flex-direction:column;gap:8px">
@@ -350,7 +350,7 @@
       </div>
 
       <!-- Actions -->
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;margin-left:auto">
         <button id="archiveMultiSelectBtn" data-active="false" onclick="toggleArchiveMultiSelect()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">☑️ Select Multiple</button>
         <div id="archiveBulkActions" style="display:none;gap:8px">
           <button id="bulkUnarchiveBtn" onclick="bulkUnarchiveExpenses()" style="padding:8px 14px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500">Unarchive Selected</button>
