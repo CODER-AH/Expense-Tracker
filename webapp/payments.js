@@ -387,8 +387,36 @@ let selectedPaymentMethod = '';
 
 function togglePaymentMethodDropdown() {
   const dropdown = document.getElementById('payment-method-dropdown');
-  dropdown.classList.toggle('hidden');
-  dropdown.classList.toggle('active');
+  const isActive = dropdown.classList.contains('active');
+
+  if (isActive) {
+    // Close dropdown
+    dropdown.classList.remove('active');
+    dropdown.classList.add('hidden');
+    // Reset positioning
+    dropdown.style.top = '';
+    dropdown.style.bottom = '';
+    dropdown.style.marginTop = '';
+    dropdown.style.marginBottom = '';
+  } else {
+    // Open dropdown
+    dropdown.classList.add('active');
+    dropdown.classList.remove('hidden');
+
+    // Check viewport and adjust position if needed
+    setTimeout(() => {
+      const dropdownRect = dropdown.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+
+      // If dropdown goes below viewport, open it upward
+      if (dropdownRect.bottom > viewportHeight - 20) {
+        dropdown.style.top = 'auto';
+        dropdown.style.bottom = '100%';
+        dropdown.style.marginTop = '0';
+        dropdown.style.marginBottom = '4px';
+      }
+    }, 0);
+  }
 }
 
 function selectPaymentMethod(method) {
