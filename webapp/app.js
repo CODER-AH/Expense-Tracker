@@ -2037,7 +2037,7 @@ function renderNotes() {
     }
 
     // Edited badge
-    const editedBadge = isEdited ? '<span style="display:inline-block;font-size:10px;padding:2px 6px;background:rgba(72, 126, 98, 0.2);border:1px solid var(--accent);color:var(--accent);border-radius:4px;font-family:\'DM Mono\',monospace;margin-bottom:4px">edited</span>' : '';
+    const editedBadge = isEdited ? '<span style="display:inline-block;font-size:10px;padding:2px 6px;background:#2a2410;border:1px solid #f5c842;color:#f5c842;border-radius:4px;font-family:\'DM Mono\',monospace;margin-bottom:4px">edited</span>' : '';
 
     return `
       <div class="note-item" style="display:flex;gap:12px;padding:12px;background:rgba(72, 126, 98, 0.1);border-radius:8px;margin-bottom:8px;align-items:start">
