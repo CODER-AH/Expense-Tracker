@@ -122,18 +122,18 @@ function getCurrentSettlements() {
 
   // Apply confirmed payments
   confirmedPayments.forEach(payment => {
-    // Person who sent loses money (negative)
-    paymentAdjustments[payment.from] = (paymentAdjustments[payment.from] || 0) - payment.amount;
-    // Person who received gains money (positive)
-    paymentAdjustments[payment.to] = (paymentAdjustments[payment.to] || 0) + payment.amount;
+    // Person who sent payment: debt decreases (add positive adjustment)
+    paymentAdjustments[payment.from] = (paymentAdjustments[payment.from] || 0) + payment.amount;
+    // Person who received payment: credit decreases (subtract)
+    paymentAdjustments[payment.to] = (paymentAdjustments[payment.to] || 0) - payment.amount;
   });
 
   // Apply pending payments to show remaining amounts
   pendingPayments.forEach(payment => {
-    // Person who sent loses money (negative)
-    paymentAdjustments[payment.from] = (paymentAdjustments[payment.from] || 0) - payment.amount;
-    // Person who received gains money (positive)
-    paymentAdjustments[payment.to] = (paymentAdjustments[payment.to] || 0) + payment.amount;
+    // Person who sent payment: debt decreases (add positive adjustment)
+    paymentAdjustments[payment.from] = (paymentAdjustments[payment.from] || 0) + payment.amount;
+    // Person who received payment: credit decreases (subtract)
+    paymentAdjustments[payment.to] = (paymentAdjustments[payment.to] || 0) - payment.amount;
   });
 
   // Get base settlements from expenses
@@ -383,6 +383,20 @@ function getTimeAgo(timestamp) {
 // ============================================
 
 let currentPaymentIdForAction = null;
+let selectedPaymentMethod = '';
+
+function togglePaymentMethodDropdown() {
+  const dropdown = document.getElementById('payment-method-dropdown');
+  dropdown.classList.toggle('hidden');
+  dropdown.classList.toggle('active');
+}
+
+function selectPaymentMethod(method) {
+  selectedPaymentMethod = method;
+  document.getElementById('payment-method-label').textContent = method;
+  document.getElementById('payment-method-label').style.color = 'var(--text)';
+  togglePaymentMethodDropdown();
+}
 
 function showRecordPaymentModal(from, to, suggestedAmount) {
   const modal = document.getElementById('record-payment-modal');
@@ -395,9 +409,15 @@ function showRecordPaymentModal(from, to, suggestedAmount) {
   document.getElementById('payment-note').value = '';
 
   // Reset payment method dropdown
-  const methodDropdown = document.getElementById('payment-method');
-  if (methodDropdown) {
-    methodDropdown.selectedIndex = 0;
+  selectedPaymentMethod = '';
+  document.getElementById('payment-method-label').textContent = 'Select method...';
+  document.getElementById('payment-method-label').style.color = 'var(--muted)';
+
+  // Make sure dropdown is hidden
+  const dropdown = document.getElementById('payment-method-dropdown');
+  if (dropdown) {
+    dropdown.classList.add('hidden');
+    dropdown.classList.remove('active');
   }
 
   // Show modal using confirm-overlay pattern
@@ -411,33 +431,40 @@ function hideRecordPaymentModal() {
     modal.classList.add('hidden');
     modal.style.display = 'none';
   }
+
+  // Also hide dropdown if open
+  const dropdown = document.getElementById('payment-method-dropdown');
+  if (dropdown) {
+    dropdown.classList.add('hidden');
+    dropdown.classList.remove('active');
+  }
 }
 
 async function submitPayment() {
   const from = document.getElementById('payment-from').value;
   const to = document.getElementById('payment-to').value;
   const amount = parseFloat(document.getElementById('payment-amount').value);
-  const method = document.getElementById('payment-method').value;
+  const method = selectedPaymentMethod;
   const note = document.getElementById('payment-note').value.trim();
 
   // Validation
   if (!from || !to) {
-    showToast('Please specify sender and receiver');
+    showToast('Please specify sender and receiver', true);
     return;
   }
 
   if (from === to) {
-    showToast('Cannot send payment to yourself');
+    showToast('Cannot send payment to yourself', true);
     return;
   }
 
   if (!amount || amount <= 0) {
-    showToast('Please enter a valid amount');
+    showToast('Please enter a valid amount', true);
     return;
   }
 
   if (!method) {
-    showToast('Please select a payment method');
+    showToast('Please select a payment method', true);
     return;
   }
 
@@ -658,3 +685,18 @@ function showToast(message, isError = false) {
     console.log('Toast:', message);
   }
 }
+
+// ============================================
+// GLOBAL EVENT LISTENERS
+// ============================================
+
+// Close payment method dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  const dropdown = document.getElementById('payment-method-dropdown');
+  const btn = document.getElementById('payment-method-btn');
+
+  if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+    dropdown.classList.add('hidden');
+    dropdown.classList.remove('active');
+  }
+});

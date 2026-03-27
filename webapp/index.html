@@ -747,15 +747,20 @@
       </div>
       <div style="margin-bottom:15px">
         <label style="display:block;margin-bottom:5px;color:var(--text);font-size:14px">Payment Method:</label>
-        <select id="payment-method" style="width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text)">
-          <option value="">Select method...</option>
-          <option value="GPay">GPay</option>
-          <option value="PhonePe">PhonePe</option>
-          <option value="Paytm">Paytm</option>
-          <option value="Cred">Cred</option>
-          <option value="Cash">Cash</option>
-          <option value="Other">Other</option>
-        </select>
+        <div style="position:relative">
+          <div class="filter-btn" id="payment-method-btn" onclick="event.stopPropagation();togglePaymentMethodDropdown()" style="width:100%;justify-content:space-between;padding:8px 12px">
+            <span id="payment-method-label" style="color:var(--muted)">Select method...</span>
+            <span style="font-size:10px;opacity:0.6">▼</span>
+          </div>
+          <div class="filter-dropdown hidden" id="payment-method-dropdown" style="width:100%;left:0;min-width:100%">
+            <div class="filter-option" onclick="selectPaymentMethod('GPay')">GPay</div>
+            <div class="filter-option" onclick="selectPaymentMethod('PhonePe')">PhonePe</div>
+            <div class="filter-option" onclick="selectPaymentMethod('Paytm')">Paytm</div>
+            <div class="filter-option" onclick="selectPaymentMethod('Cred')">Cred</div>
+            <div class="filter-option" onclick="selectPaymentMethod('Cash')">Cash</div>
+            <div class="filter-option" onclick="selectPaymentMethod('Other')">Other</div>
+          </div>
+        </div>
       </div>
       <div style="margin-bottom:15px">
         <label style="display:block;margin-bottom:5px;color:var(--text);font-size:14px">Note (optional):</label>
