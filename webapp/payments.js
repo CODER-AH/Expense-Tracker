@@ -19,9 +19,11 @@ const PARTICIPANTS = ['Afsar', 'Adham', 'Aakif', 'Sahlaan'];
 
 async function loadPayments() {
   // Always reload payments to ensure fresh data
+  console.log('loadPayments() called - fetching fresh data...');
   try {
     allPayments = await dbGetAllPayments();
     paymentsLoaded = true;
+    console.log('Loaded payments:', allPayments.length);
     renderPaymentSection();
   } catch (error) {
     console.error('Error loading payments:', error);
@@ -55,7 +57,9 @@ function renderPaymentSection() {
 
   let html = `
     <div class="payments-container">
-      <h2>💸 Payments & Settlements</h2>
+      <div class="section-title" style="margin-top: 28px">
+        💳 Payments
+      </div>
 
       <!-- Current Settlements -->
       <div class="settlements-section">
@@ -601,17 +605,19 @@ async function doCancelPayment() {
     return;
   }
 
+  // Save the ID before hiding modal (which sets it to null)
+  const paymentId = currentPaymentIdForAction;
+
   try {
     hideCancelPaymentModal();
     showLoading(true, 'default', 'Cancelling payment...');
-    await dbDeletePayment(currentPaymentIdForAction);
+    await dbDeletePayment(paymentId);
 
     // Reload payments
     await loadPayments();
 
     showLoading(false);
     showToast('Payment cancelled');
-    currentPaymentIdForAction = null;
   } catch (error) {
     showLoading(false);
     console.error('Error cancelling payment:', error);

@@ -1488,16 +1488,6 @@
     padding: 0 16px;
   }
 
-  .payments-container h2 {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 24px;
-    margin-top: 28px;
-    font-family: 'Playfair Display', serif;
-    text-align: left;
-  }
-
   .payments-container h3 {
     font-size: 18px;
     font-weight: 600;
