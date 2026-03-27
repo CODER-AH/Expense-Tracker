@@ -242,8 +242,23 @@ let tripDays = [
 ];
 let maxDay = 2;
 
-// Load saved trip days from localStorage
-function loadTripDays() {
+// Load saved trip days from Firebase/localStorage
+async function loadTripDays() {
+  try {
+    // Try to load from Firebase first
+    const firestoreDays = await dbGetTripDays();
+    if (firestoreDays && firestoreDays.length > 0) {
+      tripDays = firestoreDays;
+      maxDay = Math.max(...tripDays.map(d => d.day));
+      // Sync to localStorage
+      saveTripDays();
+      return;
+    }
+  } catch (error) {
+    console.error('Error loading trip days from Firebase:', error);
+  }
+
+  // Fallback to localStorage
   const saved = localStorage.getItem('coorg_tripDays');
   if (saved) {
     tripDays = JSON.parse(saved);
@@ -275,9 +290,9 @@ function populateDayDropdown(selectElement) {
 }
 
 // Handle day select change
-function handleDaySelect(select) {
+async function handleDaySelect(select) {
   if (select.value === 'add') {
-    addNewDay();
+    await addNewDay();
     // Reset to last actual day
     select.value = maxDay;
     return false;
@@ -286,7 +301,7 @@ function handleDaySelect(select) {
 }
 
 // Add a new day to the trip
-function addNewDay() {
+async function addNewDay() {
   const lastDay = tripDays[tripDays.length - 1];
   const newDayNum = maxDay + 1;
 
@@ -325,10 +340,20 @@ function addNewDay() {
   saveTripDays();
   saveLocal();
 
+  // Save to Firebase/database
+  try {
+    await dbAddTripDay(newDay);
+  } catch (error) {
+    console.error('Error saving trip day to database:', error);
+    // Don't fail - localStorage save already succeeded
+  }
+
   // Update filter dropdown
   updateFilterOptions();
 
   showToast(`Added Day ${newDayNum} (${nextDayName}, ${nextDayOfMonth} ${nextMonthName})`);
+
+  return newDay;
 }
 
 // Update filter dropdown options with current trip days
@@ -364,12 +389,12 @@ function updateFilterOptions() {
 }
 
 // ─── INIT ─────────────────────────────────────────────────
-window.onload = () => {
+window.onload = async () => {
   // Initialize Firebase first
   dbInit();
 
   showLoading(true);
-  loadTripDays();
+  await loadTripDays();
 
   const saved = localStorage.getItem('coorg_username');
   const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
@@ -3278,23 +3303,17 @@ function selectBatchPaidBy(index, value, label) {
 }
 
 // Handle add new day from batch dropdown
-function handleBatchAddNewDay(index) {
+async function handleBatchAddNewDay(index) {
   document.getElementById(`batch-day-dropdown-${index}`).style.display = 'none';
 
-  const dayName = prompt('Enter day name (e.g., Monday):');
-  const dayDate = prompt('Enter date (e.g., 30 March):');
+  // Automatically add new day using the existing addNewDay function
+  const newDay = await addNewDay();
 
-  if (dayName && dayDate) {
-    const newDayNumber = tripDays.length + 1;
-    tripDays.push({ day: newDayNumber, name: dayName, date: dayDate });
+  // Update this row to the new day
+  batchExpenseRows[index].day = newDay.day;
 
-    // Update this row to the new day
-    batchExpenseRows[index].day = newDayNumber;
-
-    // Re-render to show updated dropdowns
-    renderBatchAddRows();
-    updateFilterOptions();
-  }
+  // Re-render to show updated dropdowns
+  renderBatchAddRows();
 }
 
 // Close batch dropdowns when clicking outside
@@ -3304,26 +3323,16 @@ document.addEventListener('click', function(e) {
   }
 });
 
-function handleBatchDayChange(index, value) {
+async function handleBatchDayChange(index, value) {
   if (value === 'add') {
-    const dayName = prompt('Enter day name (e.g., Monday):');
-    const dayDate = prompt('Enter date (e.g., 30 March):');
+    // Automatically add new day
+    const newDay = await addNewDay();
 
-    if (dayName && dayDate) {
-      const newDayNumber = tripDays.length + 1;
-      tripDays.push({ day: newDayNumber, name: dayName, date: dayDate });
+    // Update this row to the new day
+    batchExpenseRows[index].day = newDay.day;
 
-      // Update this row to the new day
-      batchExpenseRows[index].day = newDayNumber;
-
-      // Re-render to show updated dropdowns
-      renderBatchAddRows();
-      updateFilterOptions();
-    } else {
-      // User cancelled, reset to first day
-      batchExpenseRows[index].day = tripDays[0].day;
-      document.getElementById(`batch-day-${index}`).value = tripDays[0].day;
-    }
+    // Re-render to show updated dropdowns
+    renderBatchAddRows();
   } else {
     updateBatchRow(index, 'day', value);
   }
