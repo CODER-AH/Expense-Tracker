@@ -186,7 +186,9 @@ let filterBy = 'all';
 let dayFilterBy = 'all'; // New day filter
 let archivedDayFilterBy = 'all'; // Archived day filter
 let archivedPersonFilterBy = 'all'; // Archived person filter
-let currentPage = 1; // Single page state
+let currentPage = 1; // Expenses page
+let archivedPage = 1; // Archived page
+let notesPage = 1; // Notes page
 let tripBudget = 0; // Trip budget
 const ITEMS_PER_PAGE = 10;
 
@@ -2137,6 +2139,7 @@ function renderNotes() {
 
   if (notes.length === 0) {
     notesList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">No notes yet. Click "Add Note" to create one.</div>';
+    renderNotesPagination(0);
     return;
   }
 
@@ -2148,10 +2151,18 @@ function renderNotes() {
 
   if (filteredNotes.length === 0) {
     notesList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">No notes match the filter.</div>';
+    renderNotesPagination(0);
     return;
   }
 
-  notesList.innerHTML = filteredNotes.map((note, idx) => {
+  // Apply pagination
+  const totalPages = Math.ceil(filteredNotes.length / ITEMS_PER_PAGE);
+  const page = notesPage || 1;
+  const startIdx = (page - 1) * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+  const paginatedNotes = filteredNotes.slice(startIdx, endIdx);
+
+  notesList.innerHTML = paginatedNotes.map((note, idx) => {
     const isCompleted = note.completed || false;
     const textStyle = isCompleted ? 'text-decoration:line-through;opacity:0.6' : '';
     const createdBy = note.createdBy || '—';
@@ -2232,7 +2243,7 @@ function renderNotes() {
   }).join('');
 
   // After rendering, set text content and check if truncation is needed
-  filteredNotes.forEach(note => {
+  paginatedNotes.forEach(note => {
     const textEl = document.getElementById(`note-text-${note.id}`);
     const toggleEl = document.getElementById(`note-toggle-${note.id}`);
     if (textEl) {
@@ -2243,6 +2254,68 @@ function renderNotes() {
       }
     }
   });
+
+  // Render pagination
+  renderNotesPagination(totalPages);
+}
+
+// Render notes pagination
+function renderNotesPagination(totalPages) {
+  const container = document.getElementById('notes-pagination');
+  if (!container) return;
+
+  if (totalPages <= 1) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const page = notesPage || 1;
+  let html = '';
+
+  // Previous button
+  html += `<button class="page-btn" onclick="goToNotesPage(${page - 1})" ${page === 1 ? 'disabled' : ''}>‹ Prev</button>`;
+
+  // Page numbers
+  const maxVisible = 7;
+  let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+  if (endPage - startPage < maxVisible - 1) {
+    startPage = Math.max(1, endPage - maxVisible + 1);
+  }
+
+  if (startPage > 1) {
+    html += `<button class="page-btn" onclick="goToNotesPage(1)">1</button>`;
+    if (startPage > 2) {
+      html += `<span style="color:var(--muted);padding:0 4px">...</span>`;
+    }
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="goToNotesPage(${i})">${i}</button>`;
+  }
+
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      html += `<span style="color:var(--muted);padding:0 4px">...</span>`;
+    }
+    html += `<button class="page-btn" onclick="goToNotesPage(${totalPages})">${totalPages}</button>`;
+  }
+
+  // Next button
+  html += `<button class="page-btn" onclick="goToNotesPage(${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next ›</button>`;
+
+  container.innerHTML = html;
+}
+
+function goToNotesPage(page) {
+  notesPage = page;
+  renderNotes();
+  // Scroll to top of notes section
+  const notesSection = document.getElementById('notes-section');
+  if (notesSection) {
+    notesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 // Show add note dialog
