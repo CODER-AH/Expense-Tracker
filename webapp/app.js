@@ -1728,7 +1728,12 @@ function updateSettlement() {
     } else if (personSettlements.length > 0) {
       personSettlements.forEach(s => {
         if (s.from === person) {
-          actionHTML += `<div class="action owes">Pay ₹${s.amount.toLocaleString('en-IN')} to ${s.to}</div>`;
+          actionHTML += `
+            <div class="action owes">
+              Pay ₹${s.amount.toLocaleString('en-IN')} to ${s.to}
+              ${person === currentUser ? `<button class="pay-now-btn" onclick="navigateToPayment('${s.from}', '${s.to}', ${s.amount})" style="margin-top:8px;width:100%;padding:8px;background:var(--accent);color:#0e1412;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif">Pay Now</button>` : ''}
+            </div>
+          `;
         } else {
           actionHTML += `<div class="action gets">Gets ₹${s.amount.toLocaleString('en-IN')} from ${s.from}</div>`;
         }
@@ -1761,6 +1766,19 @@ function updateSettlement() {
     `;
 
     grid.appendChild(card);
+  });
+}
+
+// Navigate to payments page and open payment modal
+function navigateToPayment(from, to, amount) {
+  // Navigate to payments section
+  navigateTo('payments').then(() => {
+    // Wait a bit for the section to load, then show modal
+    setTimeout(() => {
+      if (typeof showRecordPaymentModal !== 'undefined') {
+        showRecordPaymentModal(from, to, amount);
+      }
+    }, 300);
   });
 }
 

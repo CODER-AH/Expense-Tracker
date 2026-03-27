@@ -18,11 +18,7 @@ const PARTICIPANTS = ['Afsar', 'Adham', 'Aakif', 'Sahlaan'];
 // ============================================
 
 async function loadPayments() {
-  if (paymentsLoaded) {
-    renderPaymentSection();
-    return;
-  }
-
+  // Always reload payments to ensure fresh data
   try {
     allPayments = await dbGetAllPayments();
     paymentsLoaded = true;
@@ -402,7 +398,7 @@ async function submitPayment() {
   }
 
   try {
-    showLoading('Recording payment...');
+    showLoading(true, 'default', 'Recording payment...');
 
     const payment = {
       from,
@@ -414,16 +410,15 @@ async function submitPayment() {
 
     await dbAddPayment(payment);
 
-    hideLoading();
+    showLoading(false);
     hideRecordPaymentModal();
 
     // Reload payments
-    paymentsLoaded = false;
     await loadPayments();
 
     showSuccess('Payment recorded! Waiting for confirmation.');
   } catch (error) {
-    hideLoading();
+    showLoading(false);
     console.error('Error submitting payment:', error);
     showError('Failed to record payment. Please try again.');
   }
@@ -433,17 +428,16 @@ async function confirmPaymentAction(paymentId) {
   if (!confirm('Confirm that you received this payment?')) return;
 
   try {
-    showLoading('Confirming payment...');
+    showLoading(true, 'default', 'Confirming payment...');
     await dbConfirmPayment(paymentId, currentUser);
-    hideLoading();
+    showLoading(false);
 
     // Reload payments
-    paymentsLoaded = false;
     await loadPayments();
 
     showSuccess('Payment confirmed!');
   } catch (error) {
-    hideLoading();
+    showLoading(false);
     console.error('Error confirming payment:', error);
     showError('Failed to confirm payment. Please try again.');
   }
@@ -463,17 +457,16 @@ function showRejectPaymentModal(paymentId) {
 
 async function rejectPaymentAction(paymentId, reason) {
   try {
-    showLoading('Rejecting payment...');
+    showLoading(true, 'default', 'Rejecting payment...');
     await dbRejectPayment(paymentId, reason);
-    hideLoading();
+    showLoading(false);
 
     // Reload payments
-    paymentsLoaded = false;
     await loadPayments();
 
     showSuccess('Payment rejected.');
   } catch (error) {
-    hideLoading();
+    showLoading(false);
     console.error('Error rejecting payment:', error);
     showError('Failed to reject payment. Please try again.');
   }
@@ -483,17 +476,16 @@ async function deletePaymentAction(paymentId) {
   if (!confirm('Cancel this payment?')) return;
 
   try {
-    showLoading('Cancelling payment...');
+    showLoading(true, 'default', 'Cancelling payment...');
     await dbDeletePayment(paymentId);
-    hideLoading();
+    showLoading(false);
 
     // Reload payments
-    paymentsLoaded = false;
     await loadPayments();
 
     showSuccess('Payment cancelled.');
   } catch (error) {
-    hideLoading();
+    showLoading(false);
     console.error('Error cancelling payment:', error);
     showError('Failed to cancel payment. Please try again.');
   }

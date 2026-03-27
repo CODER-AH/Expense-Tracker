@@ -1484,7 +1484,7 @@
   /* PAYMENTS SECTION */
   .payments-container {
     max-width: 1000px;
-    margin: 28px auto 0;
+    margin: 0 auto;
     padding: 0 16px;
   }
 
@@ -1493,7 +1493,9 @@
     font-weight: 700;
     color: var(--text);
     margin-bottom: 24px;
+    margin-top: 28px;
     font-family: 'Playfair Display', serif;
+    text-align: left;
   }
 
   .payments-container h3 {
@@ -1502,6 +1504,7 @@
     color: var(--text);
     margin-bottom: 16px;
     margin-top: 32px;
+    text-align: left;
   }
 
   .settlements-section {
@@ -1510,9 +1513,10 @@
 
   .settlement-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
     margin-bottom: 24px;
+    max-width: 1000px;
   }
 
   .settlement-card {
