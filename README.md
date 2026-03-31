@@ -2,6 +2,8 @@
 
 A modern, feature-rich expense tracking application designed for group trips with **Firebase Firestore**, Google Sheets backup, payment confirmations, and full mobile responsiveness.
 
+**Live App:** https://coder-ah.github.io/Expense-Tracker/
+
 ## Features
 
 - ✅ **Firebase Backend**: Fast, real-time database with offline support
